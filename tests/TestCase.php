@@ -2,9 +2,9 @@
 
 namespace Blafast\Blafast\Tests;
 
+use Blafast\Blafast\BlafastServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Blafast\Blafast\BlafastServiceProvider;
 
 class TestCase extends Orchestra
 {

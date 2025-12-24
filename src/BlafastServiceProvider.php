@@ -2,9 +2,9 @@
 
 namespace Blafast\Blafast;
 
+use Blafast\Blafast\Commands\BlafastCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Blafast\Blafast\Commands\BlafastCommand;
 
 class BlafastServiceProvider extends PackageServiceProvider
 {
