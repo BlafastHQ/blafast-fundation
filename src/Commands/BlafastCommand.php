@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Blafast\Blafast\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class BlafastCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'blafast-fundation';
 
     public $description = 'My command';
 
