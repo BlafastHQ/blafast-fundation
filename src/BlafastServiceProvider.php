@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -53,6 +54,23 @@ class BlafastServiceProvider extends PackageServiceProvider
      */
     public function packageBooted(): void
     {
+        // Register morph map for polymorphic relationships
+        $morphMap = [
+            'organization' => \Blafast\Foundation\Models\Organization::class,
+        ];
+
+        // Add User class if it exists
+        if (class_exists(\App\Models\User::class)) {
+            $morphMap['user'] = \App\Models\User::class;
+        }
+
+        // Add test fixture model in testing environment
+        if ($this->app->environment('testing') && class_exists(\Blafast\Foundation\Tests\Fixtures\AddressableModel::class)) {
+            $morphMap['addressable_model'] = \Blafast\Foundation\Tests\Fixtures\AddressableModel::class;
+        }
+
+        Relation::enforceMorphMap($morphMap);
+
         // Register publishable resources
         if ($this->app->runningInConsole()) {
             // Publish configuration

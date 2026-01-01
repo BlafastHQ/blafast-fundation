@@ -41,5 +41,15 @@ class TestCase extends Orchestra
 
         $migration = include __DIR__.'/../database/migrations/2026_01_01_000002_create_countries_table.php';
         $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_01_01_000003_create_addresses_table.php';
+        $migration->up();
+
+        // Create test table for Addressable trait testing
+        $app['db']->connection()->getSchemaBuilder()->create('addressable_models', function ($table) {
+            $table->uuid('id')->primary();
+            $table->string('name');
+            $table->timestamps();
+        });
     }
 }
