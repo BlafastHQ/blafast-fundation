@@ -53,8 +53,6 @@ class CountryFactory extends Factory
 
     /**
      * Indicate that the country is inactive.
-     *
-     * @return static
      */
     public function inactive(): static
     {
@@ -65,8 +63,6 @@ class CountryFactory extends Factory
 
     /**
      * Create a United States country.
-     *
-     * @return static
      */
     public function unitedStates(): static
     {
@@ -81,8 +77,6 @@ class CountryFactory extends Factory
 
     /**
      * Create a France country.
-     *
-     * @return static
      */
     public function france(): static
     {

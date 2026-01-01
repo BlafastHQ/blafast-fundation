@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Models;
 
 use Blafast\Foundation\Database\Factories\CurrencyFactory;
-use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,7 +24,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Blafast\Foundation\Models\Country> $countries
  *
  * @method static \Blafast\Foundation\Database\Factories\CurrencyFactory factory($count = null, $state = [])
@@ -38,6 +36,7 @@ class Currency extends Model
 {
     /** @use HasFactory<CurrencyFactory> */
     use HasFactory;
+
     use HasUuids;
 
     /**
@@ -83,7 +82,7 @@ class Currency extends Model
     /**
      * Scope a query to only include active currencies.
      *
-     * @param Builder<Currency> $query
+     * @param  Builder<Currency>  $query
      * @return Builder<Currency>
      */
     public function scopeActive(Builder $query): Builder
@@ -94,8 +93,7 @@ class Currency extends Model
     /**
      * Scope a query to filter by currency code.
      *
-     * @param Builder<Currency> $query
-     * @param string $code
+     * @param  Builder<Currency>  $query
      * @return Builder<Currency>
      */
     public function scopeByCode(Builder $query, string $code): Builder
@@ -105,8 +103,6 @@ class Currency extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return CurrencyFactory
      */
     protected static function newFactory(): CurrencyFactory
     {

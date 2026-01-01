@@ -50,8 +50,6 @@ class CurrencyFactory extends Factory
 
     /**
      * Indicate that the currency is inactive.
-     *
-     * @return static
      */
     public function inactive(): static
     {
@@ -62,8 +60,6 @@ class CurrencyFactory extends Factory
 
     /**
      * Create a USD currency.
-     *
-     * @return static
      */
     public function usd(): static
     {
@@ -77,8 +73,6 @@ class CurrencyFactory extends Factory
 
     /**
      * Create a EUR currency.
-     *
-     * @return static
      */
     public function eur(): static
     {
@@ -92,8 +86,6 @@ class CurrencyFactory extends Factory
 
     /**
      * Create a GBP currency.
-     *
-     * @return static
      */
     public function gbp(): static
     {

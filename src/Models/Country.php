@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Models;
 
 use Blafast\Foundation\Database\Factories\CountryFactory;
-use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +26,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_active
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- *
  * @property-read \Blafast\Foundation\Models\Currency $currency
  *
  * @method static \Blafast\Foundation\Database\Factories\CountryFactory factory($count = null, $state = [])
@@ -41,6 +39,7 @@ class Country extends Model
 {
     /** @use HasFactory<CountryFactory> */
     use HasFactory;
+
     use HasUuids;
 
     /**
@@ -87,7 +86,7 @@ class Country extends Model
     /**
      * Scope a query to only include active countries.
      *
-     * @param Builder<Country> $query
+     * @param  Builder<Country>  $query
      * @return Builder<Country>
      */
     public function scopeActive(Builder $query): Builder
@@ -98,8 +97,7 @@ class Country extends Model
     /**
      * Scope a query to filter by ISO Alpha-2 code.
      *
-     * @param Builder<Country> $query
-     * @param string $code
+     * @param  Builder<Country>  $query
      * @return Builder<Country>
      */
     public function scopeByIsoAlpha2(Builder $query, string $code): Builder
@@ -110,8 +108,7 @@ class Country extends Model
     /**
      * Scope a query to filter by ISO Alpha-3 code.
      *
-     * @param Builder<Country> $query
-     * @param string $code
+     * @param  Builder<Country>  $query
      * @return Builder<Country>
      */
     public function scopeByIsoAlpha3(Builder $query, string $code): Builder
@@ -121,8 +118,6 @@ class Country extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return CountryFactory
      */
     protected static function newFactory(): CountryFactory
     {
