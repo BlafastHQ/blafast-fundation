@@ -29,11 +29,17 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app): void
     {
         config()->set('database.default', 'testing');
+        config()->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
 
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/../database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
+        // Run migrations
+        $migration = include __DIR__.'/../database/migrations/2026_01_01_000001_create_currencies_table.php';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_01_01_000002_create_countries_table.php';
+        $migration->up();
     }
 }
