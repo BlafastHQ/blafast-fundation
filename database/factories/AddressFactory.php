@@ -51,8 +51,6 @@ class AddressFactory extends Factory
 
     /**
      * Indicate that the address is primary.
-     *
-     * @return static
      */
     public function primary(): static
     {
@@ -63,8 +61,6 @@ class AddressFactory extends Factory
 
     /**
      * Indicate that the address is verified.
-     *
-     * @return static
      */
     public function verified(): static
     {
@@ -75,8 +71,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a billing address.
-     *
-     * @return static
      */
     public function billing(): static
     {
@@ -88,8 +82,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a shipping address.
-     *
-     * @return static
      */
     public function shipping(): static
     {
@@ -101,8 +93,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a headquarters address.
-     *
-     * @return static
      */
     public function headquarters(): static
     {
@@ -114,8 +104,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a home address.
-     *
-     * @return static
      */
     public function home(): static
     {
@@ -127,8 +115,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a work address.
-     *
-     * @return static
      */
     public function work(): static
     {
@@ -140,8 +126,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a US address.
-     *
-     * @return static
      */
     public function unitedStates(): static
     {
@@ -171,8 +155,6 @@ class AddressFactory extends Factory
 
     /**
      * Create a French address.
-     *
-     * @return static
      */
     public function france(): static
     {
@@ -202,8 +184,6 @@ class AddressFactory extends Factory
 
     /**
      * Set GPS coordinates.
-     *
-     * @return static
      */
     public function withCoordinates(): static
     {
@@ -216,8 +196,7 @@ class AddressFactory extends Factory
     /**
      * Add metadata.
      *
-     * @param array<string, mixed> $metadata
-     * @return static
+     * @param  array<string, mixed>  $metadata
      */
     public function withMetadata(array $metadata): static
     {

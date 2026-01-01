@@ -39,8 +39,6 @@ class AddressableModel extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return \Blafast\Foundation\Tests\Fixtures\Factories\AddressableModelFactory
      */
     protected static function newFactory(): Factories\AddressableModelFactory
     {

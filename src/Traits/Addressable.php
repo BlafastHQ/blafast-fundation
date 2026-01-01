@@ -28,8 +28,6 @@ trait Addressable
 
     /**
      * Get the primary address.
-     *
-     * @return Address|null
      */
     public function primaryAddress(): ?Address
     {
@@ -38,8 +36,6 @@ trait Addressable
 
     /**
      * Get the billing address.
-     *
-     * @return Address|null
      */
     public function billingAddress(): ?Address
     {
@@ -51,8 +47,6 @@ trait Addressable
 
     /**
      * Get the shipping address.
-     *
-     * @return Address|null
      */
     public function shippingAddress(): ?Address
     {
@@ -65,7 +59,6 @@ trait Addressable
     /**
      * Get all addresses of a specific type.
      *
-     * @param int $type
      * @return \Illuminate\Database\Eloquent\Collection<int, Address>
      */
     public function addressesOfType(int $type): \Illuminate\Database\Eloquent\Collection
@@ -76,9 +69,7 @@ trait Addressable
     /**
      * Add a new address to this model.
      *
-     * @param array<string, mixed> $attributes
-     * @param bool $isPrimary
-     * @return Address
+     * @param  array<string, mixed>  $attributes
      */
     public function addAddress(array $attributes, bool $isPrimary = false): Address
     {
@@ -97,9 +88,6 @@ trait Addressable
 
     /**
      * Set an address as primary.
-     *
-     * @param Address $address
-     * @return bool
      */
     public function setPrimaryAddress(Address $address): bool
     {
@@ -115,8 +103,6 @@ trait Addressable
 
     /**
      * Check if the model has any addresses.
-     *
-     * @return bool
      */
     public function hasAddresses(): bool
     {
@@ -125,8 +111,6 @@ trait Addressable
 
     /**
      * Check if the model has a primary address.
-     *
-     * @return bool
      */
     public function hasPrimaryAddress(): bool
     {
@@ -135,9 +119,6 @@ trait Addressable
 
     /**
      * Check if the model has an address of a specific type.
-     *
-     * @param int $type
-     * @return bool
      */
     public function hasAddressOfType(int $type): bool
     {

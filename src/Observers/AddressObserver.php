@@ -18,9 +18,6 @@ class AddressObserver
      *
      * When creating a new primary address, unset other primary addresses
      * of the same type for the same addressable entity.
-     *
-     * @param Address $address
-     * @return void
      */
     public function creating(Address $address): void
     {
@@ -34,9 +31,6 @@ class AddressObserver
      *
      * When setting an address as primary, unset other primary addresses
      * of the same type for the same addressable entity.
-     *
-     * @param Address $address
-     * @return void
      */
     public function updating(Address $address): void
     {
@@ -51,9 +45,6 @@ class AddressObserver
      *
      * If the deleted address was primary, set the first remaining address
      * of the same type as primary.
-     *
-     * @param Address $address
-     * @return void
      */
     public function deleted(Address $address): void
     {
@@ -75,9 +66,6 @@ class AddressObserver
 
     /**
      * Unset other primary addresses of the same type for the same addressable.
-     *
-     * @param Address $address
-     * @return void
      */
     private function unsetOtherPrimaryAddresses(Address $address): void
     {

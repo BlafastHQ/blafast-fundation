@@ -37,7 +37,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property array|null $metadata
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- *
  * @property-read \Illuminate\Database\Eloquent\Model $addressable
  * @property-read \Blafast\Foundation\Models\Country $country
  * @property-read string $formatted_address
@@ -56,17 +55,24 @@ class Address extends Model
 {
     /** @use HasFactory<AddressFactory> */
     use HasFactory;
+
     use HasUuids;
 
     /**
      * Address type constants.
      */
     public const TYPE_BILLING = 1;
+
     public const TYPE_SHIPPING = 2;
+
     public const TYPE_HEADQUARTERS = 3;
+
     public const TYPE_BRANCH = 4;
+
     public const TYPE_WAREHOUSE = 5;
+
     public const TYPE_HOME = 6;
+
     public const TYPE_WORK = 7;
 
     /**
@@ -151,7 +157,7 @@ class Address extends Model
     /**
      * Scope a query to only include primary addresses.
      *
-     * @param Builder<Address> $query
+     * @param  Builder<Address>  $query
      * @return Builder<Address>
      */
     public function scopePrimary(Builder $query): Builder
@@ -162,8 +168,7 @@ class Address extends Model
     /**
      * Scope a query to filter by address type.
      *
-     * @param Builder<Address> $query
-     * @param int $type
+     * @param  Builder<Address>  $query
      * @return Builder<Address>
      */
     public function scopeOfType(Builder $query, int $type): Builder
@@ -174,7 +179,7 @@ class Address extends Model
     /**
      * Scope a query to only include verified addresses.
      *
-     * @param Builder<Address> $query
+     * @param  Builder<Address>  $query
      * @return Builder<Address>
      */
     public function scopeVerified(Builder $query): Builder
@@ -185,8 +190,7 @@ class Address extends Model
     /**
      * Scope a query to filter addresses for a specific addressable.
      *
-     * @param Builder<Address> $query
-     * @param Model $addressable
+     * @param  Builder<Address>  $query
      * @return Builder<Address>
      */
     public function scopeForAddressable(Builder $query, Model $addressable): Builder
@@ -232,8 +236,6 @@ class Address extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return AddressFactory
      */
     protected static function newFactory(): AddressFactory
     {
