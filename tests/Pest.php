@@ -1,5 +1,7 @@
 <?php
 
-use Blafast\Blafast\Tests\TestCase;
+declare(strict_types=1);
+
+use Blafast\Foundation\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);

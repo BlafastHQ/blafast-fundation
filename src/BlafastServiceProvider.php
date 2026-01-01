@@ -1,8 +1,10 @@
 <?php
 
-namespace Blafast\Blafast;
+declare(strict_types=1);
 
-use Blafast\Blafast\Commands\BlafastCommand;
+namespace Blafast\Foundation;
+
+use Blafast\Foundation\Commands\BlafastCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -17,9 +19,65 @@ class BlafastServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('blafast-fundation')
-            ->hasConfigFile()
+            ->hasConfigFile('blafast-fundation')
             ->hasViews()
-            ->hasMigration('create_blafast_fundation_table')
+            ->hasRoute('api')
+            ->hasMigrations([
+                'create_organizations_table',
+                'create_organization_user_table',
+                'create_addresses_table',
+                'create_countries_table',
+                'create_currencies_table',
+                'create_system_settings_table',
+                'create_deferred_endpoint_configs_table',
+                'create_deferred_api_requests_table',
+            ])
+            ->runsMigrations()
             ->hasCommand(BlafastCommand::class);
+    }
+
+    /**
+     * Register any package services.
+     */
+    public function packageRegistered(): void
+    {
+        // Merge package configuration with application config
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/blafast-fundation.php',
+            'blafast-fundation'
+        );
+    }
+
+    /**
+     * Bootstrap any package services.
+     */
+    public function packageBooted(): void
+    {
+        // Register publishable resources
+        if ($this->app->runningInConsole()) {
+            // Publish configuration
+            $this->publishes([
+                __DIR__.'/../config/blafast-fundation.php' => config_path('blafast-fundation.php'),
+            ], 'blafast-config');
+
+            // Publish migrations
+            $this->publishes([
+                __DIR__.'/../database/migrations' => database_path('migrations'),
+            ], 'blafast-migrations');
+
+            // Publish views
+            $this->publishes([
+                __DIR__.'/../resources/views' => resource_path('views/vendor/blafast-fundation'),
+            ], 'blafast-views');
+        }
+
+        // Register routes if they exist
+        $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+
+        // Register views
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'blafast-fundation');
+
+        // Register translations if needed
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'blafast-fundation');
     }
 }

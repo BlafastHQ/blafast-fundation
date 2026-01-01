@@ -1,16 +1,18 @@
 <?php
 
-namespace Blafast\Blafast\Facades;
+declare(strict_types=1);
+
+namespace Blafast\Foundation\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Blafast\Blafast\Blafast
+ * @see \Blafast\Foundation\Blafast
  */
 class Blafast extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \Blafast\Blafast\Blafast::class;
+        return \Blafast\Foundation\Blafast::class;
     }
 }

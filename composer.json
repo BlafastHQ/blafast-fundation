@@ -17,8 +17,17 @@
     ],
     "require": {
         "php": "^8.4",
+        "illuminate/contracts": "^12.0",
+        "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.0",
         "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^11.0||^12.0"
+        "spatie/laravel-permission": "^6.0",
+        "spatie/laravel-tags": "^4.10",
+        "spatie/laravel-query-builder": "^6.0",
+        "spatie/laravel-medialibrary": "^11.0",
+        "spatie/laravel-activitylog": "^4.0",
+        "laravel-json-api/laravel": "^5.0",
+        "knuckleswtf/scribe": "^5.0"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
@@ -34,13 +43,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Blafast\\Blafast\\": "src/",
-            "Blafast\\Blafast\\Database\\Factories\\": "database/factories/"
+            "Blafast\\Foundation\\": "src/",
+            "Blafast\\Foundation\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Blafast\\Blafast\\Tests\\": "tests/",
+            "Blafast\\Foundation\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -62,12 +71,16 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Blafast\\Blafast\\BlafastServiceProvider"
+                "Blafast\\Foundation\\BlafastServiceProvider"
             ],
             "aliases": {
-                "Blafast": "Blafast\\Blafast\\Facades\\Blafast"
+                "Blafast": "Blafast\\Foundation\\Facades\\Blafast"
             }
         }
+    },
+    "suggest": {
+        "predis/predis": "Required for Redis cache and queue support (^2.0)",
+        "laravel/octane": "For higher throughput and performance (^2.0)"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

@@ -1,8 +1,10 @@
 <?php
 
-namespace Blafast\Blafast\Tests;
+declare(strict_types=1);
 
-use Blafast\Blafast\BlafastServiceProvider;
+namespace Blafast\Foundation\Tests;
+
+use Blafast\Foundation\BlafastServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -13,18 +15,18 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Blafast\\Blafast\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'Blafast\\Foundation\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             BlafastServiceProvider::class,
         ];
     }
 
-    public function getEnvironmentSetUp($app)
+    public function getEnvironmentSetUp($app): void
     {
         config()->set('database.default', 'testing');
 
