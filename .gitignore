@@ -33,3 +33,6 @@ testbench.yaml
 configure.php
 .env
 .env.backup
+
+# Tasks
+tasks/
