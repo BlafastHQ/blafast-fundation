@@ -45,7 +45,7 @@ class ApiStructureBuilder
      */
     public static function make(string $modelClass): self
     {
-        $builder = new self();
+        $builder = new self;
         $builder->slug = Str::kebab(class_basename($modelClass));
 
         return $builder;

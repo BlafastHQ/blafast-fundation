@@ -48,6 +48,7 @@ class Organization extends Model implements HasApiStructure
 {
     /** @use HasFactory<OrganizationFactory> */
     use Addressable;
+
     use ExposesApiStructure;
     use HasFactory;
     use HasUuids;
