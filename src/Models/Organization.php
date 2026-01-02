@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
+use Blafast\Foundation\Api\ApiStructureBuilder;
+use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Database\Factories\OrganizationFactory;
 use Blafast\Foundation\Traits\Addressable;
+use Blafast\Foundation\Traits\ExposesApiStructure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -41,11 +44,11 @@ use Illuminate\Support\Str;
  *
  * @use HasFactory<OrganizationFactory>
  */
-class Organization extends Model
+class Organization extends Model implements HasApiStructure
 {
     /** @use HasFactory<OrganizationFactory> */
     use Addressable;
-
+    use ExposesApiStructure;
     use HasFactory;
     use HasUuids;
 
@@ -240,6 +243,32 @@ class Organization extends Model
     public function activeUsers(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->users()->wherePivot('is_active', true)->get();
+    }
+
+    /**
+     * Define the API structure for this model.
+     *
+     * @return array<string, mixed>
+     */
+    public static function apiStructure(): array
+    {
+        return ApiStructureBuilder::make(self::class)
+            ->label('organizations.label')
+            ->uuid('id', 'organizations.fields.id')
+            ->string('name', 'organizations.fields.name', searchable: true, sortable: true)
+            ->string('slug', 'organizations.fields.slug', sortable: true)
+            ->string('vat_number', 'organizations.fields.vat_number')
+            ->boolean('is_active', 'organizations.fields.is_active')
+            ->string('peppol_id', 'organizations.fields.peppol_id')
+            ->datetime('created_at', 'organizations.fields.created_at', sortable: true)
+            ->datetime('updated_at', 'organizations.fields.updated_at', sortable: true)
+            ->relation('primaryAddress', 'full_address', 'organizations.fields.primary_address')
+            ->sortable('name', 'slug', 'created_at', 'updated_at')
+            ->filterable('name', 'slug', 'is_active')
+            ->searchable('name', 'slug', 'vat_number')
+            ->includes('primaryAddress', 'users', 'addresses')
+            ->pagination(default: 25, max: 100)
+            ->build();
     }
 
     /**
