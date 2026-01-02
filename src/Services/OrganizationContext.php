@@ -17,31 +17,21 @@ class OrganizationContext
 {
     /**
      * The current organization context.
-     *
-     * @var Organization|null
      */
     private ?Organization $organization = null;
 
     /**
      * The current authenticated user.
-     *
-     * @var object|null
      */
     private ?object $user = null;
 
     /**
      * Whether the context is in global mode (superadmin bypass).
-     *
-     * @var bool
      */
     private bool $isGlobalContext = false;
 
     /**
      * Set the organization context for the current request.
-     *
-     * @param Organization $organization
-     * @param object $user
-     * @return void
      */
     public function set(Organization $organization, object $user): void
     {
@@ -66,9 +56,6 @@ class OrganizationContext
     /**
      * Set global context mode (superadmin bypass).
      * This removes the organization filter from all queries.
-     *
-     * @param object $superadmin
-     * @return void
      */
     public function setGlobalContext(object $superadmin): void
     {
@@ -83,8 +70,6 @@ class OrganizationContext
 
     /**
      * Clear the current organization context.
-     *
-     * @return void
      */
     public function clear(): void
     {
@@ -97,8 +82,6 @@ class OrganizationContext
 
     /**
      * Get the current organization ID.
-     *
-     * @return string|null
      */
     public function id(): ?string
     {
@@ -107,8 +90,6 @@ class OrganizationContext
 
     /**
      * Get the current organization slug.
-     *
-     * @return string|null
      */
     public function slug(): ?string
     {
@@ -117,8 +98,6 @@ class OrganizationContext
 
     /**
      * Get the current organization instance.
-     *
-     * @return Organization|null
      */
     public function organization(): ?Organization
     {
@@ -127,8 +106,6 @@ class OrganizationContext
 
     /**
      * Get the current authenticated user.
-     *
-     * @return object|null
      */
     public function user(): ?object
     {
@@ -137,8 +114,6 @@ class OrganizationContext
 
     /**
      * Check if the context is in global mode (superadmin bypass).
-     *
-     * @return bool
      */
     public function isGlobalContext(): bool
     {
@@ -147,8 +122,6 @@ class OrganizationContext
 
     /**
      * Check if an organization context has been set.
-     *
-     * @return bool
      */
     public function hasContext(): bool
     {
@@ -157,8 +130,6 @@ class OrganizationContext
 
     /**
      * Get the cache tag for the current organization.
-     *
-     * @return string
      */
     public function cacheTag(): string
     {
@@ -189,10 +160,6 @@ class OrganizationContext
 
     /**
      * Validate that a user belongs to the specified organization.
-     *
-     * @param object $user
-     * @param Organization $organization
-     * @return bool
      */
     public function validateUserBelongsToOrganization(object $user, Organization $organization): bool
     {
@@ -203,7 +170,6 @@ class OrganizationContext
      * Require an organization context to be set.
      * Throws an exception if no context is available.
      *
-     * @return Organization
      * @throws \RuntimeException
      */
     public function require(): Organization
@@ -218,11 +184,6 @@ class OrganizationContext
     /**
      * Execute a callback with a specific organization context.
      * The context is restored to its previous state after the callback.
-     *
-     * @param Organization $organization
-     * @param object $user
-     * @param callable $callback
-     * @return mixed
      */
     public function with(Organization $organization, object $user, callable $callback): mixed
     {
@@ -244,10 +205,6 @@ class OrganizationContext
     /**
      * Execute a callback in global context (superadmin mode).
      * The context is restored to its previous state after the callback.
-     *
-     * @param object $superadmin
-     * @param callable $callback
-     * @return mixed
      */
     public function withGlobalContext(object $superadmin, callable $callback): mixed
     {

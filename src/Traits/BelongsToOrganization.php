@@ -24,13 +24,11 @@ trait BelongsToOrganization
 {
     /**
      * Boot the BelongsToOrganization trait for a model.
-     *
-     * @return void
      */
     public static function bootBelongsToOrganization(): void
     {
         // Add the global scope to automatically filter queries
-        static::addGlobalScope(new OrganizationScope());
+        static::addGlobalScope(new OrganizationScope);
 
         // Automatically assign organization_id when creating new records
         static::creating(function (Model $model) {
@@ -69,7 +67,6 @@ trait BelongsToOrganization
      * Query the model for a specific organization.
      * This bypasses the context and allows querying a specific organization's data.
      *
-     * @param string $organizationId
      * @return Builder<static>
      */
     public static function forOrganization(string $organizationId): Builder
@@ -81,8 +78,7 @@ trait BelongsToOrganization
     /**
      * Scope a query to only include models for a specific organization.
      *
-     * @param Builder<static> $query
-     * @param string $organizationId
+     * @param  Builder<static>  $query
      * @return Builder<static>
      */
     public function scopeForOrganization(Builder $query, string $organizationId): Builder

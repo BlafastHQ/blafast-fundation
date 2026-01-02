@@ -8,8 +8,6 @@ use Blafast\Foundation\Services\OrganizationContext;
 if (! function_exists('organization')) {
     /**
      * Get the current organization from the context.
-     *
-     * @return Organization|null
      */
     function organization(): ?Organization
     {
@@ -20,8 +18,6 @@ if (! function_exists('organization')) {
 if (! function_exists('organization_id')) {
     /**
      * Get the current organization ID from the context.
-     *
-     * @return string|null
      */
     function organization_id(): ?string
     {
@@ -32,8 +28,6 @@ if (! function_exists('organization_id')) {
 if (! function_exists('organization_slug')) {
     /**
      * Get the current organization slug from the context.
-     *
-     * @return string|null
      */
     function organization_slug(): ?string
     {
@@ -44,8 +38,6 @@ if (! function_exists('organization_slug')) {
 if (! function_exists('organization_context')) {
     /**
      * Get the OrganizationContext service instance.
-     *
-     * @return OrganizationContext
      */
     function organization_context(): OrganizationContext
     {
@@ -56,8 +48,6 @@ if (! function_exists('organization_context')) {
 if (! function_exists('has_organization_context')) {
     /**
      * Check if an organization context is currently set.
-     *
-     * @return bool
      */
     function has_organization_context(): bool
     {
@@ -68,8 +58,6 @@ if (! function_exists('has_organization_context')) {
 if (! function_exists('is_global_organization_context')) {
     /**
      * Check if the current context is in global mode (superadmin).
-     *
-     * @return bool
      */
     function is_global_organization_context(): bool
     {

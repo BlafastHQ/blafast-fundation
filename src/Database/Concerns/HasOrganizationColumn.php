@@ -17,16 +17,14 @@ class HasOrganizationColumn extends ServiceProvider
 {
     /**
      * Register the blueprint macros.
-     *
-     * @return void
      */
     public function register(): void
     {
         /**
          * Add an organization_id column with foreign key constraint.
          *
-         * @param bool $nullable Whether the organization_id can be null
-         * @param string $onDelete What to do on organization delete (cascade, restrict, set null)
+         * @param  bool  $nullable  Whether the organization_id can be null
+         * @param  string  $onDelete  What to do on organization delete (cascade, restrict, set null)
          * @return Fluent
          */
         Blueprint::macro('organizationId', function (
@@ -49,7 +47,7 @@ class HasOrganizationColumn extends ServiceProvider
          * Add an indexed organization_id column without foreign key constraint.
          * Useful when you need the column but don't want the foreign key constraint.
          *
-         * @param bool $nullable Whether the organization_id can be null
+         * @param  bool  $nullable  Whether the organization_id can be null
          * @return Fluent
          */
         Blueprint::macro('organizationIdIndex', function (bool $nullable = false): Fluent {

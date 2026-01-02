@@ -52,7 +52,7 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register OrganizationContext as a scoped singleton (per-request)
         $this->app->scoped(OrganizationContext::class, function () {
-            return new OrganizationContext();
+            return new OrganizationContext;
         });
 
         // Register the migration helper for Blueprint macros
