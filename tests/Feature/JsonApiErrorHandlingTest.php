@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Blafast\Foundation\Enums\ApiErrorCode;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Models\Organization;
-use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
