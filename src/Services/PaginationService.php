@@ -32,8 +32,6 @@ class PaginationService
     /**
      * Format the paginated response according to JSON:API specification.
      *
-     * @param  CursorPaginator  $paginator
-     * @param  callable  $transformer
      * @return array<string, mixed>
      */
     public function formatResponse(

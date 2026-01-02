@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Services\PaginationService;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 

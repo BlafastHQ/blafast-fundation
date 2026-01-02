@@ -7,7 +7,6 @@ namespace Blafast\Foundation\Database\Factories;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<User>

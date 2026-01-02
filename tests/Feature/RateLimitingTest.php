@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Blafast\Foundation\Enums\ApiErrorCode;
-use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
