@@ -6,10 +6,13 @@ namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
+use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
+use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
 use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\RateLimiter;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -68,6 +71,11 @@ class BlafastServiceProvider extends PackageServiceProvider
      */
     public function packageBooted(): void
     {
+        // Register middleware aliases
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('org.resolve', ResolveOrganizationContext::class);
+        $router->aliasMiddleware('org.required', EnsureOrganizationContext::class);
+
         // Configure rate limiting for authentication endpoints
         RateLimiter::for('auth', function (Request $request) {
             return Limit::perMinute(60)->by($request->ip());

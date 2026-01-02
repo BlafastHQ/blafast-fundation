@@ -119,11 +119,13 @@ class Organization extends Model
     /**
      * Get all users belonging to this organization.
      *
-     * @return BelongsToMany<\App\Models\User>
+     * @return BelongsToMany<\Illuminate\Database\Eloquent\Model, $this, OrganizationUser>
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\User::class)
+        $userModel = config('auth.providers.users.model', \App\Models\User::class);
+
+        return $this->belongsToMany($userModel)
             ->using(OrganizationUser::class)
             ->withPivot(['role', 'is_active', 'joined_at', 'left_at', 'metadata'])
             ->withTimestamps();
@@ -233,7 +235,7 @@ class Organization extends Model
     /**
      * Get active users for this organization.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>
+     * @return \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>
      */
     public function activeUsers(): \Illuminate\Database\Eloquent\Collection
     {

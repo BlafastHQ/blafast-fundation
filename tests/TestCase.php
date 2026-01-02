@@ -62,6 +62,22 @@ class TestCase extends Orchestra
             });
         }
 
+        // Create organization_user pivot table
+        if (! $schema->hasTable('organization_user')) {
+            $schema->create('organization_user', function ($table) {
+                $table->uuid('id')->primary();
+                $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
+                $table->foreignUuid('organization_id')->constrained('organizations')->onDelete('cascade');
+                $table->string('role');
+                $table->boolean('is_active')->default(true);
+                $table->timestamp('joined_at')->nullable();
+                $table->timestamp('left_at')->nullable();
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+                $table->unique(['user_id', 'organization_id']);
+            });
+        }
+
         // Create test table for Addressable trait testing
         if (! $schema->hasTable('addressable_models')) {
             $schema->create('addressable_models', function ($table) {
@@ -93,6 +109,9 @@ class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
+        // Set application key for encryption (required for sessions)
+        config()->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
+
         // Configure authentication
         config()->set('auth.defaults.guard', 'api');
         config()->set('auth.guards.api', [
@@ -102,6 +121,10 @@ class TestCase extends Orchestra
         config()->set('auth.providers.users', [
             'driver' => 'eloquent',
             'model' => \Blafast\Foundation\Tests\Fixtures\User::class,
+        ]);
+        config()->set('auth.guards.web', [
+            'driver' => 'session',
+            'provider' => 'users',
         ]);
 
         // Configure permissions
@@ -142,6 +165,33 @@ class TestCase extends Orchestra
                 $table->string('email')->unique();
                 $table->string('password');
                 $table->timestamps();
+            });
+        }
+
+        // Create organizations table
+        if (! $this->app['db']->connection()->getSchemaBuilder()->hasTable('organizations')) {
+            $this->app['db']->connection()->getSchemaBuilder()->create('organizations', function ($table) {
+                $table->uuid('id')->primary();
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->timestamps();
+                $table->softDeletes();
+            });
+        }
+
+        // Create organization_user pivot table
+        if (! $this->app['db']->connection()->getSchemaBuilder()->hasTable('organization_user')) {
+            $this->app['db']->connection()->getSchemaBuilder()->create('organization_user', function ($table) {
+                $table->uuid('id')->primary();
+                $table->foreignUuid('user_id')->constrained('users')->onDelete('cascade');
+                $table->foreignUuid('organization_id')->constrained('organizations')->onDelete('cascade');
+                $table->string('role');
+                $table->boolean('is_active')->default(true);
+                $table->timestamp('joined_at')->nullable();
+                $table->timestamp('left_at')->nullable();
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+                $table->unique(['user_id', 'organization_id']);
             });
         }
 

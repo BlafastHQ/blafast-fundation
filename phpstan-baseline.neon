@@ -115,20 +115,8 @@ parameters:
 			path: src/Models/Organization.php
 
 		-
-			message: '#^Method Blafast\\Foundation\\Models\\Organization\:\:users\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, \$this\(Blafast\\Foundation\\Models\\Organization\), Blafast\\Foundation\\Models\\OrganizationUser, ''pivot''\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Models/Organization.php
-
-		-
 			message: '#^The @use tag of class Blafast\\Foundation\\Models\\Organization describes Illuminate\\Database\\Eloquent\\Factories\\HasFactory but the class uses Blafast\\Foundation\\Traits\\Addressable\.$#'
 			identifier: generics.wrongParent
-			count: 1
-			path: src/Models/Organization.php
-
-		-
-			message: '#^Type string in generic type Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, string\> in PHPDoc tag @return is not subtype of template type TPivotModel of Illuminate\\Database\\Eloquent\\Relations\\Pivot \= Illuminate\\Database\\Eloquent\\Relations\\Pivot of class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\.$#'
-			identifier: generics.notSubtype
 			count: 1
 			path: src/Models/Organization.php
 
