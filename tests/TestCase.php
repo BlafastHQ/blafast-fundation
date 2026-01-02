@@ -17,11 +17,54 @@ class TestCase extends Orchestra
         Factory::guessFactoryNamesUsing(
             fn (string $modelName) => 'Blafast\\Foundation\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
+
+        // Ensure test tables exist
+        $this->ensureTestTablesExist();
+    }
+
+    protected function ensureTestTablesExist(): void
+    {
+        $schema = $this->app['db']->connection()->getSchemaBuilder();
+
+        // Create personal_access_tokens table for Sanctum
+        if (! $schema->hasTable('personal_access_tokens')) {
+            $schema->create('personal_access_tokens', function ($table) {
+                $table->id();
+                $table->morphs('tokenable');
+                $table->text('name');
+                $table->string('token', 64)->unique();
+                $table->text('abilities')->nullable();
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamp('expires_at')->nullable()->index();
+                $table->timestamps();
+            });
+        }
+
+        // Create test users table
+        if (! $schema->hasTable('users')) {
+            $schema->create('users', function ($table) {
+                $table->uuid('id')->primary();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->string('password');
+                $table->timestamps();
+            });
+        }
+
+        // Create test table for Addressable trait testing
+        if (! $schema->hasTable('addressable_models')) {
+            $schema->create('addressable_models', function ($table) {
+                $table->uuid('id')->primary();
+                $table->string('name');
+                $table->timestamps();
+            });
+        }
     }
 
     protected function getPackageProviders($app): array
     {
         return [
+            \Laravel\Sanctum\SanctumServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }
@@ -35,35 +78,58 @@ class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
+        // Configure authentication
+        config()->set('auth.defaults.guard', 'api');
+        config()->set('auth.guards.api', [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ]);
+        config()->set('auth.providers.users', [
+            'driver' => 'eloquent',
+            'model' => \Blafast\Foundation\Tests\Fixtures\User::class,
+        ]);
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        // Load package migrations - they are auto-loaded by the service provider via runsMigrations()
+        // We just need to ensure they run with RefreshDatabase
+    }
+
+    protected function afterRefreshingDatabase()
+    {
+        // Create personal_access_tokens table for Sanctum
+        if (! $this->app['db']->connection()->getSchemaBuilder()->hasTable('personal_access_tokens')) {
+            $this->app['db']->connection()->getSchemaBuilder()->create('personal_access_tokens', function ($table) {
+                $table->id();
+                $table->morphs('tokenable');
+                $table->text('name');
+                $table->string('token', 64)->unique();
+                $table->text('abilities')->nullable();
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamp('expires_at')->nullable()->index();
+                $table->timestamps();
+            });
+        }
+
         // Create test users table
-        $app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamps();
-        });
-
-        // Run migrations
-        $migration = include __DIR__.'/../database/migrations/2026_01_01_000001_create_currencies_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_01_01_000002_create_countries_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_01_01_000003_create_addresses_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_01_01_000004_create_organizations_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_01_01_000005_create_organization_user_table.php';
-        $migration->up();
+        if (! $this->app['db']->connection()->getSchemaBuilder()->hasTable('users')) {
+            $this->app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
+                $table->uuid('id')->primary();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->string('password');
+                $table->timestamps();
+            });
+        }
 
         // Create test table for Addressable trait testing
-        $app['db']->connection()->getSchemaBuilder()->create('addressable_models', function ($table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->timestamps();
-        });
+        if (! $this->app['db']->connection()->getSchemaBuilder()->hasTable('addressable_models')) {
+            $this->app['db']->connection()->getSchemaBuilder()->create('addressable_models', function ($table) {
+                $table->uuid('id')->primary();
+                $table->string('name');
+                $table->timestamps();
+            });
+        }
     }
 }

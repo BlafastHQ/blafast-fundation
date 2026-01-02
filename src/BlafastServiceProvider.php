@@ -7,7 +7,10 @@ namespace Blafast\Foundation;
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Services\OrganizationContext;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -64,19 +67,27 @@ class BlafastServiceProvider extends PackageServiceProvider
      */
     public function packageBooted(): void
     {
+        // Configure rate limiting for authentication endpoints
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
+
         // Register morph map for polymorphic relationships
         $morphMap = [
             'organization' => \Blafast\Foundation\Models\Organization::class,
         ];
 
-        // Add User class if it exists
-        if (class_exists(\App\Models\User::class)) {
+        // In testing environment, use test fixtures
+        if ($this->app->environment('testing')) {
+            if (class_exists(\Blafast\Foundation\Tests\Fixtures\User::class)) {
+                $morphMap['user'] = \Blafast\Foundation\Tests\Fixtures\User::class;
+            }
+            if (class_exists(\Blafast\Foundation\Tests\Fixtures\AddressableModel::class)) {
+                $morphMap['addressable_model'] = \Blafast\Foundation\Tests\Fixtures\AddressableModel::class;
+            }
+        } elseif (class_exists(\App\Models\User::class)) {
+            // Add User class if it exists in non-testing environment
             $morphMap['user'] = \App\Models\User::class;
-        }
-
-        // Add test fixture model in testing environment
-        if ($this->app->environment('testing') && class_exists(\Blafast\Foundation\Tests\Fixtures\AddressableModel::class)) {
-            $morphMap['addressable_model'] = \Blafast\Foundation\Tests\Fixtures\AddressableModel::class;
         }
 
         Relation::enforceMorphMap($morphMap);
