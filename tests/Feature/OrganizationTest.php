@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Blafast\Foundation\Database\Factories\OrganizationFactory;
 use Blafast\Foundation\Models\Address;
 use Blafast\Foundation\Models\Country;
 use Blafast\Foundation\Models\Organization;

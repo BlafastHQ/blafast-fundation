@@ -53,8 +53,6 @@ class OrganizationFactory extends Factory
 
     /**
      * Indicate that the organization is inactive.
-     *
-     * @return static
      */
     public function inactive(): static
     {
@@ -65,9 +63,6 @@ class OrganizationFactory extends Factory
 
     /**
      * Set a specific slug.
-     *
-     * @param string $slug
-     * @return static
      */
     public function withSlug(string $slug): static
     {
@@ -78,9 +73,6 @@ class OrganizationFactory extends Factory
 
     /**
      * Add VAT number.
-     *
-     * @param string|null $vatNumber
-     * @return static
      */
     public function withVat(?string $vatNumber = null): static
     {
@@ -91,9 +83,6 @@ class OrganizationFactory extends Factory
 
     /**
      * Add PEPPOL ID.
-     *
-     * @param string|null $peppolId
-     * @return static
      */
     public function withPeppol(?string $peppolId = null): static
     {
@@ -105,8 +94,7 @@ class OrganizationFactory extends Factory
     /**
      * Set custom contact details.
      *
-     * @param array<string, mixed> $contactDetails
-     * @return static
+     * @param  array<string, mixed>  $contactDetails
      */
     public function withContactDetails(array $contactDetails): static
     {
@@ -118,8 +106,7 @@ class OrganizationFactory extends Factory
     /**
      * Set custom settings.
      *
-     * @param array<string, mixed> $settings
-     * @return static
+     * @param  array<string, mixed>  $settings
      */
     public function withSettings(array $settings): static
     {
@@ -130,8 +117,6 @@ class OrganizationFactory extends Factory
 
     /**
      * Create a small business organization.
-     *
-     * @return static
      */
     public function smallBusiness(): static
     {
@@ -149,8 +134,6 @@ class OrganizationFactory extends Factory
 
     /**
      * Create an enterprise organization.
-     *
-     * @return static
      */
     public function enterprise(): static
     {

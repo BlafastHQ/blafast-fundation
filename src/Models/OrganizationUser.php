@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property array|null $metadata
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- *
  * @property-read \App\Models\User $user
  * @property-read \Blafast\Foundation\Models\Organization $organization
  *
@@ -84,7 +83,7 @@ class OrganizationUser extends Pivot
     /**
      * Scope a query to only include active memberships.
      *
-     * @param Builder<OrganizationUser> $query
+     * @param  Builder<OrganizationUser>  $query
      * @return Builder<OrganizationUser>
      */
     public function scopeActive(Builder $query): Builder
@@ -95,8 +94,7 @@ class OrganizationUser extends Pivot
     /**
      * Scope a query to filter by role.
      *
-     * @param Builder<OrganizationUser> $query
-     * @param string $role
+     * @param  Builder<OrganizationUser>  $query
      * @return Builder<OrganizationUser>
      */
     public function scopeByRole(Builder $query, string $role): Builder
@@ -106,8 +104,6 @@ class OrganizationUser extends Pivot
 
     /**
      * Check if the membership is active.
-     *
-     * @return bool
      */
     public function isActive(): bool
     {
@@ -116,10 +112,6 @@ class OrganizationUser extends Pivot
 
     /**
      * Get a metadata value by key with optional default.
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
      */
     public function getMetadata(string $key, mixed $default = null): mixed
     {
@@ -128,10 +120,6 @@ class OrganizationUser extends Pivot
 
     /**
      * Set a metadata value by key.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return self
      */
     public function setMetadata(string $key, mixed $value): self
     {

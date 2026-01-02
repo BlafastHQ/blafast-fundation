@@ -31,7 +31,6 @@ use Illuminate\Support\Str;
  * @property string|null $peppol_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
- *
  * @property-read \Blafast\Foundation\Models\Address|null $primaryAddress
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Blafast\Foundation\Models\Address> $addresses
@@ -46,6 +45,7 @@ class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
     use Addressable;
+
     use HasFactory;
     use HasUuids;
 
@@ -132,7 +132,7 @@ class Organization extends Model
     /**
      * Scope a query to only include active organizations.
      *
-     * @param Builder<Organization> $query
+     * @param  Builder<Organization>  $query
      * @return Builder<Organization>
      */
     public function scopeActive(Builder $query): Builder
@@ -143,8 +143,7 @@ class Organization extends Model
     /**
      * Scope a query to filter by slug.
      *
-     * @param Builder<Organization> $query
-     * @param string $slug
+     * @param  Builder<Organization>  $query
      * @return Builder<Organization>
      */
     public function scopeBySlug(Builder $query, string $slug): Builder
@@ -154,10 +153,6 @@ class Organization extends Model
 
     /**
      * Get a setting value by key with optional default.
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
      */
     public function getSetting(string $key, mixed $default = null): mixed
     {
@@ -166,10 +161,6 @@ class Organization extends Model
 
     /**
      * Set a setting value by key.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return self
      */
     public function setSetting(string $key, mixed $value): self
     {
@@ -182,10 +173,6 @@ class Organization extends Model
 
     /**
      * Get a contact detail value by key with optional default.
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
      */
     public function getContactDetail(string $key, mixed $default = null): mixed
     {
@@ -194,10 +181,6 @@ class Organization extends Model
 
     /**
      * Set a contact detail value by key.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return self
      */
     public function setContactDetail(string $key, mixed $value): self
     {
@@ -211,10 +194,8 @@ class Organization extends Model
     /**
      * Add a user to this organization.
      *
-     * @param \App\Models\User|object $user
-     * @param string $role
-     * @param array<string, mixed> $metadata
-     * @return void
+     * @param  \App\Models\User|object  $user
+     * @param  array<string, mixed>  $metadata
      */
     public function addUser(object $user, string $role, array $metadata = []): void
     {
@@ -229,8 +210,7 @@ class Organization extends Model
     /**
      * Remove a user from this organization.
      *
-     * @param \App\Models\User|object $user
-     * @return void
+     * @param  \App\Models\User|object  $user
      */
     public function removeUser(object $user): void
     {
@@ -243,8 +223,7 @@ class Organization extends Model
     /**
      * Check if a user belongs to this organization.
      *
-     * @param \App\Models\User|object $user
-     * @return bool
+     * @param  \App\Models\User|object  $user
      */
     public function hasUser(object $user): bool
     {
@@ -263,8 +242,6 @@ class Organization extends Model
 
     /**
      * Create a new factory instance for the model.
-     *
-     * @return OrganizationFactory
      */
     protected static function newFactory(): OrganizationFactory
     {

@@ -8,7 +8,6 @@ use Blafast\Foundation\Models\Address;
 use Blafast\Foundation\Models\Country;
 use Blafast\Foundation\Models\Organization;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class OrganizationSeeder extends Seeder
 {
