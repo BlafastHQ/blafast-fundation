@@ -7,16 +7,16 @@ namespace Blafast\Foundation;
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
+use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
+use Blafast\Foundation\Providers\RateLimitServiceProvider;
 use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
 use Blafast\Foundation\Services\OrganizationContext;
-use Illuminate\Cache\RateLimiting\Limit;
+use Blafast\Foundation\Services\PaginationService;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
-use Illuminate\Support\Facades\RateLimiter;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -65,6 +65,9 @@ class BlafastServiceProvider extends PackageServiceProvider
             return new OrganizationContext;
         });
 
+        // Register PaginationService as a singleton
+        $this->app->singleton(PaginationService::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }
@@ -78,17 +81,16 @@ class BlafastServiceProvider extends PackageServiceProvider
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('org.resolve', ResolveOrganizationContext::class);
         $router->aliasMiddleware('org.required', EnsureOrganizationContext::class);
+        $router->aliasMiddleware('rate-limit-headers', AddRateLimitHeaders::class);
 
         // Register response macros
         $this->app->register(ResponseMacroServiceProvider::class);
 
+        // Register rate limiting
+        $this->app->register(RateLimitServiceProvider::class);
+
         // Register JSON:API exception handler
         $this->registerExceptionHandler();
-
-        // Configure rate limiting for authentication endpoints
-        RateLimiter::for('auth', function (Request $request) {
-            return Limit::perMinute(60)->by($request->ip());
-        });
 
         // Register morph map for polymorphic relationships
         $morphMap = [

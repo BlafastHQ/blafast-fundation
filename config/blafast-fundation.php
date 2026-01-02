@@ -23,6 +23,9 @@ return [
             'max_per_page' => 100,
             // Use cursor pagination by default
             'type' => 'cursor',
+            // Query parameter names
+            'cursor_name' => 'cursor',
+            'size_name' => 'per_page',
         ],
 
         // Rate limiting configuration

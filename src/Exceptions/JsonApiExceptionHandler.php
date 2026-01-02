@@ -8,6 +8,7 @@ use Blafast\Foundation\Enums\ApiErrorCode;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -40,6 +41,7 @@ class JsonApiExceptionHandler
             $e instanceof ModelNotFoundException => $this->renderModelNotFound($e),
             $e instanceof NotFoundHttpException => $this->renderNotFound($e),
             $e instanceof MethodNotAllowedHttpException => $this->renderMethodNotAllowed($e),
+            $e instanceof ThrottleRequestsException => $this->renderThrottled($e),
             $e instanceof HttpException => $this->renderHttp($e),
             default => $this->renderGeneric($e),
         };
@@ -167,6 +169,26 @@ class JsonApiExceptionHandler
         ];
 
         return response()->json(['errors' => [$error]], 405);
+    }
+
+    /**
+     * Render a throttled request exception.
+     */
+    private function renderThrottled(ThrottleRequestsException $e): JsonResponse
+    {
+        $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
+
+        $error = [
+            'status' => '429',
+            'code' => ApiErrorCode::RATE_LIMIT_EXCEEDED->value,
+            'title' => ApiErrorCode::RATE_LIMIT_EXCEEDED->title(),
+            'detail' => 'Too many requests. Please try again later.',
+            'meta' => [
+                'retry_after' => (int) $retryAfter,
+            ],
+        ];
+
+        return response()->json(['errors' => [$error]], 429, $e->getHeaders());
     }
 
     /**
