@@ -17,7 +17,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed roles
-    (new RoleSeeder())->run();
+    (new RoleSeeder)->run();
 
     // Create a test route that uses the middleware
     Route::middleware(['web', ResolveOrganizationContext::class])
