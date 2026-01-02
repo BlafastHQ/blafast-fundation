@@ -6,10 +6,13 @@ namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
+use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
+use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
 use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
@@ -28,7 +31,7 @@ class BlafastServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('blafast-fundation')
-            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum'])
+            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi'])
             ->hasViews()
             ->hasRoute('api')
             ->hasMigrations([
@@ -75,6 +78,12 @@ class BlafastServiceProvider extends PackageServiceProvider
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('org.resolve', ResolveOrganizationContext::class);
         $router->aliasMiddleware('org.required', EnsureOrganizationContext::class);
+
+        // Register response macros
+        $this->app->register(ResponseMacroServiceProvider::class);
+
+        // Register JSON:API exception handler
+        $this->registerExceptionHandler();
 
         // Configure rate limiting for authentication endpoints
         RateLimiter::for('auth', function (Request $request) {
@@ -127,5 +136,24 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register translations if needed
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'blafast-fundation');
+    }
+
+    /**
+     * Register the JSON:API exception handler.
+     */
+    protected function registerExceptionHandler(): void
+    {
+        $this->app->singleton(JsonApiExceptionHandler::class);
+
+        // Extend the exception handler to use our JSON:API handler for API requests
+        $this->app->extend(ExceptionHandler::class, function (ExceptionHandler $handler) {
+            $jsonApiHandler = $this->app->make(JsonApiExceptionHandler::class);
+
+            $handler->renderable(function (\Throwable $e, \Illuminate\Http\Request $request) use ($jsonApiHandler) {
+                return $jsonApiHandler->render($request, $e);
+            });
+
+            return $handler;
+        });
     }
 }

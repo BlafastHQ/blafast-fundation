@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
 use Illuminate\Support\Facades\Route;
+use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
+use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,24 +13,52 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Here is where you can register API routes for the Blafast Foundation
-| module. These routes are prefixed with /api/v1.
+| module. All API routes are versioned (v1, v2, etc.).
 |
 */
 
-// Authentication routes
-Route::prefix('api/v1/auth')->group(function () {
-    // Public routes (with rate limiting)
-    Route::post('login', [AuthController::class, 'login'])
-        ->middleware('throttle:auth')
-        ->name('auth.login');
+/*
+|--------------------------------------------------------------------------
+| API Version 1 Routes
+|--------------------------------------------------------------------------
+*/
 
-    // Protected routes (require authentication)
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
-        Route::post('logout-all', [AuthController::class, 'logoutAll'])->name('auth.logout-all');
-        Route::get('me', [AuthController::class, 'me'])->name('auth.me');
-        Route::get('tokens', [AuthController::class, 'tokens'])->name('auth.tokens.index');
-        Route::post('tokens', [AuthController::class, 'createToken'])->name('auth.tokens.create');
-        Route::delete('tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('auth.tokens.revoke');
+Route::prefix('api/v1')->name('api.v1.')->group(function () {
+    // Authentication routes (non-JSON:API)
+    Route::prefix('auth')->name('auth.')->group(function () {
+        // Public routes (with rate limiting)
+        Route::post('login', [AuthController::class, 'login'])
+            ->middleware('throttle:auth')
+            ->name('login');
+
+        // Protected routes (require authentication)
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+            Route::post('logout-all', [AuthController::class, 'logoutAll'])->name('logout-all');
+            Route::get('me', [AuthController::class, 'me'])->name('me');
+            Route::get('tokens', [AuthController::class, 'tokens'])->name('tokens.index');
+            Route::post('tokens', [AuthController::class, 'createToken'])->name('tokens.create');
+            Route::delete('tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('tokens.revoke');
+        });
     });
+
+    // JSON:API resource routes
+    JsonApiRoute::server('v1')
+        ->prefix('api/v1')
+        ->middleware('auth:sanctum')
+        ->middleware('org.resolve')
+        ->resources(function (ResourceRegistrar $server) {
+            // JSON:API resources will be registered here
+            // Example: $server->resource('organizations', OrganizationController::class);
+        });
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Version 2 Routes (Future)
+|--------------------------------------------------------------------------
+*/
+
+// Route::prefix('api/v2')->name('api.v2.')->group(function () {
+//     // V2 routes will be added here
+// });

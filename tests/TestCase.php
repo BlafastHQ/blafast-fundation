@@ -96,6 +96,7 @@ class TestCase extends Orchestra
         return [
             \Laravel\Sanctum\SanctumServiceProvider::class,
             \Spatie\Permission\PermissionServiceProvider::class,
+            \LaravelJsonApi\Laravel\ServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }
