@@ -1,0 +1,133 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 13
+			path: config/blafast-fundation.php
+
+		-
+			message: '#^Call to an undefined method Faker\\Generator\:\:secondaryAddress\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: database/factories/AddressFactory.php
+
+		-
+			message: '#^Call to an undefined method Faker\\Generator\:\:state\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: database/factories/AddressFactory.php
+
+		-
+			message: '#^Call to an undefined method Faker\\Generator\:\:stateAbbr\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: database/factories/AddressFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Blafast\\Foundation\\Database\\Factories\\AddressFactory\:\:definition\(\) should be compatible with return type \(array\<model property of Blafast\\Foundation\\Models\\Address, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<Blafast\\Foundation\\Models\\Address\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/AddressFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Blafast\\Foundation\\Database\\Factories\\CountryFactory\:\:definition\(\) should be compatible with return type \(array\<model property of Blafast\\Foundation\\Models\\Country, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<Blafast\\Foundation\\Models\\Country\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/CountryFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Blafast\\Foundation\\Database\\Factories\\CurrencyFactory\:\:definition\(\) should be compatible with return type \(array\<model property of Blafast\\Foundation\\Models\\Currency, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<Blafast\\Foundation\\Models\\Currency\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/CurrencyFactory.php
+
+		-
+			message: '#^Return type \(array\<string, mixed\>\) of method Blafast\\Foundation\\Database\\Factories\\OrganizationFactory\:\:definition\(\) should be compatible with return type \(array\<model property of Blafast\\Foundation\\Models\\Organization, mixed\>\) of method Illuminate\\Database\\Eloquent\\Factories\\Factory\<Blafast\\Foundation\\Models\\Organization\>\:\:definition\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: database/factories/OrganizationFactory.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Address\:\:addressable\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, Blafast\\Foundation\\Models\\Address\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(Blafast\\Foundation\\Models\\Address\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Address.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Address\:\:country\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Country, Blafast\\Foundation\\Models\\Address\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Country, \$this\(Blafast\\Foundation\\Models\\Address\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Address.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type Blafast\\Foundation\\Models\\Country\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: src/Models/Address.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Country\:\:currency\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Currency, Blafast\\Foundation\\Models\\Country\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Currency, \$this\(Blafast\\Foundation\\Models\\Country\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Country.php
+
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Blafast\\Foundation\\Models\\Country\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: src/Models/Currency.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Currency\:\:countries\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Blafast\\Foundation\\Models\\Country\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<Blafast\\Foundation\\Models\\Country, \$this\(Blafast\\Foundation\\Models\\Currency\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Currency.php
+
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Blafast\\Foundation\\Models\\Address\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\MorphMany\: TRelatedModel, TDeclaringModel$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Organization\:\:addresses\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Blafast\\Foundation\\Models\\Address\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Blafast\\Foundation\\Models\\Address, \$this\(Blafast\\Foundation\\Models\\Organization\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Organization\:\:primaryAddress\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Address, Blafast\\Foundation\\Models\\Organization\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Address, \$this\(Blafast\\Foundation\\Models\\Organization\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Organization\:\:users\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, \$this\(Blafast\\Foundation\\Models\\Organization\), Blafast\\Foundation\\Models\\OrganizationUser, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^The @use tag of class Blafast\\Foundation\\Models\\Organization describes Illuminate\\Database\\Eloquent\\Factories\\HasFactory but the class uses Blafast\\Foundation\\Traits\\Addressable\.$#'
+			identifier: generics.wrongParent
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^Type string in generic type Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, string\> in PHPDoc tag @return is not subtype of template type TPivotModel of Illuminate\\Database\\Eloquent\\Relations\\Pivot \= Illuminate\\Database\\Eloquent\\Relations\\Pivot of class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\OrganizationUser\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\OrganizationUser\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\OrganizationUser\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/OrganizationUser.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\OrganizationUser\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, Blafast\\Foundation\\Models\\OrganizationUser\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(Blafast\\Foundation\\Models\\OrganizationUser\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/OrganizationUser.php

@@ -35,6 +35,14 @@ class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
+        // Create test users table
+        $app['db']->connection()->getSchemaBuilder()->create('users', function ($table) {
+            $table->uuid('id')->primary();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamps();
+        });
+
         // Run migrations
         $migration = include __DIR__.'/../database/migrations/2026_01_01_000001_create_currencies_table.php';
         $migration->up();
@@ -43,6 +51,12 @@ class TestCase extends Orchestra
         $migration->up();
 
         $migration = include __DIR__.'/../database/migrations/2026_01_01_000003_create_addresses_table.php';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_01_01_000004_create_organizations_table.php';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_01_01_000005_create_organization_user_table.php';
         $migration->up();
 
         // Create test table for Addressable trait testing
