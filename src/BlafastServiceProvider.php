@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
+use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
+use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -47,6 +49,14 @@ class BlafastServiceProvider extends PackageServiceProvider
             __DIR__.'/../config/blafast-fundation.php',
             'blafast-fundation'
         );
+
+        // Register OrganizationContext as a scoped singleton (per-request)
+        $this->app->scoped(OrganizationContext::class, function () {
+            return new OrganizationContext();
+        });
+
+        // Register the migration helper for Blueprint macros
+        $this->app->register(HasOrganizationColumn::class);
     }
 
     /**

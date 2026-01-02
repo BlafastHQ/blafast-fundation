@@ -45,7 +45,10 @@
         "psr-4": {
             "Blafast\\Foundation\\": "src/",
             "Blafast\\Foundation\\Database\\Factories\\": "database/factories/"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

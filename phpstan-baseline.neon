@@ -131,3 +131,9 @@ parameters:
 			identifier: return.type
 			count: 1
 			path: src/Models/OrganizationUser.php
+
+		-
+			message: '#^Trait Blafast\\Foundation\\Traits\\BelongsToOrganization is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/BelongsToOrganization.php
