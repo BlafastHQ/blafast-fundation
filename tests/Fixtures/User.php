@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Tests\Fixtures;
 
+use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Model implements AuthenticatableContract
 {
     use Authenticatable;
     use HasApiTokens;
     use HasFactory;
+    use HasRoles;
     use HasUuids;
 
     protected $fillable = [
@@ -27,4 +31,52 @@ class User extends Model implements AuthenticatableContract
     protected $hidden = [
         'password',
     ];
+
+    /**
+     * Check if user has permission in specific organization context.
+     *
+     * @param  string  $permission
+     * @param  Organization|string|null  $organization
+     * @return bool
+     */
+    public function hasOrganizationPermission(string $permission, Organization|string|null $organization = null): bool
+    {
+        if ($organization === null) {
+            $context = app(OrganizationContext::class);
+            $organization = $context->organization();
+        }
+
+        $organizationId = $organization instanceof Organization ? $organization->id : $organization;
+
+        return $this->hasPermissionTo($permission, 'api', $organizationId);
+    }
+
+    /**
+     * Check if user has role in specific organization context.
+     *
+     * @param  string  $role
+     * @param  Organization|string|null  $organization
+     * @return bool
+     */
+    public function hasOrganizationRole(string $role, Organization|string|null $organization = null): bool
+    {
+        if ($organization === null) {
+            $context = app(OrganizationContext::class);
+            $organization = $context->organization();
+        }
+
+        $organizationId = $organization instanceof Organization ? $organization->id : $organization;
+
+        return $this->hasRole($role, 'api', $organizationId);
+    }
+
+    /**
+     * Check if user is a Superadmin.
+     *
+     * @return bool
+     */
+    public function isSuperadmin(): bool
+    {
+        return $this->hasRole('Superadmin', 'api');
+    }
 }

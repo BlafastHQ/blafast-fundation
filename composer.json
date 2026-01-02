@@ -18,16 +18,16 @@
     "require": {
         "php": "^8.4",
         "illuminate/contracts": "^12.0",
+        "knuckleswtf/scribe": "^5.0",
+        "laravel-json-api/laravel": "^5.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
-        "spatie/laravel-package-tools": "^1.16",
-        "spatie/laravel-permission": "^6.0",
-        "spatie/laravel-tags": "^4.10",
-        "spatie/laravel-query-builder": "^6.0",
-        "spatie/laravel-medialibrary": "^11.0",
         "spatie/laravel-activitylog": "^4.0",
-        "laravel-json-api/laravel": "^5.0",
-        "knuckleswtf/scribe": "^5.0"
+        "spatie/laravel-medialibrary": "^11.0",
+        "spatie/laravel-package-tools": "^1.16",
+        "spatie/laravel-permission": "^6.24",
+        "spatie/laravel-query-builder": "^6.0",
+        "spatie/laravel-tags": "^4.10"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
@@ -44,7 +44,8 @@
     "autoload": {
         "psr-4": {
             "Blafast\\Foundation\\": "src/",
-            "Blafast\\Foundation\\Database\\Factories\\": "database/factories/"
+            "Blafast\\Foundation\\Database\\Factories\\": "database/factories/",
+            "Blafast\\Foundation\\Database\\Seeders\\": "database/seeders/"
         },
         "files": [
             "src/helpers.php"
