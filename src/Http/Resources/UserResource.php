@@ -9,6 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin \Illuminate\Database\Eloquent\Model
+ *
  * @property-read string $id
  * @property-read string $name
  * @property-read string $email
@@ -20,7 +21,6 @@ class UserResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

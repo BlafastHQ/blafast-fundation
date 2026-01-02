@@ -14,15 +14,12 @@ class TokenResource extends JsonResource
 {
     /**
      * The plain text token (only available on creation).
-     *
-     * @var string|null
      */
     public ?string $plainTextToken = null;
 
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

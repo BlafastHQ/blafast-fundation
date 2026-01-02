@@ -10,7 +10,6 @@ use Blafast\Foundation\Http\Resources\TokenResource;
 use Blafast\Foundation\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -20,8 +19,6 @@ class AuthController extends Controller
     /**
      * Authenticate user and issue access token.
      *
-     * @param LoginRequest $request
-     * @return JsonResponse
      * @throws ValidationException
      */
     public function login(LoginRequest $request): JsonResponse
@@ -54,9 +51,6 @@ class AuthController extends Controller
 
     /**
      * Revoke the current access token.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
@@ -75,9 +69,6 @@ class AuthController extends Controller
 
     /**
      * Revoke all user's access tokens.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logoutAll(Request $request): JsonResponse
     {
@@ -96,9 +87,6 @@ class AuthController extends Controller
 
     /**
      * Get the authenticated user.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function me(Request $request): JsonResponse
     {
@@ -109,9 +97,6 @@ class AuthController extends Controller
 
     /**
      * List all user's access tokens.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function tokens(Request $request): JsonResponse
     {
@@ -125,9 +110,6 @@ class AuthController extends Controller
 
     /**
      * Create a new access token.
-     *
-     * @param CreateTokenRequest $request
-     * @return JsonResponse
      */
     public function createToken(CreateTokenRequest $request): JsonResponse
     {
@@ -150,10 +132,6 @@ class AuthController extends Controller
 
     /**
      * Revoke a specific access token.
-     *
-     * @param Request $request
-     * @param string $tokenId
-     * @return JsonResponse
      */
     public function revokeToken(Request $request, string $tokenId): JsonResponse
     {
