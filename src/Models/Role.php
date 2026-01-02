@@ -56,8 +56,6 @@ class Role extends SpatieRole
 
     /**
      * The organization ID associated with this role.
-     *
-     * @var string|null
      */
     public ?string $organization_id = null;
 
@@ -86,7 +84,6 @@ class Role extends SpatieRole
      * Scope a query to organization-specific roles.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<Role>  $query
-     * @param  string  $organizationId
      * @return \Illuminate\Database\Eloquent\Builder<Role>
      */
     public function scopeForOrganization(\Illuminate\Database\Eloquent\Builder $query, string $organizationId): \Illuminate\Database\Eloquent\Builder
@@ -96,8 +93,6 @@ class Role extends SpatieRole
 
     /**
      * Check if this is a global role (like Superadmin).
-     *
-     * @return bool
      */
     public function isGlobal(): bool
     {
@@ -106,8 +101,6 @@ class Role extends SpatieRole
 
     /**
      * Check if this is the Superadmin role.
-     *
-     * @return bool
      */
     public function isSuperadmin(): bool
     {

@@ -14,7 +14,6 @@ class BlaFastPermissionRegistrar
      * Register CRUD permissions for a model.
      *
      * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
-     * @param  string|null  $organizationId
      * @return array<int, Permission>
      */
     public function registerPermissionsForModel(string $modelClass, ?string $organizationId = null): array
@@ -57,8 +56,6 @@ class BlaFastPermissionRegistrar
      * Register exec permissions for models with exposed API methods.
      *
      * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
-     * @param  string  $slug
-     * @param  string|null  $organizationId
      * @return array<int, Permission>
      */
     protected function registerExecPermissions(string $modelClass, string $slug, ?string $organizationId = null): array
@@ -67,6 +64,7 @@ class BlaFastPermissionRegistrar
 
         /**
          * @var array<string, array<string, mixed>> $apiMethods
+         *
          * @phpstan-ignore-next-line Method exists on models with ExposesApiMethods trait
          */
         $apiMethods = $modelClass::apiMethods();
@@ -90,7 +88,6 @@ class BlaFastPermissionRegistrar
      * Assign default permissions to a role based on model's defaultRights configuration.
      *
      * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
-     * @param  string|null  $organizationId
      */
     public function assignDefaultRights(string $modelClass, ?string $organizationId = null): void
     {
@@ -130,10 +127,6 @@ class BlaFastPermissionRegistrar
 
     /**
      * Register module permissions.
-     *
-     * @param  string  $moduleName
-     * @param  string|null  $organizationId
-     * @return Permission
      */
     public function registerModulePermission(string $moduleName, ?string $organizationId = null): Permission
     {
@@ -156,7 +149,6 @@ class BlaFastPermissionRegistrar
     /**
      * Copy template roles to an organization.
      *
-     * @param  string  $organizationId
      * @return array<int, Role>
      */
     public function copyTemplateRolesToOrganization(string $organizationId): array

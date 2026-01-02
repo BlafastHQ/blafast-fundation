@@ -15,8 +15,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed roles and permissions directly
-    (new RoleSeeder())->run();
-    (new PermissionSeeder())->run();
+    (new RoleSeeder)->run();
+    (new PermissionSeeder)->run();
 });
 
 test('superadmin role is created without organization', function () {
@@ -165,7 +165,7 @@ test('superadmin has all permissions', function () {
 });
 
 test('permission registrar can register CRUD permissions for model', function () {
-    $registrar = new BlaFastPermissionRegistrar();
+    $registrar = new BlaFastPermissionRegistrar;
 
     $permissions = $registrar->registerPermissionsForModel(User::class);
 
@@ -183,7 +183,7 @@ test('permission registrar can copy template roles to organization', function ()
         'slug' => 'new-org',
     ]);
 
-    $registrar = new BlaFastPermissionRegistrar();
+    $registrar = new BlaFastPermissionRegistrar;
     $copiedRoles = $registrar->copyTemplateRolesToOrganization($organization->id);
 
     expect($copiedRoles)->toHaveCount(4) // Admin, User, Viewer, Consumer

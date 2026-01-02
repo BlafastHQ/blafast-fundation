@@ -79,7 +79,6 @@ class Permission extends SpatiePermission
      * Scope a query to organization-specific permissions.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<Permission>  $query
-     * @param  string  $organizationId
      * @return \Illuminate\Database\Eloquent\Builder<Permission>
      */
     public function scopeForOrganization(\Illuminate\Database\Eloquent\Builder $query, string $organizationId): \Illuminate\Database\Eloquent\Builder

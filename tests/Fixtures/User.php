@@ -34,10 +34,6 @@ class User extends Model implements AuthenticatableContract
 
     /**
      * Check if user has permission in specific organization context.
-     *
-     * @param  string  $permission
-     * @param  Organization|string|null  $organization
-     * @return bool
      */
     public function hasOrganizationPermission(string $permission, Organization|string|null $organization = null): bool
     {
@@ -53,10 +49,6 @@ class User extends Model implements AuthenticatableContract
 
     /**
      * Check if user has role in specific organization context.
-     *
-     * @param  string  $role
-     * @param  Organization|string|null  $organization
-     * @return bool
      */
     public function hasOrganizationRole(string $role, Organization|string|null $organization = null): bool
     {
@@ -72,8 +64,6 @@ class User extends Model implements AuthenticatableContract
 
     /**
      * Check if user is a Superadmin.
-     *
-     * @return bool
      */
     public function isSuperadmin(): bool
     {
