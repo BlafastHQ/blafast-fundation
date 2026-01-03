@@ -89,6 +89,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register MetadataCacheService as a singleton
         $this->app->singleton(MetadataCacheService::class);
 
+        // Register MenuRegistry as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\MenuRegistry::class);
+
         // Register QueryBuilderService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\QueryBuilderService::class);
 
