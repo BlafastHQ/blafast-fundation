@@ -5,13 +5,12 @@ declare(strict_types=1);
 use Blafast\Foundation\Database\Seeders\PermissionSeeder;
 use Blafast\Foundation\Database\Seeders\RoleSeeder;
 use Blafast\Foundation\Models\Organization;
-use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+
 use function Pest\Laravel\actingAs;
-use function Pest\Laravel\getJson;
 
 uses(RefreshDatabase::class);
 

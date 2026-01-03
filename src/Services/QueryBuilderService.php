@@ -117,7 +117,7 @@ class QueryBuilderService
 
             // Date fields use custom date range filter
             str_starts_with($type, 'date'),
-            str_starts_with($type, 'datetime') => AllowedFilter::custom($name, new DateRangeFilter()),
+            str_starts_with($type, 'datetime') => AllowedFilter::custom($name, new DateRangeFilter),
 
             // Relation fields - filter by related model's field
             str_starts_with($type, 'relation') => $this->createRelationFilter($field),
