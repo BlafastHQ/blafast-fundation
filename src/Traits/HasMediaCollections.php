@@ -75,8 +75,6 @@ trait HasMediaCollections
 
     /**
      * Register media conversions based on apiStructure().
-     *
-     * @param  Media|null  $media
      */
     public function registerMediaConversions(?Media $media = null): void
     {

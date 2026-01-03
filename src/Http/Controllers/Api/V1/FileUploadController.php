@@ -35,11 +35,9 @@ class FileUploadController extends Controller
      *
      * POST /api/v1/{model-slug}/{id}/files/{collection}
      *
-     * @param  FileUploadRequest  $request
      * @param  string  $modelSlug  Model slug (e.g., 'product')
      * @param  string  $id  Model ID
      * @param  string  $collection  Collection name (e.g., 'images')
-     * @return JsonResponse
      */
     public function store(
         FileUploadRequest $request,
@@ -77,12 +75,10 @@ class FileUploadController extends Controller
      *
      * DELETE /api/v1/{model-slug}/{id}/files/{collection}/{fileId}
      *
-     * @param  Request  $request
      * @param  string  $modelSlug  Model slug (e.g., 'product')
      * @param  string  $id  Model ID
      * @param  string  $collection  Collection name (e.g., 'images')
      * @param  string  $fileId  File UUID
-     * @return JsonResponse
      */
     public function destroy(
         Request $request,
@@ -114,7 +110,6 @@ class FileUploadController extends Controller
      * Validate that a collection exists in the model's API structure.
      *
      * @param  class-string<HasApiStructure>  $modelClass
-     * @param  string  $collection
      *
      * @throws NotFoundHttpException
      */
