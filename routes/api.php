@@ -7,6 +7,7 @@ use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
 use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
 use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
+use Blafast\Foundation\Http\Controllers\Api\V1\NotificationController;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
@@ -61,6 +62,15 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->prefix('activities')->name('activities.')->group(function () {
         Route::get('/', [ActivityLogController::class, 'index'])->name('index');
         Route::get('{id}', [ActivityLogController::class, 'show'])->name('show');
+    });
+
+    // Notification endpoints - requires authentication
+    Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::get('{id}', [NotificationController::class, 'show'])->name('show');
+        Route::post('{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
     });
 
     // File upload and management routes - requires authentication

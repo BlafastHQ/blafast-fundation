@@ -57,6 +57,7 @@ class BlafastServiceProvider extends PackageServiceProvider
                 'create_permission_tables',
                 'create_media_table',
                 'create_activity_log_table',
+                'create_notifications_table',
             ])
             ->runsMigrations()
             ->hasCommands([
