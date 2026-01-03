@@ -52,7 +52,7 @@ class JobFailedNotification extends BlaFastNotification
             ->line('A queued job has failed after maximum retry attempts.')
             ->line("**Job:** {$this->jobClass}")
             ->line("**Error:** {$errorPreview}")
-            ->line("**Organization:** " . ($this->jobOrganizationId ?? 'Global'))
+            ->line('**Organization:** '.($this->jobOrganizationId ?? 'Global'))
             ->line('Please investigate the failed job and take appropriate action.')
             ->action('View Failed Jobs', url('/admin/failed-jobs'));
     }
