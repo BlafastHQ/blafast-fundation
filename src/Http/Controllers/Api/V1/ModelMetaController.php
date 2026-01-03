@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Http\Controllers\Api\V1;
 
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Http\Resources\ModelMetaResource;
+use Blafast\Foundation\Services\MetadataCacheService;
 use Blafast\Foundation\Services\ModelMetaService;
 use Blafast\Foundation\Services\ModelRegistry;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -26,6 +27,7 @@ class ModelMetaController extends Controller
     public function __construct(
         private ModelRegistry $registry,
         private ModelMetaService $metaService,
+        private MetadataCacheService $cache,
     ) {}
 
     /**
@@ -48,9 +50,15 @@ class ModelMetaController extends Controller
             $this->authorize('viewAny', $modelClass);
         }
 
-        $meta = $this->metaService->compile(
-            $modelClass,
-            $request->user()
+        // Cache the metadata response
+        // Cache key includes user ID to handle permission-based filtering
+        $userId = $request->user()?->getAuthIdentifier() ?? 'guest';
+        $cacheKey = "model-meta:{$modelSlug}:user:{$userId}";
+
+        $meta = $this->cache->remember(
+            $cacheKey,
+            [$modelSlug, 'model-meta'],
+            fn () => $this->metaService->compile($modelClass, $request->user())
         );
 
         return response()->json([

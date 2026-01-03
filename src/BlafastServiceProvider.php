@@ -5,20 +5,25 @@ declare(strict_types=1);
 namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
+use Blafast\Foundation\Commands\MetadataCacheCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
+use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnModelUpdate;
+use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Policies\OrganizationPolicy;
 use Blafast\Foundation\Providers\RateLimitServiceProvider;
 use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
+use Blafast\Foundation\Services\MetadataCacheService;
 use Blafast\Foundation\Services\OrganizationContext;
 use Blafast\Foundation\Services\PaginationService;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -50,7 +55,10 @@ class BlafastServiceProvider extends PackageServiceProvider
                 'create_media_table',
             ])
             ->runsMigrations()
-            ->hasCommand(BlafastCommand::class);
+            ->hasCommands([
+                BlafastCommand::class,
+                MetadataCacheCommand::class,
+            ]);
     }
 
     /**
@@ -77,6 +85,9 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register ModelMetaService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\ModelMetaService::class);
+
+        // Register MetadataCacheService as a singleton
+        $this->app->singleton(MetadataCacheService::class);
 
         // Register QueryBuilderService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\QueryBuilderService::class);
@@ -134,6 +145,9 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         Relation::enforceMorphMap($morphMap);
 
+        // Register cache invalidation event listeners
+        $this->registerCacheInvalidationListeners();
+
         // Register publishable resources
         if ($this->app->runningInConsole()) {
             // Publish configuration
@@ -179,5 +193,25 @@ class BlafastServiceProvider extends PackageServiceProvider
 
             return $handler;
         });
+    }
+
+    /**
+     * Register cache invalidation event listeners.
+     */
+    protected function registerCacheInvalidationListeners(): void
+    {
+        // Listen to Eloquent model events for cache invalidation
+        Event::listen('eloquent.updated:*', InvalidateMetadataCacheOnModelUpdate::class);
+        Event::listen('eloquent.created:*', InvalidateMetadataCacheOnModelUpdate::class);
+        Event::listen('eloquent.deleted:*', InvalidateMetadataCacheOnModelUpdate::class);
+
+        // Listen to Spatie permission package events for cache invalidation
+        // These events are fired when roles/permissions are assigned to users
+        if (class_exists(\Spatie\Permission\PermissionRegistrar::class)) {
+            Event::listen('permission.attached', InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen('permission.detached', InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen('role.attached', InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen('role.detached', InvalidateMetadataCacheOnPermissionChange::class);
+        }
     }
 }

@@ -136,13 +136,13 @@ return [
         'enabled' => env('BLAFAST_CACHE_ENABLED', true),
 
         // Default TTL for metadata responses (in seconds)
-        'metadata_ttl' => 600, // 10 minutes
+        'metadata_ttl' => env('BLAFAST_CACHE_METADATA_TTL', 600), // 10 minutes
 
         // Menu cache TTL (in seconds)
-        'menu_ttl' => 600, // 10 minutes
+        'menu_ttl' => env('BLAFAST_CACHE_MENU_TTL', 600), // 10 minutes
 
         // Settings cache TTL (in seconds)
-        'settings_ttl' => 600, // 10 minutes
+        'settings_ttl' => env('BLAFAST_CACHE_SETTINGS_TTL', 600), // 10 minutes
 
         // Cache driver (null = use default)
         'driver' => env('BLAFAST_CACHE_DRIVER', null),
@@ -152,6 +152,9 @@ return [
 
         // Enable cache tagging (requires Redis or Memcached)
         'tagging' => env('BLAFAST_CACHE_TAGGING', false),
+
+        // Enable cache monitoring (fires events on cache misses)
+        'monitoring_enabled' => env('BLAFAST_CACHE_MONITORING', false),
     ],
 
     /*

@@ -82,6 +82,22 @@ class ModelRegistry
     }
 
     /**
+     * Get the slug for a given model class.
+     *
+     * @param  class-string  $modelClass
+     */
+    public function getSlug(string $modelClass): ?string
+    {
+        foreach ($this->models as $slug => $class) {
+            if ($class === $modelClass) {
+                return $slug;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Resolve a model class by slug, throwing an exception if not found.
      *
      * @return class-string
