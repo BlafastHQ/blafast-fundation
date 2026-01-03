@@ -80,6 +80,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register QueryBuilderService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\QueryBuilderService::class);
 
+        // Register FileService as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\FileService::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }

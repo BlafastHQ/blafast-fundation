@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Http\Controllers\Api\V1;
 
 use Blafast\Foundation\Contracts\HasApiStructure;
+use Blafast\Foundation\Services\FileService;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Services\PaginationService;
 use Blafast\Foundation\Services\QueryBuilderService;
@@ -28,6 +29,7 @@ class DynamicResourceController extends Controller
         protected ModelRegistry $registry,
         protected PaginationService $pagination,
         protected QueryBuilderService $queryBuilder,
+        protected FileService $fileService,
     ) {}
 
     /**
@@ -66,7 +68,6 @@ class DynamicResourceController extends Controller
         $query = $this->queryBuilder->buildQuery($modelClass, $request);
 
         $paginator = $this->pagination->paginate(
-            /** @phpstan-ignore argument.type */
             $query,
             $request,
             /** @phpstan-ignore staticMethod.notFound */
@@ -76,7 +77,6 @@ class DynamicResourceController extends Controller
         return response()->json(
             $this->pagination->formatResponse(
                 $paginator,
-                /** @phpstan-ignore argument.type */
                 fn ($model) => $this->transformModel($model, $modelClass)
             )
         );
@@ -88,9 +88,11 @@ class DynamicResourceController extends Controller
     public function show(Request $request, string $id): JsonResponse
     {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure> $modelClass */
+        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
-        $model = $this->findModel($modelClass, $id);
+
+        // Apply includes if requested
+        $model = $this->findModel($modelClass, $id, $request);
 
         $this->authorize('view', $model);
 
@@ -108,11 +110,14 @@ class DynamicResourceController extends Controller
         string $collection
     ): JsonResponse {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure> $modelClass */
+        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
         $model = $this->findModel($modelClass, $id);
 
         $this->authorize('view', $model);
+
+        // Validate collection exists in API structure
+        $this->validateCollection($modelClass, $collection);
 
         // Check if model uses HasMedia trait
         if (! method_exists($model, 'getMedia')) {
@@ -128,19 +133,11 @@ class DynamicResourceController extends Controller
         $media = $model->getMedia($collection);
 
         return response()->json([
-            'data' => $media->map(function ($mediaItem) {
-                return [
-                    'type' => 'media',
-                    'id' => $mediaItem->uuid,
-                    'attributes' => [
-                        'name' => $mediaItem->name,
-                        'file_name' => $mediaItem->file_name,
-                        'mime_type' => $mediaItem->mime_type,
-                        'size' => $mediaItem->size,
-                        'url' => $mediaItem->getUrl(),
-                    ],
-                ];
-            })->values()->all(),
+            'data' => $media->map(fn ($mediaItem) => $this->fileService->transform($mediaItem))->values()->all(),
+            'meta' => [
+                'collection' => $collection,
+                'total' => $media->count(),
+            ],
         ]);
     }
 
@@ -154,11 +151,14 @@ class DynamicResourceController extends Controller
         string $fileId
     ): JsonResponse {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure> $modelClass */
+        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
         $model = $this->findModel($modelClass, $id);
 
         $this->authorize('view', $model);
+
+        // Validate collection exists in API structure
+        $this->validateCollection($modelClass, $collection);
 
         // Check if model uses HasMedia trait
         if (! method_exists($model, 'getMedia')) {
@@ -184,28 +184,35 @@ class DynamicResourceController extends Controller
         }
 
         return response()->json([
-            'data' => [
-                'type' => 'media',
-                'id' => $mediaItem->uuid,
-                'attributes' => [
-                    'name' => $mediaItem->name,
-                    'file_name' => $mediaItem->file_name,
-                    'mime_type' => $mediaItem->mime_type,
-                    'size' => $mediaItem->size,
-                    'url' => $mediaItem->getUrl(),
-                    'conversions' => $mediaItem->generated_conversions ?? [],
-                ],
-            ],
+            'data' => $this->fileService->transform($mediaItem, detailed: true),
         ]);
     }
 
     /**
-     * Find a model by ID.
+     * Find a model by ID with optional includes.
+     *
+     * @param  class-string<HasApiStructure&Model>  $modelClass
      */
-    protected function findModel(string $modelClass, string $id): Model
+    protected function findModel(string $modelClass, string $id, ?Request $request = null): Model
     {
         /** @var class-string<Model> $modelClass */
-        return $modelClass::findOrFail($id);
+        $query = $modelClass::query();
+
+        // Apply includes if requested
+        if ($request !== null) {
+            $includes = $request->input('include', '');
+            if ($includes !== '' && $includes !== null) {
+                /** @phpstan-ignore staticMethod.notFound */
+                $allowed = $modelClass::getApiIncludes();
+                $requested = explode(',', (string) $includes);
+                $valid = array_intersect($requested, $allowed);
+                if (! empty($valid)) {
+                    $query->with($valid);
+                }
+            }
+        }
+
+        return $query->findOrFail($id);
     }
 
     /**
@@ -281,5 +288,25 @@ class DynamicResourceController extends Controller
             'search' => $structure['search'] ?? null,
             'pagination' => $structure['pagination'] ?? null,
         ];
+    }
+
+    /**
+     * Validate that a collection exists in the model's API structure.
+     *
+     * @param  class-string<HasApiStructure>  $modelClass
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    protected function validateCollection(string $modelClass, string $collection): void
+    {
+        /** @phpstan-ignore staticMethod.notFound */
+        $structure = $modelClass::getApiStructure();
+        $collections = $structure['media_collections'] ?? [];
+
+        if (! isset($collections[$collection])) {
+            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException(
+                "Collection '{$collection}' not found for this resource."
+            );
+        }
     }
 }
