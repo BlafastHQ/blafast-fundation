@@ -170,7 +170,7 @@ return [
         'connection' => env('BLAFAST_QUEUE_CONNECTION', 'database'),
 
         // Queue names for different job types
-        'queues' => [
+        'names' => [
             'default' => 'default',
             'notifications' => 'notifications',
             'media' => 'media',
@@ -180,8 +180,22 @@ return [
             'deferred_low' => 'deferred-low',
         ],
 
-        // Maximum retry attempts for failed jobs
-        'max_attempts' => 3,
+        // Failed job configuration
+        'failed' => [
+            'notify_superadmins' => env('BLAFAST_QUEUE_NOTIFY_SUPERADMINS', true),
+            'notify_after_attempts' => 3,
+        ],
+
+        // Timeout configuration for different queue types (in seconds)
+        'timeouts' => [
+            'default' => 60,
+            'notifications' => 60,
+            'media' => 300,
+            'exports' => 600,
+            'deferred' => 300,
+            'deferred_high' => 300,
+            'deferred_low' => 300,
+        ],
     ],
 
     /*

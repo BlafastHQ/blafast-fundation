@@ -7,13 +7,17 @@ namespace Blafast\Foundation;
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Commands\CleanupActivityLogCommand;
 use Blafast\Foundation\Commands\MetadataCacheCommand;
+use Blafast\Foundation\Commands\QueueStatusCommand;
+use Blafast\Foundation\Commands\RetryFailedJobsCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
+use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnModelUpdate;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
+use Blafast\Foundation\Listeners\NotifySuperadminsOnJobFailure;
 use Blafast\Foundation\Models\Activity;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Policies\ActivityPolicy;
@@ -42,7 +46,7 @@ class BlafastServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('blafast-fundation')
-            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library', 'activitylog'])
+            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library', 'activitylog', 'queue'])
             ->hasViews()
             ->hasRoute('api')
             ->hasMigrations([
@@ -58,12 +62,15 @@ class BlafastServiceProvider extends PackageServiceProvider
                 'create_media_table',
                 'create_activity_log_table',
                 'create_notifications_table',
+                'create_jobs_table',
             ])
             ->runsMigrations()
             ->hasCommands([
                 BlafastCommand::class,
                 MetadataCacheCommand::class,
                 CleanupActivityLogCommand::class,
+                QueueStatusCommand::class,
+                RetryFailedJobsCommand::class,
             ]);
     }
 
@@ -161,6 +168,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register cache invalidation event listeners
         $this->registerCacheInvalidationListeners();
 
+        // Register queue event listeners
+        $this->registerQueueEventListeners();
+
         // Register publishable resources
         if ($this->app->runningInConsole()) {
             // Publish configuration
@@ -226,5 +236,14 @@ class BlafastServiceProvider extends PackageServiceProvider
             Event::listen('role.attached', InvalidateMetadataCacheOnPermissionChange::class);
             Event::listen('role.detached', InvalidateMetadataCacheOnPermissionChange::class);
         }
+    }
+
+    /**
+     * Register queue event listeners.
+     */
+    protected function registerQueueEventListeners(): void
+    {
+        // Listen to JobFailed event to notify superadmins
+        Event::listen(JobFailed::class, NotifySuperadminsOnJobFailure::class);
     }
 }
