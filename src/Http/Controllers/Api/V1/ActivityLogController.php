@@ -21,6 +21,7 @@ use Illuminate\Routing\Controller;
 class ActivityLogController extends Controller
 {
     use AuthorizesRequests;
+
     /**
      * Create a new controller instance.
      */
