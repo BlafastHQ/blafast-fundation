@@ -41,7 +41,7 @@ class DynamicRouteServiceProvider extends ServiceProvider
 
             // Register meta endpoint first (outside prefix for clean URL)
             /** @phpstan-ignore method.notFound */
-            $this->get("meta/{slug}", [$controller, 'meta'])
+            $this->get('meta/{slug}', [$controller, 'meta'])
                 ->where('slug', $slug)
                 ->name("{$slug}.meta");
 

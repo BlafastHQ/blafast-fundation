@@ -7,7 +7,6 @@ namespace Blafast\Foundation\Http\Controllers\Api\V1;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Services\PaginationService;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -119,7 +118,7 @@ class DynamicResourceController extends Controller
                 'errors' => [[
                     'status' => '404',
                     'title' => 'Collection Not Found',
-                    'detail' => "Model does not support media collections",
+                    'detail' => 'Model does not support media collections',
                 ]],
             ], 404);
         }
@@ -165,7 +164,7 @@ class DynamicResourceController extends Controller
                 'errors' => [[
                     'status' => '404',
                     'title' => 'Collection Not Found',
-                    'detail' => "Model does not support media collections",
+                    'detail' => 'Model does not support media collections',
                 ]],
             ], 404);
         }
@@ -177,7 +176,7 @@ class DynamicResourceController extends Controller
                 'errors' => [[
                     'status' => '404',
                     'title' => 'File Not Found',
-                    'detail' => "File not found in collection",
+                    'detail' => 'File not found in collection',
                 ]],
             ], 404);
         }
@@ -201,7 +200,7 @@ class DynamicResourceController extends Controller
     /**
      * Build a query with filters, sorts, and includes.
      *
-     * @param class-string<HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass
+     * @param  class-string<HasApiStructure&\Illuminate\Database\Eloquent\Model>  $modelClass
      * @return \Spatie\QueryBuilder\QueryBuilder<\Illuminate\Database\Eloquent\Model>
      */
     protected function buildQuery(string $modelClass, Request $request): \Spatie\QueryBuilder\QueryBuilder
@@ -231,8 +230,8 @@ class DynamicResourceController extends Controller
     /**
      * Apply search to the query.
      *
-     * @param \Spatie\QueryBuilder\QueryBuilder<\Illuminate\Database\Eloquent\Model> $query
-     * @param class-string<HasApiStructure> $modelClass
+     * @param  \Spatie\QueryBuilder\QueryBuilder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  class-string<HasApiStructure>  $modelClass
      */
     protected function applySearch(\Spatie\QueryBuilder\QueryBuilder $query, string $search, string $modelClass): void
     {
@@ -270,7 +269,7 @@ class DynamicResourceController extends Controller
     /**
      * Transform a model to JSON:API format.
      *
-     * @param class-string<HasApiStructure> $modelClass
+     * @param  class-string<HasApiStructure>  $modelClass
      * @return array<string, mixed>
      */
     protected function transformModel(Model $model, string $modelClass): array
@@ -289,7 +288,7 @@ class DynamicResourceController extends Controller
     /**
      * Build attributes array from model based on structure.
      *
-     * @param array<string, mixed> $structure
+     * @param  array<string, mixed>  $structure
      * @return array<string, mixed>
      */
     protected function buildAttributes(Model $model, array $structure): array
@@ -316,7 +315,7 @@ class DynamicResourceController extends Controller
     /**
      * Build meta response for a resource.
      *
-     * @param array<string, mixed> $structure
+     * @param  array<string, mixed>  $structure
      * @return array<string, mixed>
      */
     protected function buildMetaResponse(string $slug, array $structure): array
