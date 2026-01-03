@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
+use Blafast\Foundation\Commands\CleanupActivityLogCommand;
 use Blafast\Foundation\Commands\MetadataCacheCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
@@ -13,7 +14,9 @@ use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnModelUpdate;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
+use Blafast\Foundation\Models\Activity;
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Policies\ActivityPolicy;
 use Blafast\Foundation\Policies\OrganizationPolicy;
 use Blafast\Foundation\Providers\RateLimitServiceProvider;
 use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
@@ -39,7 +42,7 @@ class BlafastServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('blafast-fundation')
-            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library'])
+            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library', 'activitylog'])
             ->hasViews()
             ->hasRoute('api')
             ->hasMigrations([
@@ -53,11 +56,13 @@ class BlafastServiceProvider extends PackageServiceProvider
                 'create_deferred_api_requests_table',
                 'create_permission_tables',
                 'create_media_table',
+                'create_activity_log_table',
             ])
             ->runsMigrations()
             ->hasCommands([
                 BlafastCommand::class,
                 MetadataCacheCommand::class,
+                CleanupActivityLogCommand::class,
             ]);
     }
 
@@ -127,6 +132,7 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register policies
         Gate::policy(Organization::class, OrganizationPolicy::class);
+        Gate::policy(Activity::class, ActivityPolicy::class);
 
         // Register JSON:API exception handler
         $this->registerExceptionHandler();

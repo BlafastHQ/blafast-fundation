@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Http\Controllers\Api\V1\ActivityLogController;
 use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
 use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
 use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
@@ -55,6 +56,12 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
     Route::get('user-menu', MenuController::class)
         ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
         ->name('user-menu');
+
+    // Activity log endpoints - requires authentication and permissions
+    Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->prefix('activities')->name('activities.')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'index'])->name('index');
+        Route::get('{id}', [ActivityLogController::class, 'show'])->name('show');
+    });
 
     // File upload and management routes - requires authentication
     Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->group(function () {
