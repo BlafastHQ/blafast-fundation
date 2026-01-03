@@ -57,8 +57,15 @@ class TestCase extends Orchestra
                 $table->uuid('id')->primary();
                 $table->string('name');
                 $table->string('slug')->unique();
+                $table->foreignUuid('address_id')->nullable();
+                $table->string('vat_number')->nullable();
+                $table->json('contact_details')->nullable();
+                $table->json('settings')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->string('peppol_id')->nullable();
                 $table->timestamps();
-                $table->softDeletes();
+                $table->index('is_active');
+                $table->index('slug');
             });
         }
 
@@ -175,8 +182,15 @@ class TestCase extends Orchestra
                 $table->uuid('id')->primary();
                 $table->string('name');
                 $table->string('slug')->unique();
+                $table->foreignUuid('address_id')->nullable();
+                $table->string('vat_number')->nullable();
+                $table->json('contact_details')->nullable();
+                $table->json('settings')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->string('peppol_id')->nullable();
                 $table->timestamps();
-                $table->softDeletes();
+                $table->index('is_active');
+                $table->index('slug');
             });
         }
 

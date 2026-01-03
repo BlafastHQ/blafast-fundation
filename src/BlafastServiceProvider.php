@@ -68,6 +68,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register PaginationService as a singleton
         $this->app->singleton(PaginationService::class);
 
+        // Register ModelRegistry as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\ModelRegistry::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }
@@ -88,6 +91,9 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register rate limiting
         $this->app->register(RateLimitServiceProvider::class);
+
+        // Register dynamic route macros
+        $this->app->register(\Blafast\Foundation\Providers\DynamicRouteServiceProvider::class);
 
         // Register JSON:API exception handler
         $this->registerExceptionHandler();
