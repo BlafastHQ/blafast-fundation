@@ -7,12 +7,12 @@ namespace Blafast\Foundation\Http\Controllers\Api\V1;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Services\PaginationService;
+use Blafast\Foundation\Services\QueryBuilderService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Spatie\QueryBuilder\QueryBuilder;
 
 /**
  * Base controller for dynamically handling resource routes.
@@ -27,6 +27,7 @@ class DynamicResourceController extends Controller
     public function __construct(
         protected ModelRegistry $registry,
         protected PaginationService $pagination,
+        protected QueryBuilderService $queryBuilder,
     ) {}
 
     /**
@@ -60,8 +61,9 @@ class DynamicResourceController extends Controller
 
         $this->authorize('viewAny', $modelClass);
 
+        // Build query with filters, sorts, includes, and search
         /** @phpstan-ignore argument.type */
-        $query = $this->buildQuery($modelClass, $request);
+        $query = $this->queryBuilder->buildQuery($modelClass, $request);
 
         $paginator = $this->pagination->paginate(
             /** @phpstan-ignore argument.type */
@@ -195,66 +197,6 @@ class DynamicResourceController extends Controller
                 ],
             ],
         ]);
-    }
-
-    /**
-     * Build a query with filters, sorts, and includes.
-     *
-     * @param  class-string<HasApiStructure&\Illuminate\Database\Eloquent\Model>  $modelClass
-     * @return \Spatie\QueryBuilder\QueryBuilder<\Illuminate\Database\Eloquent\Model>
-     */
-    protected function buildQuery(string $modelClass, Request $request): \Spatie\QueryBuilder\QueryBuilder
-    {
-        /** @phpstan-ignore staticMethod.notFound */
-        $structure = $modelClass::getApiStructure();
-
-        /** @phpstan-ignore argument.type, staticMethod.notFound */
-        $query = QueryBuilder::for($modelClass)
-            /** @phpstan-ignore staticMethod.notFound */
-            ->allowedFilters($modelClass::getApiFilters())
-            /** @phpstan-ignore staticMethod.notFound */
-            ->allowedSorts($modelClass::getApiSorts())
-            /** @phpstan-ignore staticMethod.notFound */
-            ->allowedIncludes($modelClass::getApiIncludes());
-
-        // Apply search if provided
-        if ($request->has('search') && $request->input('search') !== '') {
-            /** @phpstan-ignore argument.type */
-            $this->applySearch($query, (string) $request->input('search'), $modelClass);
-        }
-
-        /** @phpstan-ignore return.type */
-        return $query;
-    }
-
-    /**
-     * Apply search to the query.
-     *
-     * @param  \Spatie\QueryBuilder\QueryBuilder<\Illuminate\Database\Eloquent\Model>  $query
-     * @param  class-string<HasApiStructure>  $modelClass
-     */
-    protected function applySearch(\Spatie\QueryBuilder\QueryBuilder $query, string $search, string $modelClass): void
-    {
-        /** @phpstan-ignore staticMethod.notFound */
-        $fields = $modelClass::getApiSearchableFields();
-        /** @phpstan-ignore staticMethod.notFound */
-        $strategy = $modelClass::getApiSearchStrategy();
-
-        if (empty($fields)) {
-            return;
-        }
-
-        if ($strategy === 'full_text') {
-            // PostgreSQL full-text search
-            $query->whereFullText($fields, $search);
-        } else {
-            // ILIKE/LIKE search (works on both PostgreSQL and MySQL)
-            $query->where(function ($q) use ($fields, $search) {
-                foreach ($fields as $field) {
-                    $q->orWhere($field, 'ILIKE', "%{$search}%");
-                }
-            });
-        }
     }
 
     /**

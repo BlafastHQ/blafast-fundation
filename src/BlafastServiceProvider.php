@@ -10,6 +10,8 @@ use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
+use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Policies\OrganizationPolicy;
 use Blafast\Foundation\Providers\RateLimitServiceProvider;
 use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
 use Blafast\Foundation\Services\OrganizationContext;
@@ -17,6 +19,7 @@ use Blafast\Foundation\Services\PaginationService;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -74,6 +77,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register ModelMetaService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\ModelMetaService::class);
 
+        // Register QueryBuilderService as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\QueryBuilderService::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }
@@ -97,6 +103,9 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register dynamic route macros
         $this->app->register(\Blafast\Foundation\Providers\DynamicRouteServiceProvider::class);
+
+        // Register policies
+        Gate::policy(Organization::class, OrganizationPolicy::class);
 
         // Register JSON:API exception handler
         $this->registerExceptionHandler();
