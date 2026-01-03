@@ -265,6 +265,28 @@ return [
 
         // Queue media conversions
         'queue_conversions' => true,
+
+        // Image conversion presets
+        'conversions' => [
+            'thumb' => [
+                'width' => 150,
+                'height' => 150,
+                'quality' => 80,
+                'format' => 'webp',
+            ],
+            'preview' => [
+                'width' => 800,
+                'height' => 600,
+                'quality' => 85,
+                'format' => 'webp',
+            ],
+            'large' => [
+                'width' => 1920,
+                'height' => 1080,
+                'quality' => 90,
+                'format' => 'webp',
+            ],
+        ],
     ],
 
     /*

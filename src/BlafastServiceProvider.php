@@ -34,7 +34,7 @@ class BlafastServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('blafast-fundation')
-            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi'])
+            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library'])
             ->hasViews()
             ->hasRoute('api')
             ->hasMigrations([
@@ -47,6 +47,7 @@ class BlafastServiceProvider extends PackageServiceProvider
                 'create_deferred_endpoint_configs_table',
                 'create_deferred_api_requests_table',
                 'create_permission_tables',
+                'create_media_table',
             ])
             ->runsMigrations()
             ->hasCommand(BlafastCommand::class);
