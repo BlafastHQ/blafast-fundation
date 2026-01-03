@@ -130,9 +130,10 @@ test('dynamic resources macro can register multiple models', function () {
             ]);
         });
 
-    // Verify routes work by accessing the meta endpoint
-    $response = $this->getJson('/api/v1/test/meta/organization');
-    $response->assertStatus(200);
+    // Verify routes work by accessing the index endpoint
+    // Note: Meta endpoint is now global at /api/v1/meta/{slug}
+    $response = $this->getJson('/api/v1/test/organization');
+    $response->assertStatus(403); // Unauthorized without auth
 });
 
 test('unknown model slug returns 404', function () {

@@ -71,6 +71,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register ModelRegistry as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\ModelRegistry::class);
 
+        // Register ModelMetaService as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\ModelMetaService::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
+use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
@@ -42,6 +43,11 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
                 Route::delete('tokens/{tokenId}', [AuthController::class, 'revokeToken'])->name('tokens.revoke');
             });
         });
+
+    // Model metadata endpoint - public but requires viewAny permission
+    Route::get('meta/{modelSlug}', ModelMetaController::class)
+        ->middleware('throttle:api')
+        ->name('meta.show');
 
     // JSON:API resource routes - with API rate limiting
     JsonApiRoute::server('v1')

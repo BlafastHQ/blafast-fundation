@@ -46,6 +46,7 @@ class DynamicRouteServiceProvider extends ServiceProvider
                 ->name("{$slug}.meta");
 
             // Register resource routes using array-based group syntax
+            // Note: Meta endpoint is handled globally by ModelMetaController
             /** @phpstan-ignore method.notFound */
             $this->group([
                 'prefix' => $slug,
