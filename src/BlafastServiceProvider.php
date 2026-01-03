@@ -92,6 +92,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register MenuRegistry as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\MenuRegistry::class);
 
+        // Register MenuService as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\MenuService::class);
+
         // Register QueryBuilderService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\QueryBuilderService::class);
 

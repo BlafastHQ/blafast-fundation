@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
 use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
+use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
@@ -49,6 +50,11 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
     Route::get('meta/{modelSlug}', ModelMetaController::class)
         ->middleware('throttle:api')
         ->name('meta.show');
+
+    // User menu endpoint - requires authentication
+    Route::get('user-menu', MenuController::class)
+        ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
+        ->name('user-menu');
 
     // File upload and management routes - requires authentication
     Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->group(function () {
