@@ -42,7 +42,6 @@ class MetadataCacheService
      * @param  array<int, string>  $tags  Cache tags for invalidation
      * @param  callable  $callback  Function to compute value on cache miss
      * @param  int|null  $ttl  Time to live in seconds (null = use default)
-     * @return mixed
      */
     public function remember(
         string $key,
@@ -175,7 +174,7 @@ class MetadataCacheService
      * Build cache key with prefix and organization scope.
      *
      * @param  string  $key  Base cache key
-     * @return string  Scoped cache key
+     * @return string Scoped cache key
      */
     protected function buildKey(string $key): string
     {
@@ -188,7 +187,7 @@ class MetadataCacheService
      * Build tags with organization context and base tag.
      *
      * @param  array<int, string>  $tags  User-provided tags
-     * @return array<int, string>  Tags with context
+     * @return array<int, string> Tags with context
      */
     protected function buildTags(array $tags): array
     {
@@ -204,7 +203,7 @@ class MetadataCacheService
     /**
      * Check if the current cache driver supports tagging.
      *
-     * @return bool  True if tagging is supported
+     * @return bool True if tagging is supported
      */
     protected function supportsTagging(): bool
     {
@@ -214,7 +213,7 @@ class MetadataCacheService
     /**
      * Get TTL from configuration.
      *
-     * @return int  TTL in seconds
+     * @return int TTL in seconds
      */
     protected function getTtl(): int
     {

@@ -51,7 +51,6 @@ class InvalidateMetadataCacheOnPermissionChange
      * Extract user from event.
      *
      * @param  object  $event  Event object
-     * @return Authenticatable|null
      */
     protected function extractUser(object $event): ?Authenticatable
     {

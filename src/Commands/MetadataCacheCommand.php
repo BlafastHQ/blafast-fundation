@@ -92,7 +92,7 @@ class MetadataCacheCommand extends Command
 
             $bar->finish();
             $this->newLine();
-            $this->info("✓ Warmed cache for all models");
+            $this->info('✓ Warmed cache for all models');
         }
 
         return Command::SUCCESS;

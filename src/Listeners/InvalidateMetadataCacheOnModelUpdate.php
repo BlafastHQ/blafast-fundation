@@ -53,7 +53,6 @@ class InvalidateMetadataCacheOnModelUpdate
      * Extract model from various event types.
      *
      * @param  object  $event  Event object
-     * @return Model|null
      */
     protected function extractModel(object $event): ?Model
     {
