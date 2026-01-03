@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
-use Blafast\Foundation\Services\OrganizationContext;
 use Blafast\Foundation\Scopes\DatabaseNotificationOrganizationScope;
+use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\DatabaseNotification as BaseDatabaseNotification;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Http\Controllers\Api\V1;
 
 use Blafast\Foundation\Http\Resources\NotificationResource;
-use Blafast\Foundation\Models\DatabaseNotification;
 use Blafast\Foundation\Services\PaginationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -42,7 +42,7 @@ class PasswordResetNotification extends BlaFastNotification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $resetUrl = url(config('app.frontend_url') . '/reset-password?' . http_build_query([
+        $resetUrl = url(config('app.frontend_url').'/reset-password?'.http_build_query([
             'token' => $this->token,
             'email' => $this->email,
         ]));
