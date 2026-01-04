@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Database\Factories;
 
 use Blafast\Foundation\Models\Address;
 use Blafast\Foundation\Models\Country;
+use Blafast\Foundation\Tests\Fixtures\AddressableModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -28,6 +29,8 @@ class AddressFactory extends Factory
     public function definition(): array
     {
         return [
+            'addressable_type' => AddressableModel::class,
+            'addressable_id' => AddressableModel::factory(),
             'type' => fake()->randomElement([
                 Address::TYPE_BILLING,
                 Address::TYPE_SHIPPING,

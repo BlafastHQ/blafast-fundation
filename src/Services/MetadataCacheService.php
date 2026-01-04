@@ -49,6 +49,11 @@ class MetadataCacheService
         callable $callback,
         ?int $ttl = null
     ): mixed {
+        // Skip caching if disabled in config
+        if (! config('blafast-fundation.cache.enabled', true)) {
+            return $callback();
+        }
+
         $cacheKey = $this->buildKey($key);
         $cacheTags = $this->buildTags($tags);
         $ttl = $ttl ?? $this->getTtl();

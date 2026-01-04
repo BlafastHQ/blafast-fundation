@@ -175,12 +175,13 @@ describe('Deferred Request Middleware', function () {
         $org = Organization::factory()->create();
         actingAsOrgAdmin($org);
 
-        // Create endpoint config
-        DeferredEndpointConfig::factory()->create([
+        // Create endpoint config - ensure all values match
+        $config = DeferredEndpointConfig::factory()->create([
             'http_method' => 'GET',
             'endpoint_pattern' => 'api/v1/test/*',
             'force_deferred' => false,
             'is_active' => true,
+            'organization_id' => null, // Global config
         ]);
 
         $response = $this->withHeader('X-Blafast-Defer', 'true')
@@ -210,8 +211,8 @@ describe('Deferred Request Middleware', function () {
 
         $response = $this->getJson('/api/v1/test/endpoint');
 
-        // Should pass through normally (not deferred)
-        $response->assertStatus(404); // Route doesn't actually exist
+        // Should pass through normally (not deferred) and hit the test route
+        $response->assertStatus(200);
     });
 
     it('always defers request when force_deferred is true', function () {

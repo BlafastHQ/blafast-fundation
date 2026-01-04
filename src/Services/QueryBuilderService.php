@@ -31,7 +31,7 @@ class QueryBuilderService
         /** @phpstan-ignore staticMethod.notFound */
         $structure = $modelClass::getApiStructure();
 
-        $query = QueryBuilder::for($modelClass)
+        $query = QueryBuilder::for($modelClass, $request)
             ->allowedFilters($this->buildFilters($modelClass, $structure))
             ->allowedSorts($this->buildSorts($structure))
             /** @phpstan-ignore staticMethod.notFound */

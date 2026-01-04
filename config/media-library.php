@@ -47,7 +47,7 @@ return [
     /*
      * The class that contains the strategy for determining a media file's path.
      */
-    'path_generator' => null,
+    'path_generator' => Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator::class,
 
     /*
      * Here you can specify which path generator should be used for the given class.
@@ -235,4 +235,9 @@ return [
      * This is the class that is responsible for naming generated files.
      */
     'conversion_file_namer' => Spatie\MediaLibrary\Conversions\DefaultConversionFileNamer::class,
+
+    /*
+     * This is the class that is responsible for naming the original files.
+     */
+    'file_namer' => Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer::class,
 ];

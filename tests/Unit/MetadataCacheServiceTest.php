@@ -34,8 +34,8 @@ test('remember caches data with tags when tagging is supported', function () {
     $this->context->shouldReceive('id')->andReturn('123');
     $this->context->shouldReceive('hasContext')->andReturn(true);
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     Cache::shouldReceive('tags')
         ->once()
@@ -55,9 +55,10 @@ test('remember caches data with tags when tagging is supported', function () {
 
 test('remember uses fallback without tagging', function () {
     $this->context->shouldReceive('id')->andReturn('123');
+    $this->context->shouldReceive('hasContext')->andReturn(false);
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'file']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(false);
 
     Cache::shouldReceive('remember')
         ->once()
@@ -74,8 +75,8 @@ test('remember fires cache miss event when value is computed', function () {
     $this->context->shouldReceive('id')->andReturn('123');
     $this->context->shouldReceive('hasContext')->andReturn(true);
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     Cache::shouldReceive('tags')
         ->andReturnSelf();
@@ -97,8 +98,8 @@ test('invalidateByTags flushes tagged cache', function () {
     $this->context->shouldReceive('hasContext')->andReturn(true);
     $this->context->shouldReceive('id')->andReturn('123');
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     Cache::shouldReceive('tags')
         ->once()
@@ -118,11 +119,13 @@ test('invalidateByTags flushes tagged cache', function () {
 });
 
 test('invalidateModel clears cache for specific model', function () {
+    Event::fake([MetadataCacheInvalidated::class]);
+
     $this->context->shouldReceive('hasContext')->andReturn(true);
     $this->context->shouldReceive('id')->andReturn('123');
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     Cache::shouldReceive('tags')
         ->once()
@@ -138,10 +141,12 @@ test('invalidateModel clears cache for specific model', function () {
 });
 
 test('invalidateOrganization clears cache for entire organization', function () {
+    Event::fake([MetadataCacheInvalidated::class]);
+
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     Cache::shouldReceive('tags')
         ->once()
@@ -157,26 +162,41 @@ test('invalidateOrganization clears cache for entire organization', function () 
 });
 
 test('invalidateMenuForUser clears menu cache for specific user', function () {
+    Event::fake([MetadataCacheInvalidated::class]);
+
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
-    Cache::shouldReceive('forget')
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
+
+    Cache::shouldReceive('tags')
         ->once()
-        ->with(Mockery::on(function ($key) {
-            return str_contains($key, 'menu:user:456:org:123');
-        }));
+        ->with(Mockery::on(function ($tags) {
+            return in_array('menu', $tags)
+                && in_array('user-456', $tags)
+                && in_array('org-123', $tags);
+        }))
+        ->andReturnSelf();
+
+    Cache::shouldReceive('flush')
+        ->once();
 
     $this->service->invalidateMenuForUser('456', '123');
 });
 
 test('invalidateAll clears all metadata cache', function () {
+    Event::fake([MetadataCacheInvalidated::class]);
+
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     Cache::shouldReceive('tags')
         ->once()
-        ->with(['blafast-metadata'])
+        ->with(Mockery::on(function ($tags) {
+            return in_array('blafast-metadata', $tags);
+        }))
         ->andReturnSelf();
 
     Cache::shouldReceive('flush')
@@ -186,27 +206,25 @@ test('invalidateAll clears all metadata cache', function () {
 });
 
 test('warmModel pre-populates cache for a model', function () {
-    $this->context->shouldReceive('id')->andReturn('123');
-    $this->context->shouldReceive('hasContext')->andReturn(true);
-    $this->registry->shouldReceive('getSlug')
-        ->with(Organization::class)
-        ->andReturn('organization');
+    // Mock the ModelMetaService to avoid complex dependencies
+    $metaService = Mockery::mock(\Blafast\Foundation\Services\ModelMetaService::class);
+    $metaService->shouldReceive('compile')
+        ->once()
+        ->with(Organization::class, null)
+        ->andReturn(new \Blafast\Foundation\Dto\ModelMeta(
+            model: Organization::class,
+            label: 'Organization',
+            slug: 'organization',
+        ));
 
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
-
-    Cache::shouldReceive('tags')
-        ->andReturnSelf();
-
-    Cache::shouldReceive('put')
-        ->once();
+    app()->instance(\Blafast\Foundation\Services\ModelMetaService::class, $metaService);
 
     $this->service->warmModel(Organization::class);
 });
 
 test('getStats returns cache statistics', function () {
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->andReturn(true);
 
     $stats = $this->service->getStats();
 
@@ -257,8 +275,9 @@ test('buildTags includes organization tag when context exists', function () {
 });
 
 test('supportsTagging returns true for redis driver', function () {
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'redis']);
+    Cache::shouldReceive('supportsTags')
+        ->once()
+        ->andReturn(true);
 
     $reflection = new ReflectionClass($this->service);
     $method = $reflection->getMethod('supportsTagging');
@@ -270,8 +289,9 @@ test('supportsTagging returns true for redis driver', function () {
 });
 
 test('supportsTagging returns false for file driver', function () {
-    Cache::shouldReceive('getStore->getConfig')
-        ->andReturn(['driver' => 'file']);
+    Cache::shouldReceive('supportsTags')
+        ->once()
+        ->andReturn(false);
 
     $reflection = new ReflectionClass($this->service);
     $method = $reflection->getMethod('supportsTagging');

@@ -65,7 +65,9 @@ class DeferredRequestMiddleware
     protected function findMatchingConfig(Request $request): ?DeferredEndpointConfig
     {
         // Check database configs first
-        $dbConfig = DeferredEndpointConfig::query()
+        // Use withoutOrganizationScope() because we handle org filtering manually
+        // (configs can be global with null organization_id or specific to an org)
+        $dbConfig = DeferredEndpointConfig::withoutOrganizationScope()
             ->where('is_active', true)
             ->where('http_method', $request->method())
             ->where(function ($q) {

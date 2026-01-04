@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 require_once __DIR__.'/Helpers.php';
 
 uses(TestCase::class, RefreshDatabase::class)
-    ->in('Feature', 'Unit');
+    ->in('Feature', 'Unit', 'Traits', 'Models');
 
 // Global test helpers for authentication and organization context
 

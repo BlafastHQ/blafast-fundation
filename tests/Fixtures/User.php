@@ -27,6 +27,7 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     use HasUuids;
 
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',

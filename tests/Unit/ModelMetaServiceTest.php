@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Dto\ModelMeta;
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Services\ExecPermissionChecker;
 use Blafast\Foundation\Services\ModelMetaService;
 use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +13,10 @@ beforeEach(function () {
     $this->context = Mockery::mock(OrganizationContext::class);
     $this->context->shouldReceive('id')->andReturn(null);
 
-    $this->service = new ModelMetaService($this->context);
+    $this->permissionChecker = Mockery::mock(ExecPermissionChecker::class);
+    $this->permissionChecker->shouldReceive('getExecutableMethodsForModel')->andReturn([]);
+
+    $this->service = new ModelMetaService($this->context, $this->permissionChecker);
 });
 
 afterEach(function () {
@@ -96,7 +100,10 @@ test('compile uses organization context in cache key', function () {
     $contextWithOrg = Mockery::mock(OrganizationContext::class);
     $contextWithOrg->shouldReceive('id')->andReturn('123');
 
-    $service = new ModelMetaService($contextWithOrg);
+    $permissionChecker = Mockery::mock(ExecPermissionChecker::class);
+    $permissionChecker->shouldReceive('getExecutableMethodsForModel')->andReturn([]);
+
+    $service = new ModelMetaService($contextWithOrg, $permissionChecker);
 
     Cache::shouldReceive('tags')
         ->once()

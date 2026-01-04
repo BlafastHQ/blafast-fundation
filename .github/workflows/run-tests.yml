@@ -32,7 +32,25 @@ jobs:
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: blafast
+          POSTGRES_USER: blafast
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+
     steps:
+      - name: Verify pgsql service is healthy
+        run: |
+          nc -z localhost 5432
+          if [ $? -ne 0 ]; then
+            echo "PostgreSQL service is not healthy"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -58,3 +76,10 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/pest --ci
+        env:
+          DB_CONNECTION: pgsql
+          DB_PORT: ${{ job.services.postgres.ports[5432] }}
+          DB_DATABASE: blafast
+          DB_USERNAME: blafast
+          DB_PASSWORD: password
+          DB_HOST: localhost
