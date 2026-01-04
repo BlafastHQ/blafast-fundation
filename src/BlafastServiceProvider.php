@@ -6,12 +6,14 @@ namespace Blafast\Foundation;
 
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Commands\CleanupActivityLogCommand;
+use Blafast\Foundation\Commands\DeferredCleanupCommand;
 use Blafast\Foundation\Commands\MetadataCacheCommand;
 use Blafast\Foundation\Commands\ModulesDiscoverCommand;
 use Blafast\Foundation\Commands\ModulesListCommand;
 use Blafast\Foundation\Commands\PermissionsSyncCommand;
 use Blafast\Foundation\Commands\QueueStatusCommand;
 use Blafast\Foundation\Commands\RetryFailedJobsCommand;
+use Blafast\Foundation\Commands\SchedulerHealthCheckCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
@@ -80,6 +82,8 @@ class BlafastServiceProvider extends PackageServiceProvider
                 ModulesDiscoverCommand::class,
                 ModulesListCommand::class,
                 PermissionsSyncCommand::class,
+                DeferredCleanupCommand::class,
+                SchedulerHealthCheckCommand::class,
             ]);
     }
 
@@ -157,6 +161,9 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register dynamic route macros
         $this->app->register(\Blafast\Foundation\Providers\DynamicRouteServiceProvider::class);
+
+        // Register scheduled tasks
+        $this->app->register(\Blafast\Foundation\Console\ScheduleServiceProvider::class);
 
         // Register policies
         Gate::policy(Organization::class, OrganizationPolicy::class);

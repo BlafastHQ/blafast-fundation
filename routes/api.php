@@ -8,6 +8,7 @@ use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
 use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
 use Blafast\Foundation\Http\Controllers\Api\V1\NotificationController;
+use Blafast\Foundation\Http\Controllers\Api\V1\ScheduleController;
 use Blafast\Foundation\Http\Controllers\Api\V1\SettingsController;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
@@ -92,6 +93,11 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
         // Resolved settings (current context view)
         Route::get('resolved', [SettingsController::class, 'resolved'])->name('resolved');
     });
+
+    // Scheduler status endpoint - requires authentication (Superadmin only)
+    Route::get('scheduler/status', [ScheduleController::class, 'status'])
+        ->middleware(['auth:sanctum', 'throttle:api'])
+        ->name('scheduler.status');
 
     // File upload and management routes - requires authentication
     Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->group(function () {
