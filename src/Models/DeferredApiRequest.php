@@ -9,6 +9,7 @@ use Blafast\Foundation\Traits\BelongsToOrganization;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -43,6 +44,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class DeferredApiRequest extends Model
 {
+    use HasFactory;
     use BelongsToOrganization;
     use HasUuids;
 

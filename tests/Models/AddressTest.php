@@ -6,6 +6,9 @@ use Blafast\Foundation\Models\Address;
 use Blafast\Foundation\Models\Country;
 use Blafast\Foundation\Models\Currency;
 use Blafast\Foundation\Tests\Fixtures\AddressableModel;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create a currency and country for testing

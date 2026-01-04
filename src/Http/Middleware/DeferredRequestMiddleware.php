@@ -89,8 +89,8 @@ class DeferredRequestMiddleware
      */
     protected function matchesPattern(string $path, string $pattern): bool
     {
-        // Convert pattern to regex (simple version - can be enhanced)
-        $regex = str_replace(['*', '/'], ['[^/]+', '\/'], $pattern);
+        // Convert pattern to regex - * matches any characters (including /)
+        $regex = str_replace(['*', '/'], ['.*', '\/'], $pattern);
 
         return (bool) preg_match("/^{$regex}$/", $path);
     }
@@ -153,8 +153,8 @@ class DeferredRequestMiddleware
                     'expires_at' => $deferred->expires_at->toIso8601String(),
                 ],
                 'links' => [
-                    'self' => route('deferred.show', ['id' => $deferred->id]),
-                    'poll' => route('deferred.show', ['id' => $deferred->id]),
+                    'self' => route('api.v1.deferred.show', ['id' => $deferred->id]),
+                    'poll' => route('api.v1.deferred.show', ['id' => $deferred->id]),
                 ],
             ],
         ], 202);

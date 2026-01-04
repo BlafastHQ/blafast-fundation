@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('media', function (Blueprint $table) {
             $table->uuid('uuid')->primary();
-            $table->uuidMorphs('model');
+            $table->uuidMorphs('model'); // This already creates an index on model_type and model_uuid
             $table->foreignUuid('organization_id')->nullable()->constrained('organizations')->nullOnDelete();
             $table->string('collection_name');
             $table->string('name');
@@ -27,8 +27,6 @@ return new class extends Migration
             $table->json('responsive_images');
             $table->unsignedInteger('order_column')->nullable()->index();
             $table->timestamps();
-
-            $table->index(['model_type', 'model_id']);
         });
     }
 

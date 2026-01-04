@@ -63,7 +63,8 @@ class DeferredRequestResource extends JsonResource
                 ],
             ],
             'links' => [
-                'self' => route('deferred.show', ['id' => $deferred->id]),
+                'self' => route('api.v1.deferred.show', ['id' => $deferred->id]),
+                'poll' => route('api.v1.deferred.show', ['id' => $deferred->id]),
             ],
         ];
     }

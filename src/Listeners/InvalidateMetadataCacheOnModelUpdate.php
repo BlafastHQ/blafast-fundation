@@ -25,12 +25,13 @@ class InvalidateMetadataCacheOnModelUpdate
     /**
      * Handle the model updated event.
      *
-     * @param  object  $event  Model updated event
+     * @param  string|object  $event  Event name (for wildcard listeners) or event object
+     * @param  array<mixed>|null  $data  Event data (for wildcard listeners)
      */
-    public function handle(object $event): void
+    public function handle(string|object $event, ?array $data = null): void
     {
         // Extract model from event
-        $model = $this->extractModel($event);
+        $model = $this->extractModel($event, $data);
 
         if (! $model) {
             return;
@@ -52,22 +53,35 @@ class InvalidateMetadataCacheOnModelUpdate
     /**
      * Extract model from various event types.
      *
-     * @param  object  $event  Event object
+     * @param  string|object  $event  Event name or event object
+     * @param  array<mixed>|null  $data  Event data (for wildcard listeners)
      */
-    protected function extractModel(object $event): ?Model
+    protected function extractModel(string|object $event, ?array $data = null): ?Model
     {
-        // Try common event property names
-        if (property_exists($event, 'model') && $event->model instanceof Model) {
-            return $event->model;
+        // For wildcard listeners (Laravel 12+), event is a string and data is an array
+        if (is_string($event) && is_array($data)) {
+            // Data array typically contains the model as first element
+            $model = $data[0] ?? null;
+            if ($model instanceof Model) {
+                return $model;
+            }
         }
 
-        if (property_exists($event, 'entity') && $event->entity instanceof Model) {
-            return $event->entity;
-        }
+        // For regular event objects
+        if (is_object($event)) {
+            // Try common event property names
+            if (property_exists($event, 'model') && $event->model instanceof Model) {
+                return $event->model;
+            }
 
-        // Check if event itself is a model
-        if ($event instanceof Model) {
-            return $event;
+            if (property_exists($event, 'entity') && $event->entity instanceof Model) {
+                return $event->entity;
+            }
+
+            // Check if event itself is a model
+            if ($event instanceof Model) {
+                return $event;
+            }
         }
 
         return null;

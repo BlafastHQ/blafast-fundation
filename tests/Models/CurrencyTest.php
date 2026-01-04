@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Country;
 use Blafast\Foundation\Models\Currency;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
 
 test('currency can be created with factory', function () {
     $currency = Currency::factory()->create();

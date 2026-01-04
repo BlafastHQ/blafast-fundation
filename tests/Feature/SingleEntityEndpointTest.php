@@ -25,6 +25,9 @@ beforeEach(function () {
             Route::dynamicResource(Organization::class);
         });
 
+    // Authenticate as a user
+    actingAsUser();
+
     // Bypass all authorization for testing
     Gate::before(fn () => true);
 });
@@ -67,8 +70,8 @@ test('show endpoint supports includes parameter for relationships', function () 
     $response = $this->getJson("/api/v1/organization/{$org->id}?include=users");
 
     // Should return successfully
-    $response->assertStatus(200)
-        ->and($response->json('data.id'))->toBe($org->id);
+    $response->assertStatus(200);
+    expect($response->json('data.id'))->toBe($org->id);
 });
 
 test('show endpoint ignores invalid includes parameter', function () {
@@ -78,8 +81,8 @@ test('show endpoint ignores invalid includes parameter', function () {
     $response = $this->getJson("/api/v1/organization/{$org->id}?include=nonexistent,invalid");
 
     // Should still return successfully, just ignoring invalid includes
-    $response->assertStatus(200)
-        ->and($response->json('data.id'))->toBe($org->id);
+    $response->assertStatus(200);
+    expect($response->json('data.id'))->toBe($org->id);
 });
 
 test('show endpoint allows multiple valid includes', function () {
@@ -105,8 +108,8 @@ test('show endpoint works without includes parameter', function () {
 
     $response = $this->getJson("/api/v1/organization/{$org->id}");
 
-    $response->assertStatus(200)
-        ->and($response->json('data.id'))->toBe($org->id);
+    $response->assertStatus(200);
+    expect($response->json('data.id'))->toBe($org->id);
 });
 
 test('show endpoint excludes id field from attributes', function () {
@@ -154,14 +157,16 @@ test('show endpoint handles empty includes parameter', function () {
 
     $response = $this->getJson("/api/v1/organization/{$org->id}?include=");
 
-    $response->assertStatus(200)
-        ->and($response->json('data.id'))->toBe($org->id);
+    $response->assertStatus(200);
+    expect($response->json('data.id'))->toBe($org->id);
 });
 
 test('show endpoint handles whitespace in includes', function () {
     $org = Organization::factory()->create();
 
-    $response = $this->getJson("/api/v1/organization/{$org->id}?include= users , ");
+    // URL encode the include parameter with spaces
+    $include = urlencode(' users , ');
+    $response = $this->getJson("/api/v1/organization/{$org->id}?include={$include}");
 
     // Should still work despite whitespace (handled by query builder)
     $response->assertStatus(200);

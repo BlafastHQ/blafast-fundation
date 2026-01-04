@@ -31,7 +31,7 @@ test('user-menu endpoint returns empty menu for unauthenticated user', function 
 test('user-menu endpoint returns JSON:API formatted response', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -51,7 +51,7 @@ test('user-menu returns items without permission requirement', function () {
         'icon' => 'icon-dashboard',
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -85,7 +85,7 @@ test('user-menu filters items based on permissions', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -114,7 +114,7 @@ test('user-menu filters children based on permissions', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -143,7 +143,7 @@ test('user-menu excludes parent without accessible children or route', function 
         ],
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(0, 'data');
@@ -168,7 +168,7 @@ test('user-menu includes parent with route even without accessible children', fu
         ],
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -204,7 +204,7 @@ test('user-menu respects hierarchical permission structure', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -238,7 +238,7 @@ test('user-menu handles deeply nested structures', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data');
@@ -255,13 +255,13 @@ test('user-menu caches response', function () {
     $registry->add(['label' => 'dashboard', 'route' => 'dashboard']);
 
     // First request
-    $response1 = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response1 = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     // Add new item to registry
     $registry->add(['label' => 'new-item', 'route' => 'new']);
 
     // Second request should be cached and not include new item
-    $response2 = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response2 = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     expect($response1->json('data'))->toEqual($response2->json('data'));
 });
@@ -274,7 +274,7 @@ test('user-menu response includes order field', function () {
     $registry->add(['label' => 'first', 'route' => 'first', 'order' => 100]);
     $registry->add(['label' => 'second', 'route' => 'second', 'order' => 200]);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.attributes.order', 100)
@@ -288,7 +288,7 @@ test('user-menu response includes icon field', function () {
     $registry->clear();
     $registry->add(['label' => 'settings', 'route' => 'settings', 'icon' => 'icon-settings']);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.attributes.icon', 'icon-settings');
@@ -301,7 +301,7 @@ test('user-menu uses tag as id when available', function () {
     $registry->clear();
     $registry->add(['label' => 'billing', 'route' => 'billing', 'tag' => 'main.billing']);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.id', 'main.billing');
@@ -314,7 +314,7 @@ test('user-menu uses slug as id when tag not available', function () {
     $registry->clear();
     $registry->add(['label' => 'User Settings', 'route' => 'settings']);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.id', 'user-settings');
@@ -333,7 +333,7 @@ test('user-menu works with role-based permissions', function () {
     $registry->clear();
     $registry->add(['label' => 'admin', 'route' => 'admin', 'permission' => 'access_admin_panel']);
 
-    $response = $this->actingAs($user)->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')

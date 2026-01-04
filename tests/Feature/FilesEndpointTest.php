@@ -38,6 +38,9 @@ beforeEach(function () {
             Route::dynamicResource(ProductModel::class);
         });
 
+    // Authenticate as a user
+    actingAsUser();
+
     // Mock authorization to allow access
     Gate::before(fn () => true);
 
