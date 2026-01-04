@@ -20,8 +20,10 @@ use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
 use Blafast\Foundation\Listeners\NotifySuperadminsOnJobFailure;
 use Blafast\Foundation\Models\Activity;
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\SystemSetting;
 use Blafast\Foundation\Policies\ActivityPolicy;
 use Blafast\Foundation\Policies\OrganizationPolicy;
+use Blafast\Foundation\Policies\SystemSettingPolicy;
 use Blafast\Foundation\Providers\RateLimitServiceProvider;
 use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
 use Blafast\Foundation\Services\MetadataCacheService;
@@ -56,6 +58,7 @@ class BlafastServiceProvider extends PackageServiceProvider
                 'create_countries_table',
                 'create_currencies_table',
                 'create_system_settings_table',
+                'add_settings_to_organizations_table',
                 'create_deferred_endpoint_configs_table',
                 'create_deferred_api_requests_table',
                 'create_permission_tables',
@@ -114,6 +117,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register FileService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\FileService::class);
 
+        // Register SettingsService as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\SettingsService::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }
@@ -141,6 +147,7 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register policies
         Gate::policy(Organization::class, OrganizationPolicy::class);
         Gate::policy(Activity::class, ActivityPolicy::class);
+        Gate::policy(SystemSetting::class, SystemSettingPolicy::class);
 
         // Register JSON:API exception handler
         $this->registerExceptionHandler();

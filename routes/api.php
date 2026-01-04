@@ -8,6 +8,7 @@ use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
 use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
 use Blafast\Foundation\Http\Controllers\Api\V1\NotificationController;
+use Blafast\Foundation\Http\Controllers\Api\V1\SettingsController;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
@@ -71,6 +72,25 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
         Route::post('mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::get('{id}', [NotificationController::class, 'show'])->name('show');
         Route::post('{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+    });
+
+    // Settings endpoints - requires authentication
+    Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->prefix('settings')->name('settings.')->group(function () {
+        // System settings (Superadmin only)
+        Route::prefix('system')->name('system.')->group(function () {
+            Route::get('/', [SettingsController::class, 'systemIndex'])->name('index');
+            Route::put('{key}', [SettingsController::class, 'systemUpdate'])->name('update');
+            Route::delete('{key}', [SettingsController::class, 'systemDelete'])->name('delete');
+        });
+
+        // Organization settings (Admin only)
+        Route::prefix('organization')->name('organization.')->group(function () {
+            Route::get('/', [SettingsController::class, 'organizationIndex'])->name('index');
+            Route::put('/', [SettingsController::class, 'organizationUpdate'])->name('update');
+        });
+
+        // Resolved settings (current context view)
+        Route::get('resolved', [SettingsController::class, 'resolved'])->name('resolved');
     });
 
     // File upload and management routes - requires authentication
