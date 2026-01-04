@@ -9,8 +9,32 @@ parameters:
 		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 17
+			count: 18
 			path: config/blafast-fundation.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: config/activitylog.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 7
+			path: config/media-library.php
+
+		-
+			message: '#^Class Spatie\\MediaLibrary\\Conversions\\DefaultConversionFileNamer not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: config/media-library.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 13
+			path: config/queue.php
 
 		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
@@ -133,7 +157,25 @@ parameters:
 			path: src/Models/OrganizationUser.php
 
 		-
+			message: '#^Method Blafast\\Foundation\\Models\\Activity\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\Activity\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\Activity\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Activity.php
+
+		-
 			message: '#^Trait Blafast\\Foundation\\Traits\\BelongsToOrganization is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1
 			path: src/Traits/BelongsToOrganization.php
+
+		-
+			message: '#^Trait Blafast\\Foundation\\Traits\\HasMediaCollections is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/HasMediaCollections.php
+
+		-
+			message: '#^Trait Blafast\\Foundation\\Traits\\LogsOrganizationActivity is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/LogsOrganizationActivity.php

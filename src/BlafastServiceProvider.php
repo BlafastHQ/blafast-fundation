@@ -7,6 +7,9 @@ namespace Blafast\Foundation;
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Commands\CleanupActivityLogCommand;
 use Blafast\Foundation\Commands\MetadataCacheCommand;
+use Blafast\Foundation\Commands\ModulesDiscoverCommand;
+use Blafast\Foundation\Commands\ModulesListCommand;
+use Blafast\Foundation\Commands\PermissionsSyncCommand;
 use Blafast\Foundation\Commands\QueueStatusCommand;
 use Blafast\Foundation\Commands\RetryFailedJobsCommand;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
@@ -74,6 +77,9 @@ class BlafastServiceProvider extends PackageServiceProvider
                 CleanupActivityLogCommand::class,
                 QueueStatusCommand::class,
                 RetryFailedJobsCommand::class,
+                ModulesDiscoverCommand::class,
+                ModulesListCommand::class,
+                PermissionsSyncCommand::class,
             ]);
     }
 
@@ -119,6 +125,14 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register SettingsService as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\SettingsService::class);
+
+        // Register ModuleManifest as a singleton
+        $this->app->singleton(\Blafast\Foundation\Foundation\ModuleManifest::class, function ($app) {
+            return new \Blafast\Foundation\Foundation\ModuleManifest(base_path());
+        });
+
+        // Register ModuleRegistry as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\ModuleRegistry::class);
 
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);

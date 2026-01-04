@@ -47,7 +47,6 @@ class FileUploadController extends Controller
     ): JsonResponse {
         /** @var class-string<HasApiStructure&Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
-        /** @phpstan-ignore staticMethod.notFound */
         $model = $modelClass::findOrFail($id);
 
         $this->authorize('update', $model);
@@ -89,7 +88,6 @@ class FileUploadController extends Controller
     ): JsonResponse {
         /** @var class-string<HasApiStructure&Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
-        /** @phpstan-ignore staticMethod.notFound */
         $model = $modelClass::findOrFail($id);
 
         $this->authorize('update', $model);

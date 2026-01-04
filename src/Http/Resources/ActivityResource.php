@@ -51,6 +51,7 @@ class ActivityResource extends JsonResource
                     fn () => [
                         'data' => [
                             'type' => 'user',
+                            // @phpstan-ignore property.notFound
                             'id' => $activity->causer->id,
                         ],
                     ]

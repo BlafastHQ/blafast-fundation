@@ -184,4 +184,63 @@ class BlaFastPermissionRegistrar
 
         return $copiedRoles;
     }
+
+    /**
+     * Register permissions from all BlaFast modules.
+     */
+    public function registerModulePermissions(ModuleRegistry $registry): void
+    {
+        $modules = $registry->enabled();
+
+        foreach ($modules as $module) {
+            $this->registerPermissionsFromModule($module->name);
+        }
+    }
+
+    /**
+     * Register permissions from a specific module.
+     */
+    public function registerPermissionsFromModule(string $moduleName): void
+    {
+        $configKey = str_replace('/', '-', $moduleName);
+        $permissions = config("{$configKey}.permissions", []);
+
+        if (empty($permissions)) {
+            return;
+        }
+
+        // Permissions are stored in config but actual registration
+        // happens via the PermissionsSyncCommand which creates
+        // database records. This method is for future extensibility.
+    }
+
+    /**
+     * Clear cached permissions for a specific module.
+     */
+    public function clearModuleCache(string $moduleName): void
+    {
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    }
+
+    /**
+     * Get all permissions from modules.
+     *
+     * @return array<string, array<int, array<string, string>>>
+     */
+    public function getModulePermissions(ModuleRegistry $registry): array
+    {
+        $modules = $registry->enabled();
+        $result = [];
+
+        foreach ($modules as $module) {
+            $configKey = str_replace('/', '-', $module->name);
+            $permissions = config("{$configKey}.permissions", []);
+
+            if (! empty($permissions)) {
+                $result[$module->name] = $permissions;
+            }
+        }
+
+        return $result;
+    }
 }
