@@ -179,3 +179,15 @@ parameters:
 			identifier: trait.unused
 			count: 1
 			path: src/Traits/LogsOrganizationActivity.php
+
+		-
+			message: '#^Property Blafast\\Foundation\\Api\\ApiMethodBuilder\:\:\$slug is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Api/ApiMethodBuilder.php
+
+		-
+			message: '#^Trait Blafast\\Foundation\\Traits\\ExposesApiMethods is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/ExposesApiMethods.php
