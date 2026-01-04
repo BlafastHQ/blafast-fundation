@@ -24,6 +24,8 @@ class PermissionsSyncCommand extends Command
      */
     protected $signature = 'blafast:permissions:sync
                             {--module= : Only sync permissions for a specific module}
+                            {--models : Sync model permissions (CRUD and exec)}
+                            {--all : Sync both module and model permissions}
                             {--force : Force sync without confirmation}';
 
     /**
@@ -36,14 +38,41 @@ class PermissionsSyncCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(ModuleRegistry $registry, PermissionRegistrar $registrar): int
-    {
+    public function handle(
+        ModuleRegistry $moduleRegistry,
+        PermissionRegistrar $registrar,
+        \Blafast\Foundation\Services\BlaFastPermissionRegistrar $blaFastRegistrar
+    ): int {
         if (! class_exists(Permission::class)) {
             $this->error('Spatie Permission package is not installed.');
 
             return self::FAILURE;
         }
 
+        $syncModels = $this->option('models') || $this->option('all');
+        $syncModules = ! $this->option('models') || $this->option('all');
+
+        // Sync model permissions (CRUD and exec)
+        if ($syncModels) {
+            $this->info('Syncing model permissions...');
+            $blaFastRegistrar->syncAll();
+            $this->info('✓ Model permissions synced.');
+            $this->newLine();
+        }
+
+        // Sync module permissions
+        if ($syncModules) {
+            $this->syncModulePermissions($moduleRegistry, $registrar);
+        }
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * Sync permissions from modules.
+     */
+    protected function syncModulePermissions(ModuleRegistry $registry, PermissionRegistrar $registrar): int
+    {
         $modules = $this->option('module')
             ? collect([$registry->get($this->option('module'))])->filter()
             : $registry->enabled();
@@ -104,7 +133,7 @@ class PermissionsSyncCommand extends Command
         $registrar->forgetCachedPermissions();
 
         $this->newLine();
-        $this->info('Permission sync completed:');
+        $this->info('Module permission sync completed:');
         $this->line("  • Created: {$created}");
         $this->line("  • Existing: {$existing}");
 

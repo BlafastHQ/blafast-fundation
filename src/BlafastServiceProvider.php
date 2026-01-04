@@ -138,6 +138,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register ModuleRegistry as a singleton
         $this->app->singleton(\Blafast\Foundation\Services\ModuleRegistry::class);
 
+        // Register ExecPermissionChecker as a singleton
+        $this->app->singleton(\Blafast\Foundation\Services\ExecPermissionChecker::class);
+
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
     }

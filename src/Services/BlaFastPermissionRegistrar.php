@@ -62,6 +62,15 @@ class BlaFastPermissionRegistrar
     {
         $execPermissions = [];
 
+        // Model-level exec permission (grants all methods)
+        $execPermissions[] = Permission::firstOrCreate(
+            [
+                'name' => "exec.{$slug}",
+                'guard_name' => 'api',
+                'organization_id' => $organizationId,
+            ]
+        );
+
         /**
          * @var array<string, array<string, mixed>> $apiMethods
          *
@@ -69,8 +78,9 @@ class BlaFastPermissionRegistrar
          */
         $apiMethods = $modelClass::apiMethods();
 
-        foreach ($apiMethods as $methodName => $config) {
-            $permissionName = "exec_{$slug}_{$methodName}";
+        // Method-level exec permissions
+        foreach ($apiMethods as $methodSlug => $config) {
+            $permissionName = "exec.{$slug}.{$methodSlug}";
 
             $execPermissions[] = Permission::firstOrCreate(
                 [
@@ -95,22 +105,99 @@ class BlaFastPermissionRegistrar
             return;
         }
 
-        /** @var array<string, array<string>> $rights */
+        /** @var array<string, mixed> $rights */
         $rights = $modelClass::defaultRights();
+        $slug = $this->getModelSlug($modelClass);
 
-        foreach ($rights as $roleName => $permissions) {
+        // Apply CRUD rights
+        $this->applyCrudRights($slug, $rights, $organizationId);
+
+        // Apply exec rights if model has apiMethods
+        if (isset($rights['exec']) && method_exists($modelClass, 'apiMethods')) {
+            $this->applyExecRights($slug, $rights['exec'], $modelClass, $organizationId);
+        }
+
+        // Clear permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    }
+
+    /**
+     * Apply CRUD permissions to roles.
+     *
+     * @param  array<string, mixed>  $rights
+     */
+    protected function applyCrudRights(string $slug, array $rights, ?string $organizationId): void
+    {
+        $actions = ['view', 'create', 'update', 'delete', 'list'];
+
+        foreach ($actions as $action) {
+            if (! isset($rights[$action])) {
+                continue;
+            }
+
+            $permission = "{$action}_{$slug}";
+
+            foreach ($rights[$action] as $roleName) {
+                $role = Role::where('name', $roleName)
+                    ->where('guard_name', 'api')
+                    ->where('organization_id', $organizationId)
+                    ->first();
+
+                if ($role && ! $role->hasPermissionTo($permission)) {
+                    $role->givePermissionTo($permission);
+                }
+            }
+        }
+    }
+
+    /**
+     * Apply exec permissions to roles.
+     *
+     * @param  array<string, array<string>|string>  $execRights
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     */
+    protected function applyExecRights(string $slug, array $execRights, string $modelClass, ?string $organizationId): void
+    {
+        /**
+         * @var array<string, array<string, mixed>> $apiMethods
+         *
+         * @phpstan-ignore-next-line Method exists on models with ExposesApiMethods trait
+         */
+        $apiMethods = $modelClass::apiMethods();
+        $allMethods = array_keys($apiMethods);
+
+        foreach ($execRights as $roleName => $methods) {
             $role = Role::where('name', $roleName)
                 ->where('guard_name', 'api')
                 ->where('organization_id', $organizationId)
                 ->first();
 
-            if ($role) {
-                $role->givePermissionTo($permissions);
+            if (! $role) {
+                continue;
+            }
+
+            // Handle wildcard - give model-level permission
+            if ($methods === ['*'] || $methods === '*') {
+                $permission = "exec.{$slug}";
+                if (! $role->hasPermissionTo($permission)) {
+                    $role->givePermissionTo($permission);
+                }
+
+                continue;
+            }
+
+            // Give specific method permissions
+            foreach ($methods as $methodSlug) {
+                if (! in_array($methodSlug, $allMethods)) {
+                    continue;
+                }
+
+                $permission = "exec.{$slug}.{$methodSlug}";
+                if (! $role->hasPermissionTo($permission)) {
+                    $role->givePermissionTo($permission);
+                }
             }
         }
-
-        // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     /**
@@ -242,5 +329,21 @@ class BlaFastPermissionRegistrar
         }
 
         return $result;
+    }
+
+    /**
+     * Sync all permissions for all registered models.
+     */
+    public function syncAll(?string $organizationId = null): void
+    {
+        $registry = app(\Blafast\Foundation\Services\ModelRegistry::class);
+
+        foreach ($registry->all() as $modelClass) {
+            $this->registerPermissionsForModel($modelClass, $organizationId);
+            $this->assignDefaultRights($modelClass, $organizationId);
+        }
+
+        // Clear permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }

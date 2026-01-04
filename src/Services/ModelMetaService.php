@@ -21,6 +21,7 @@ class ModelMetaService
 {
     public function __construct(
         private OrganizationContext $context,
+        private ExecPermissionChecker $permissionChecker,
     ) {}
 
     /**
@@ -212,9 +213,7 @@ class ModelMetaService
      */
     private function canExecuteMethod(Authenticatable $user, string $modelSlug, string $methodSlug): bool
     {
-        // Check for specific method permission or general exec permission
-        return $user->can("exec.{$modelSlug}")
-            || $user->can("exec.{$modelSlug}.{$methodSlug}");
+        return $this->permissionChecker->canExecute($user, $modelSlug, $methodSlug);
     }
 
     /**
