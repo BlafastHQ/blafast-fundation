@@ -55,7 +55,7 @@ class SchedulerHealthCheckCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info("✓ Scheduler healthy");
+        $this->info('✓ Scheduler healthy');
         $this->line("Last heartbeat: {$lastRun->diffForHumans()} ({$lastRun->toDateTimeString()})");
         $this->newLine();
 
