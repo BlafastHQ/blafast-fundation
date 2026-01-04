@@ -43,8 +43,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class DeferredApiRequest extends Model
 {
-    use HasUuids;
     use BelongsToOrganization;
+    use HasUuids;
 
     protected $fillable = [
         'organization_id',

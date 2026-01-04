@@ -39,19 +39,19 @@ class DeferredRequestMiddleware
         }
 
         // Skip if no authenticated user
-        if (!$request->user()) {
+        if (! $request->user()) {
             return $next($request);
         }
 
         // Find matching configuration
         $config = $this->findMatchingConfig($request);
 
-        if (!$config) {
+        if (! $config) {
             return $next($request);
         }
 
         // Check if request should be deferred
-        if (!$this->shouldDefer($request, $config)) {
+        if (! $this->shouldDefer($request, $config)) {
             return $next($request);
         }
 

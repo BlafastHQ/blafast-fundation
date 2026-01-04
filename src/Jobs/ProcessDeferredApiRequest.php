@@ -92,7 +92,7 @@ class ProcessDeferredApiRequest extends BlaFastJob
      */
     protected function buildInternalUrl(): string
     {
-        return config('app.url') . '/' . ltrim($this->deferredRequest->endpoint, '/');
+        return config('app.url').'/'.ltrim($this->deferredRequest->endpoint, '/');
     }
 
     /**

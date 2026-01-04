@@ -28,8 +28,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class DeferredEndpointConfig extends Model
 {
-    use HasUuids;
     use BelongsToOrganization;
+    use HasUuids;
 
     protected $fillable = [
         'organization_id',

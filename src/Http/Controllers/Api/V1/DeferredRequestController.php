@@ -84,7 +84,7 @@ class DeferredRequestController extends Controller
 
         $this->authorize('cancel', $deferred);
 
-        if (!$deferred->isPending()) {
+        if (! $deferred->isPending()) {
             return response()->json([
                 'errors' => [[
                     'status' => '409',
@@ -111,7 +111,7 @@ class DeferredRequestController extends Controller
 
         $this->authorize('retry', $deferred);
 
-        if (!$deferred->canRetry()) {
+        if (! $deferred->canRetry()) {
             return response()->json([
                 'errors' => [[
                     'status' => '409',
