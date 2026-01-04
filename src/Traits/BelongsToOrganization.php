@@ -32,10 +32,12 @@ trait BelongsToOrganization
 
         // Automatically assign organization_id when creating new records
         static::creating(function (Model $model) {
+            // @phpstan-ignore property.notFound
             if (empty($model->organization_id)) {
                 $context = app(OrganizationContext::class);
 
                 if ($context->hasContext()) {
+                    // @phpstan-ignore property.notFound
                     $model->organization_id = $context->id();
                 }
             }
@@ -60,6 +62,7 @@ trait BelongsToOrganization
      */
     public static function withoutOrganizationScope(): Builder
     {
+        // @phpstan-ignore return.type
         return static::withoutGlobalScope(OrganizationScope::class);
     }
 

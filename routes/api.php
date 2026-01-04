@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Http\Controllers\Api\V1\ActivityLogController;
 use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
+use Blafast\Foundation\Http\Controllers\Api\V1\DeferredRequestController;
 use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
 use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
@@ -99,6 +100,14 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
     Route::get('scheduler/status', [ScheduleController::class, 'status'])
         ->middleware(['auth:sanctum', 'throttle:api'])
         ->name('scheduler.status');
+
+    // Deferred API request routes - requires authentication
+    Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->prefix('deferred')->name('deferred.')->group(function () {
+        Route::get('/', [DeferredRequestController::class, 'index'])->name('index');
+        Route::get('{id}', [DeferredRequestController::class, 'show'])->name('show');
+        Route::post('{id}/cancel', [DeferredRequestController::class, 'cancel'])->name('cancel');
+        Route::post('{id}/retry', [DeferredRequestController::class, 'retry'])->name('retry');
+    });
 
     // File upload and management routes - requires authentication
     Route::middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])->group(function () {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Commands;
 
+use Blafast\Foundation\Models\DeferredApiRequest;
 use Illuminate\Console\Command;
 
 /**
@@ -40,13 +41,28 @@ class DeferredCleanupCommand extends Command
 
         $this->info("Cleaning up deferred requests older than {$days} days...");
 
-        // TODO: Implement when deferred API system is built
-        // For now, this is a placeholder for the scheduler
-        if ($dryRun) {
-            $this->info('Dry run mode - no records deleted');
-        } else {
-            $this->info('Deferred cleanup completed (not yet implemented)');
+        // Find expired requests
+        $query = DeferredApiRequest::where('expires_at', '<', now())
+            ->orWhere('created_at', '<', now()->subDays($days));
+
+        $count = $query->count();
+
+        if ($count === 0) {
+            $this->info('No expired deferred requests found.');
+
+            return self::SUCCESS;
         }
+
+        if ($dryRun) {
+            $this->info("Would delete {$count} expired deferred requests (dry run mode)");
+
+            return self::SUCCESS;
+        }
+
+        // Delete expired requests
+        $deleted = $query->delete();
+
+        $this->info("Deleted {$deleted} expired deferred requests.");
 
         return self::SUCCESS;
     }

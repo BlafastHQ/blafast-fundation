@@ -18,15 +18,18 @@ use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
+use Blafast\Foundation\Http\Middleware\DeferredRequestMiddleware;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnModelUpdate;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
 use Blafast\Foundation\Listeners\NotifySuperadminsOnJobFailure;
 use Blafast\Foundation\Models\Activity;
+use Blafast\Foundation\Models\DeferredApiRequest;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\SystemSetting;
 use Blafast\Foundation\Policies\ActivityPolicy;
+use Blafast\Foundation\Policies\DeferredApiRequestPolicy;
 use Blafast\Foundation\Policies\OrganizationPolicy;
 use Blafast\Foundation\Policies\SystemSettingPolicy;
 use Blafast\Foundation\Providers\RateLimitServiceProvider;
@@ -155,6 +158,7 @@ class BlafastServiceProvider extends PackageServiceProvider
         $router->aliasMiddleware('org.resolve', ResolveOrganizationContext::class);
         $router->aliasMiddleware('org.required', EnsureOrganizationContext::class);
         $router->aliasMiddleware('rate-limit-headers', AddRateLimitHeaders::class);
+        $router->aliasMiddleware('deferred', DeferredRequestMiddleware::class);
 
         // Register response macros
         $this->app->register(ResponseMacroServiceProvider::class);
@@ -172,6 +176,7 @@ class BlafastServiceProvider extends PackageServiceProvider
         Gate::policy(Organization::class, OrganizationPolicy::class);
         Gate::policy(Activity::class, ActivityPolicy::class);
         Gate::policy(SystemSetting::class, SystemSettingPolicy::class);
+        Gate::policy(DeferredApiRequest::class, DeferredApiRequestPolicy::class);
 
         // Register JSON:API exception handler
         $this->registerExceptionHandler();
