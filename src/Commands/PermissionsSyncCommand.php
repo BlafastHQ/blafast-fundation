@@ -104,7 +104,7 @@ class PermissionsSyncCommand extends Command
         $registrar->forgetCachedPermissions();
 
         $this->newLine();
-        $this->info("Permission sync completed:");
+        $this->info('Permission sync completed:');
         $this->line("  • Created: {$created}");
         $this->line("  • Existing: {$existing}");
 
