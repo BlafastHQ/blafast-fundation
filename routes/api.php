@@ -7,6 +7,7 @@ use Blafast\Foundation\Http\Controllers\Api\V1\AuthController;
 use Blafast\Foundation\Http\Controllers\Api\V1\FileUploadController;
 use Blafast\Foundation\Http\Controllers\Api\V1\MenuController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ModelMetaController;
+use Blafast\Foundation\Http\Controllers\Api\V1\ModelMethodController;
 use Blafast\Foundation\Http\Controllers\Api\V1\NotificationController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ScheduleController;
 use Blafast\Foundation\Http\Controllers\Api\V1\SettingsController;
@@ -106,6 +107,12 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
         Route::delete('{modelSlug}/{id}/files/{collection}/{fileId}', [FileUploadController::class, 'destroy'])
             ->name('files.delete');
     });
+
+    // Model method execution - requires authentication
+    Route::match(['get', 'post'], '{modelSlug}/{uuid}/call/{methodSlug}', ModelMethodController::class)
+        ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
+        ->whereUuid('uuid')
+        ->name('model.method');
 
     // JSON:API resource routes - with API rate limiting
     JsonApiRoute::server('v1')
