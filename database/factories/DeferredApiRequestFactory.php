@@ -31,7 +31,7 @@ class DeferredApiRequestFactory extends Factory
             'organization_id' => Organization::factory(),
             'user_id' => User::factory(),
             'http_method' => fake()->randomElement(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
-            'endpoint' => 'api/v1/' . fake()->word(),
+            'endpoint' => 'api/v1/'.fake()->word(),
             'payload' => fake()->boolean() ? ['data' => fake()->words(3)] : null,
             'query_params' => [],
             'headers' => [

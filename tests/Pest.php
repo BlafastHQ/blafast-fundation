@@ -44,7 +44,7 @@ function actingAsSuperadmin(): TestCase
 /**
  * Act as an organization admin.
  */
-function actingAsOrgAdmin(\Blafast\Foundation\Models\Organization $org = null): TestCase
+function actingAsOrgAdmin(?\Blafast\Foundation\Models\Organization $org = null): TestCase
 {
     $org ??= \Blafast\Foundation\Models\Organization::factory()->create();
 
@@ -67,7 +67,7 @@ function actingAsOrgAdmin(\Blafast\Foundation\Models\Organization $org = null): 
 /**
  * Add organization header to request.
  */
-function withOrganization(\Blafast\Foundation\Models\Organization $org = null): TestCase
+function withOrganization(?\Blafast\Foundation\Models\Organization $org = null): TestCase
 {
     $org ??= \Blafast\Foundation\Models\Organization::factory()->create();
 

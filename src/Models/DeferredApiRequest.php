@@ -44,8 +44,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class DeferredApiRequest extends Model
 {
-    use HasFactory;
     use BelongsToOrganization;
+    use HasFactory;
     use HasUuids;
 
     protected $fillable = [

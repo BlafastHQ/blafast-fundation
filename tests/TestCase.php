@@ -21,7 +21,6 @@ class TestCase extends Orchestra
         // Migrations handle table creation via RefreshDatabase trait
     }
 
-
     protected function getPackageProviders($app): array
     {
         return [
@@ -89,5 +88,4 @@ class TestCase extends Orchestra
             return response()->json(['message' => 'Test endpoint']);
         })->middleware(['auth:sanctum', 'org.resolve', 'deferred'])->where('any', '.*');
     }
-
 }

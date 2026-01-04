@@ -28,7 +28,7 @@ class DeferredEndpointConfigFactory extends Factory
         return [
             'organization_id' => null, // Global by default
             'http_method' => fake()->randomElement(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
-            'endpoint_pattern' => 'api/v1/' . fake()->word() . '/*',
+            'endpoint_pattern' => 'api/v1/'.fake()->word().'/*',
             'is_active' => true,
             'force_deferred' => false,
             'priority' => 'default',
@@ -40,7 +40,7 @@ class DeferredEndpointConfigFactory extends Factory
     /**
      * Indicate that the config is for a specific organization.
      */
-    public function forOrganization(Organization $organization = null): static
+    public function forOrganization(?Organization $organization = null): static
     {
         return $this->state([
             'organization_id' => $organization ? $organization->id : Organization::factory(),
