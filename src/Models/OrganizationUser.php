@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Carbon;
 
 /**
  * OrganizationUser Pivot Model
@@ -19,13 +21,13 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string $organization_id
  * @property string $role
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon $joined_at
- * @property \Illuminate\Support\Carbon|null $left_at
+ * @property Carbon $joined_at
+ * @property Carbon|null $left_at
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \App\Models\User $user
- * @property-read \Blafast\Foundation\Models\Organization $organization
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read User $user
+ * @property-read Organization $organization
  *
  * @method static Builder|OrganizationUser active()
  * @method static Builder|OrganizationUser byRole(string $role)
@@ -63,11 +65,11 @@ class OrganizationUser extends Pivot
     /**
      * Get the user that owns this membership.
      *
-     * @return BelongsTo<\App\Models\User, OrganizationUser>
+     * @return BelongsTo<User, OrganizationUser>
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**

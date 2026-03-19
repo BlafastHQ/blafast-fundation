@@ -7,6 +7,7 @@ namespace Blafast\Foundation\Database\Seeders;
 use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Models\Role;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
@@ -16,7 +17,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         // Clear permission cache before seeding
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Foundation module permissions
         $permissions = [

@@ -55,21 +55,21 @@ class DynamicRouteServiceProvider extends ServiceProvider
                 'modelSlug' => $slug, // Store slug in group attributes
             ], function () use ($controller) {
                 // List endpoint
-                \Illuminate\Support\Facades\Route::get('/', [$controller, 'index'])
+                Route::get('/', [$controller, 'index'])
                     ->name('index');
 
                 // Show endpoint
-                \Illuminate\Support\Facades\Route::get('/{id}', [$controller, 'show'])
+                Route::get('/{id}', [$controller, 'show'])
                     ->whereUuid('id')
                     ->name('show');
 
                 // Files collection endpoint
-                \Illuminate\Support\Facades\Route::get('/{id}/files/{collection}', [$controller, 'files'])
+                Route::get('/{id}/files/{collection}', [$controller, 'files'])
                     ->whereUuid('id')
                     ->name('files');
 
                 // Single file endpoint
-                \Illuminate\Support\Facades\Route::get('/{id}/files/{collection}/{file}', [$controller, 'file'])
+                Route::get('/{id}/files/{collection}/{file}', [$controller, 'file'])
                     ->whereUuid('id')
                     ->whereUuid('file')
                     ->name('file');

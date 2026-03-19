@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Database\Seeders;
 
 use Blafast\Foundation\Models\Role;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleSeeder extends Seeder
 {
@@ -15,7 +16,7 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         // Clear permission cache before seeding
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Create global role: Superadmin (no organization_id)
         Role::firstOrCreate(

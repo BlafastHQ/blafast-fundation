@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Commands;
 
+use Blafast\Foundation\Services\BlaFastPermissionRegistrar;
 use Blafast\Foundation\Services\ModuleRegistry;
 use Illuminate\Console\Command;
 use Spatie\Permission\Models\Permission;
@@ -41,7 +42,7 @@ class PermissionsSyncCommand extends Command
     public function handle(
         ModuleRegistry $moduleRegistry,
         PermissionRegistrar $registrar,
-        \Blafast\Foundation\Services\BlaFastPermissionRegistrar $blaFastRegistrar
+        BlaFastPermissionRegistrar $blaFastRegistrar
     ): int {
         if (! class_exists(Permission::class)) {
             $this->error('Spatie Permission package is not installed.');

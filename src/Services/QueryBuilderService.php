@@ -6,7 +6,9 @@ namespace Blafast\Foundation\Services;
 
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Filters\DateRangeFilter;
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
@@ -23,8 +25,8 @@ class QueryBuilderService
     /**
      * Build a QueryBuilder instance configured for the given model.
      *
-     * @param  class-string<HasApiStructure&\Illuminate\Database\Eloquent\Model>  $modelClass
-     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     * @param  class-string<HasApiStructure&Model>  $modelClass
+     * @return Builder<Model>
      */
     public function buildQuery(string $modelClass, Request $request): Builder
     {
@@ -211,7 +213,7 @@ class QueryBuilderService
      * - 'like': ILIKE search across fields (default, works on PostgreSQL and MySQL)
      * - 'full_text': PostgreSQL full-text search
      *
-     * @param  QueryBuilder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  QueryBuilder<Model>  $query
      * @param  class-string<HasApiStructure>  $modelClass
      * @param  array<string, mixed>  $structure
      */
@@ -249,13 +251,13 @@ class QueryBuilderService
      *
      * Uses ILIKE on PostgreSQL for case-insensitive search, LIKE elsewhere.
      *
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      * @param  array<string>  $fields
      */
     protected function applyLikeSearch(Builder $query, string $search, array $fields): void
     {
         // Use ILIKE for PostgreSQL, LIKE for others (case-insensitive in SQLite)
-        /** @var \Illuminate\Database\Connection $connection */
+        /** @var Connection $connection */
         $connection = $query->getConnection();
         $operator = $connection->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';
 
@@ -277,7 +279,7 @@ class QueryBuilderService
     /**
      * Apply PostgreSQL full-text search.
      *
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      * @param  array<string>  $fields
      */
     protected function applyFullTextSearch(Builder $query, string $search, array $fields): void

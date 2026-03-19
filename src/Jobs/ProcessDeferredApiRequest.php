@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Jobs;
 
 use Blafast\Foundation\Models\DeferredApiRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -55,7 +56,7 @@ class ProcessDeferredApiRequest extends BlaFastJob
     /**
      * Execute the internal HTTP request.
      */
-    protected function executeInternalRequest(): \Illuminate\Http\Client\Response
+    protected function executeInternalRequest(): Response
     {
         $request = Http::withHeaders($this->buildHeaders())
             ->timeout($this->timeout);

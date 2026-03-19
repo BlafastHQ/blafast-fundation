@@ -6,6 +6,7 @@ use Blafast\Foundation\Models\Address;
 use Blafast\Foundation\Models\Country;
 use Blafast\Foundation\Models\Currency;
 use Blafast\Foundation\Tests\Fixtures\AddressableModel;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 beforeEach(function () {
     // Create a currency and country for testing
@@ -16,7 +17,7 @@ beforeEach(function () {
 test('addressable model has addresses relationship', function () {
     $addressable = AddressableModel::factory()->create();
 
-    expect($addressable->addresses())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\MorphMany::class);
+    expect($addressable->addresses())->toBeInstanceOf(MorphMany::class);
 });
 
 test('can add address to addressable model', function () {

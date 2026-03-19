@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
+use App\Models\User;
 use Blafast\Foundation\Api\ApiStructureBuilder;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Database\Factories\OrganizationFactory;
@@ -11,11 +12,13 @@ use Blafast\Foundation\Traits\Addressable;
 use Blafast\Foundation\Traits\ExposesApiStructure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\AsArrayObject;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -32,11 +35,11 @@ use Illuminate\Support\Str;
  * @property array|null $settings
  * @property bool $is_active
  * @property string|null $peppol_id
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \Blafast\Foundation\Models\Address|null $primaryAddress
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Blafast\Foundation\Models\Address> $addresses
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read Address|null $primaryAddress
+ * @property-read Collection<int, User> $users
+ * @property-read Collection<int, Address> $addresses
  *
  * @method static \Blafast\Foundation\Database\Factories\OrganizationFactory factory($count = null, $state = [])
  * @method static Builder|Organization active()
@@ -123,11 +126,11 @@ class Organization extends Model implements HasApiStructure
     /**
      * Get all users belonging to this organization.
      *
-     * @return BelongsToMany<\Illuminate\Database\Eloquent\Model, $this, OrganizationUser>
+     * @return BelongsToMany<Model, $this, OrganizationUser>
      */
     public function users(): BelongsToMany
     {
-        $userModel = config('auth.providers.users.model', \App\Models\User::class);
+        $userModel = config('auth.providers.users.model', User::class);
 
         return $this->belongsToMany($userModel)
             ->using(OrganizationUser::class)
@@ -200,7 +203,7 @@ class Organization extends Model implements HasApiStructure
     /**
      * Add a user to this organization.
      *
-     * @param  \App\Models\User|object  $user
+     * @param  User|object  $user
      * @param  array<string, mixed>  $metadata
      */
     public function addUser(object $user, string $role, array $metadata = []): void
@@ -216,7 +219,7 @@ class Organization extends Model implements HasApiStructure
     /**
      * Remove a user from this organization.
      *
-     * @param  \App\Models\User|object  $user
+     * @param  User|object  $user
      */
     public function removeUser(object $user): void
     {
@@ -229,7 +232,7 @@ class Organization extends Model implements HasApiStructure
     /**
      * Check if a user belongs to this organization.
      *
-     * @param  \App\Models\User|object  $user
+     * @param  User|object  $user
      */
     public function hasUser(object $user): bool
     {
@@ -239,9 +242,9 @@ class Organization extends Model implements HasApiStructure
     /**
      * Get active users for this organization.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>
+     * @return Collection<int, Model>
      */
-    public function activeUsers(): \Illuminate\Database\Eloquent\Collection
+    public function activeUsers(): Collection
     {
         return $this->users()->wherePivot('is_active', true)->get();
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\QueryBuilderService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -20,7 +21,7 @@ test('buildQuery returns Eloquent Builder instance', function () {
 
     $query = $this->service->buildQuery(Organization::class, $request);
 
-    expect($query)->toBeInstanceOf(\Illuminate\Database\Eloquent\Builder::class);
+    expect($query)->toBeInstanceOf(Builder::class);
 });
 
 test('buildFilters creates partial filter for string fields', function () {

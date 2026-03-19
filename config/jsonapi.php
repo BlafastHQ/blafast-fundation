@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\JsonApi\V1\Server as V1Server;
+use LaravelJsonApi\Core\Exceptions\JsonApiException;
 
 return [
 
@@ -64,7 +65,7 @@ return [
         ],
         'dont_report' => [
             // Exception classes that should not be reported
-            \LaravelJsonApi\Core\Exceptions\JsonApiException::class,
+            JsonApiException::class,
         ],
     ],
 

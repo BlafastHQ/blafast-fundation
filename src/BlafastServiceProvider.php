@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation;
 
+use App\Models\User;
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Commands\CleanupActivityLogCommand;
 use Blafast\Foundation\Commands\DeferredCleanupCommand;
@@ -14,9 +15,11 @@ use Blafast\Foundation\Commands\PermissionsSyncCommand;
 use Blafast\Foundation\Commands\QueueStatusCommand;
 use Blafast\Foundation\Commands\RetryFailedJobsCommand;
 use Blafast\Foundation\Commands\SchedulerHealthCheckCommand;
+use Blafast\Foundation\Console\ScheduleServiceProvider;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
+use Blafast\Foundation\Foundation\ModuleManifest;
 use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
 use Blafast\Foundation\Http\Middleware\DeferredRequestMiddleware;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
@@ -32,18 +35,31 @@ use Blafast\Foundation\Policies\ActivityPolicy;
 use Blafast\Foundation\Policies\DeferredApiRequestPolicy;
 use Blafast\Foundation\Policies\OrganizationPolicy;
 use Blafast\Foundation\Policies\SystemSettingPolicy;
+use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Providers\RateLimitServiceProvider;
 use Blafast\Foundation\Providers\ResponseMacroServiceProvider;
+use Blafast\Foundation\Services\ExecPermissionChecker;
+use Blafast\Foundation\Services\FileService;
+use Blafast\Foundation\Services\MenuRegistry;
+use Blafast\Foundation\Services\MenuService;
 use Blafast\Foundation\Services\MetadataCacheService;
+use Blafast\Foundation\Services\ModelMetaService;
+use Blafast\Foundation\Services\ModelRegistry;
+use Blafast\Foundation\Services\ModuleRegistry;
 use Blafast\Foundation\Services\OrganizationContext;
 use Blafast\Foundation\Services\PaginationService;
+use Blafast\Foundation\Services\QueryBuilderService;
+use Blafast\Foundation\Services\SettingsService;
+use Blafast\Foundation\Tests\Fixtures\AddressableModel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Spatie\Permission\PermissionRegistrar;
 
 class BlafastServiceProvider extends PackageServiceProvider
 {
@@ -110,39 +126,39 @@ class BlafastServiceProvider extends PackageServiceProvider
         $this->app->singleton(PaginationService::class);
 
         // Register ModelRegistry as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\ModelRegistry::class);
+        $this->app->singleton(ModelRegistry::class);
 
         // Register ModelMetaService as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\ModelMetaService::class);
+        $this->app->singleton(ModelMetaService::class);
 
         // Register MetadataCacheService as a singleton
         $this->app->singleton(MetadataCacheService::class);
 
         // Register MenuRegistry as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\MenuRegistry::class);
+        $this->app->singleton(MenuRegistry::class);
 
         // Register MenuService as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\MenuService::class);
+        $this->app->singleton(MenuService::class);
 
         // Register QueryBuilderService as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\QueryBuilderService::class);
+        $this->app->singleton(QueryBuilderService::class);
 
         // Register FileService as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\FileService::class);
+        $this->app->singleton(FileService::class);
 
         // Register SettingsService as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\SettingsService::class);
+        $this->app->singleton(SettingsService::class);
 
         // Register ModuleManifest as a singleton
-        $this->app->singleton(\Blafast\Foundation\Foundation\ModuleManifest::class, function ($app) {
-            return new \Blafast\Foundation\Foundation\ModuleManifest(base_path());
+        $this->app->singleton(ModuleManifest::class, function ($app) {
+            return new ModuleManifest(base_path());
         });
 
         // Register ModuleRegistry as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\ModuleRegistry::class);
+        $this->app->singleton(ModuleRegistry::class);
 
         // Register ExecPermissionChecker as a singleton
-        $this->app->singleton(\Blafast\Foundation\Services\ExecPermissionChecker::class);
+        $this->app->singleton(ExecPermissionChecker::class);
 
         // Register the migration helper for Blueprint macros
         $this->app->register(HasOrganizationColumn::class);
@@ -167,10 +183,10 @@ class BlafastServiceProvider extends PackageServiceProvider
         $this->app->register(RateLimitServiceProvider::class);
 
         // Register dynamic route macros
-        $this->app->register(\Blafast\Foundation\Providers\DynamicRouteServiceProvider::class);
+        $this->app->register(DynamicRouteServiceProvider::class);
 
         // Register scheduled tasks
-        $this->app->register(\Blafast\Foundation\Console\ScheduleServiceProvider::class);
+        $this->app->register(ScheduleServiceProvider::class);
 
         // Register policies
         Gate::policy(Organization::class, OrganizationPolicy::class);
@@ -183,20 +199,20 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Register morph map for polymorphic relationships
         $morphMap = [
-            'organization' => \Blafast\Foundation\Models\Organization::class,
+            'organization' => Organization::class,
         ];
 
         // In testing environment, use test fixtures
         if ($this->app->environment('testing')) {
-            if (class_exists(\Blafast\Foundation\Tests\Fixtures\User::class)) {
-                $morphMap['user'] = \Blafast\Foundation\Tests\Fixtures\User::class;
+            if (class_exists(Tests\Fixtures\User::class)) {
+                $morphMap['user'] = Tests\Fixtures\User::class;
             }
-            if (class_exists(\Blafast\Foundation\Tests\Fixtures\AddressableModel::class)) {
-                $morphMap['addressable_model'] = \Blafast\Foundation\Tests\Fixtures\AddressableModel::class;
+            if (class_exists(AddressableModel::class)) {
+                $morphMap['addressable_model'] = AddressableModel::class;
             }
-        } elseif (class_exists(\App\Models\User::class)) {
+        } elseif (class_exists(User::class)) {
             // Add User class if it exists in non-testing environment
-            $morphMap['user'] = \App\Models\User::class;
+            $morphMap['user'] = User::class;
         }
 
         Relation::enforceMorphMap($morphMap);
@@ -241,7 +257,7 @@ class BlafastServiceProvider extends PackageServiceProvider
         $this->app->extend(ExceptionHandler::class, function (ExceptionHandler $handler) {
             $jsonApiHandler = $this->app->make(JsonApiExceptionHandler::class);
 
-            $handler->renderable(function (\Throwable $e, \Illuminate\Http\Request $request) use ($jsonApiHandler) {
+            $handler->renderable(function (\Throwable $e, Request $request) use ($jsonApiHandler) {
                 return $jsonApiHandler->render($request, $e);
             });
 
@@ -261,7 +277,7 @@ class BlafastServiceProvider extends PackageServiceProvider
 
         // Listen to Spatie permission package events for cache invalidation
         // These events are fired when roles/permissions are assigned to users
-        if (class_exists(\Spatie\Permission\PermissionRegistrar::class)) {
+        if (class_exists(PermissionRegistrar::class)) {
             Event::listen('permission.attached', InvalidateMetadataCacheOnPermissionChange::class);
             Event::listen('permission.detached', InvalidateMetadataCacheOnPermissionChange::class);
             Event::listen('role.attached', InvalidateMetadataCacheOnPermissionChange::class);

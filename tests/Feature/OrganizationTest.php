@@ -13,8 +13,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist
-    if (! class_exists(\App\Models\User::class)) {
-        class_alias(User::class, \App\Models\User::class);
+    if (! class_exists(App\Models\User::class)) {
+        class_alias(User::class, App\Models\User::class);
     }
 });
 
@@ -146,7 +146,7 @@ test('settings use array object cast', function () {
         'settings' => ['key' => 'value'],
     ]);
 
-    expect($organization->settings)->toBeInstanceOf(\ArrayObject::class)
+    expect($organization->settings)->toBeInstanceOf(ArrayObject::class)
         ->and($organization->settings['key'])->toBe('value');
 
     // Test mutation
@@ -162,7 +162,7 @@ test('contact details use array object cast', function () {
         'contact_details' => ['email' => 'test@example.com'],
     ]);
 
-    expect($organization->contact_details)->toBeInstanceOf(\ArrayObject::class)
+    expect($organization->contact_details)->toBeInstanceOf(ArrayObject::class)
         ->and($organization->contact_details['email'])->toBe('test@example.com');
 
     // Test mutation

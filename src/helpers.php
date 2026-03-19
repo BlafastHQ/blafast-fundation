@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\OrganizationContext;
+use Blafast\Foundation\Services\SettingsService;
 
 if (! function_exists('organization')) {
     /**
@@ -73,7 +74,7 @@ if (! function_exists('blafast_setting')) {
      */
     function blafast_setting(string $key, mixed $default = null): mixed
     {
-        return app(\Blafast\Foundation\Services\SettingsService::class)->value($key, $default);
+        return app(SettingsService::class)->value($key, $default);
     }
 }
 
@@ -88,6 +89,6 @@ if (! function_exists('blafast_setting_with_source')) {
      */
     function blafast_setting_with_source(string $key, mixed $default = null): array
     {
-        return app(\Blafast\Foundation\Services\SettingsService::class)->get($key, $default);
+        return app(SettingsService::class)->get($key, $default);
     }
 }

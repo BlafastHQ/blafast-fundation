@@ -6,14 +6,16 @@ namespace Blafast\Foundation\Services;
 
 use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Models\Role;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Spatie\Permission\PermissionRegistrar;
 
 class BlaFastPermissionRegistrar
 {
     /**
      * Register CRUD permissions for a model.
      *
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      * @return array<int, Permission>
      */
     public function registerPermissionsForModel(string $modelClass, ?string $organizationId = null): array
@@ -47,7 +49,7 @@ class BlaFastPermissionRegistrar
         }
 
         // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return $createdPermissions;
     }
@@ -55,7 +57,7 @@ class BlaFastPermissionRegistrar
     /**
      * Register exec permissions for models with exposed API methods.
      *
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      * @return array<int, Permission>
      */
     protected function registerExecPermissions(string $modelClass, string $slug, ?string $organizationId = null): array
@@ -97,7 +99,7 @@ class BlaFastPermissionRegistrar
     /**
      * Assign default permissions to a role based on model's defaultRights configuration.
      *
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      */
     public function assignDefaultRights(string $modelClass, ?string $organizationId = null): void
     {
@@ -118,7 +120,7 @@ class BlaFastPermissionRegistrar
         }
 
         // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     /**
@@ -154,7 +156,7 @@ class BlaFastPermissionRegistrar
      * Apply exec permissions to roles.
      *
      * @param  array<string, array<string>|string>  $execRights
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      */
     protected function applyExecRights(string $slug, array $execRights, string $modelClass, ?string $organizationId): void
     {
@@ -203,7 +205,7 @@ class BlaFastPermissionRegistrar
     /**
      * Get the slug for a model class.
      *
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      */
     protected function getModelSlug(string $modelClass): string
     {
@@ -228,7 +230,7 @@ class BlaFastPermissionRegistrar
         );
 
         // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return $permission;
     }
@@ -267,7 +269,7 @@ class BlaFastPermissionRegistrar
         }
 
         // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         return $copiedRoles;
     }
@@ -306,7 +308,7 @@ class BlaFastPermissionRegistrar
      */
     public function clearModuleCache(string $moduleName): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     /**
@@ -336,7 +338,7 @@ class BlaFastPermissionRegistrar
      */
     public function syncAll(?string $organizationId = null): void
     {
-        $registry = app(\Blafast\Foundation\Services\ModelRegistry::class);
+        $registry = app(ModelRegistry::class);
 
         foreach ($registry->all() as $modelClass) {
             $this->registerPermissionsForModel($modelClass, $organizationId);
@@ -344,6 +346,6 @@ class BlaFastPermissionRegistrar
         }
 
         // Clear permission cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }

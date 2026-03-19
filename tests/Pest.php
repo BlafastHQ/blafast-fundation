@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 require_once __DIR__.'/Helpers.php';
 
@@ -32,7 +35,7 @@ function actingAsSuperadmin(): TestCase
     $user = $userClass::factory()->create();
 
     // Assign Superadmin role
-    $role = \Spatie\Permission\Models\Role::firstOrCreate([
+    $role = Role::firstOrCreate([
         'name' => 'Superadmin',
         'guard_name' => 'api',
     ]);
@@ -44,16 +47,16 @@ function actingAsSuperadmin(): TestCase
 /**
  * Act as an organization admin.
  */
-function actingAsOrgAdmin(?\Blafast\Foundation\Models\Organization $org = null): TestCase
+function actingAsOrgAdmin(?Organization $org = null): TestCase
 {
-    $org ??= \Blafast\Foundation\Models\Organization::factory()->create();
+    $org ??= Organization::factory()->create();
 
     $userClass = config('auth.providers.users.model', 'App\\Models\\User');
     $user = $userClass::factory()->create();
 
     // Attach user to organization with Admin role
     $user->organizations()->attach($org->id, [
-        'id' => (string) \Illuminate\Support\Str::uuid(),
+        'id' => (string) Str::uuid(),
         'role' => 'Admin',
         'is_active' => true,
         'joined_at' => now(),
@@ -67,9 +70,9 @@ function actingAsOrgAdmin(?\Blafast\Foundation\Models\Organization $org = null):
 /**
  * Add organization header to request.
  */
-function withOrganization(?\Blafast\Foundation\Models\Organization $org = null): TestCase
+function withOrganization(?Organization $org = null): TestCase
 {
-    $org ??= \Blafast\Foundation\Models\Organization::factory()->create();
+    $org ??= Organization::factory()->create();
 
     return test()->withHeader('X-Organization-Id', $org->id);
 }

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use Blafast\Foundation\Models\Activity;
 
 return [
 
@@ -36,7 +37,7 @@ return [
      * This model will be used to log activity.
      * It should be or extend Spatie\Activitylog\Models\Activity::class.
      */
-    'activity_model' => \Blafast\Foundation\Models\Activity::class,
+    'activity_model' => Activity::class,
 
     /*
      * This is the name of the table that will be created by the migration and

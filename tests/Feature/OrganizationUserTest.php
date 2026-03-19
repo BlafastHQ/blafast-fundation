@@ -5,14 +5,16 @@ declare(strict_types=1);
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\OrganizationUser;
 use Blafast\Foundation\Tests\Fixtures\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist
-    if (! class_exists(\App\Models\User::class)) {
-        class_alias(User::class, \App\Models\User::class);
+    if (! class_exists(App\Models\User::class)) {
+        class_alias(User::class, App\Models\User::class);
     }
 });
 
@@ -140,7 +142,7 @@ test('unique constraint prevents duplicate memberships', function () {
     $organization->addUser($user, 'member');
 
     expect(fn () => $organization->addUser($user, 'admin'))
-        ->toThrow(\Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 });
 
 test('joined at is set automatically', function () {
@@ -152,7 +154,7 @@ test('joined at is set automatically', function () {
     $pivot = $organization->users()->first()->pivot;
 
     expect($pivot->joined_at)->not->toBeNull()
-        ->and($pivot->joined_at)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+        ->and($pivot->joined_at)->toBeInstanceOf(Carbon::class);
 });
 
 test('left at is null for active memberships', function () {
@@ -176,7 +178,7 @@ test('left at is set when removing user', function () {
     $pivot = $organization->users()->first()->pivot;
 
     expect($pivot->left_at)->not->toBeNull()
-        ->and($pivot->left_at)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+        ->and($pivot->left_at)->toBeInstanceOf(Carbon::class);
 });
 
 test('metadata is cast to array', function () {

@@ -33,7 +33,7 @@ class ModelMethodController extends Controller
     /**
      * Execute a model method.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function __invoke(
         Request $request,
@@ -163,7 +163,7 @@ class ModelMethodController extends Controller
      *
      * @return array<string, mixed>
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     protected function extractAndValidateParameters(Request $request, ApiMethod $method): array
     {

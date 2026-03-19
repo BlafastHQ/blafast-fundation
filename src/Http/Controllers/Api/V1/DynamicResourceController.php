@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Base controller for dynamically handling resource routes.
@@ -58,7 +59,7 @@ class DynamicResourceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure> $modelClass */
+        /** @var class-string<HasApiStructure> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
 
         $this->authorize('viewAny', $modelClass);
@@ -88,7 +89,7 @@ class DynamicResourceController extends Controller
     public function show(Request $request, string $id): JsonResponse
     {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass */
+        /** @var class-string<HasApiStructure&Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
 
         // Apply includes if requested
@@ -110,7 +111,7 @@ class DynamicResourceController extends Controller
         string $collection
     ): JsonResponse {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass */
+        /** @var class-string<HasApiStructure&Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
         $model = $this->findModel($modelClass, $id);
 
@@ -151,7 +152,7 @@ class DynamicResourceController extends Controller
         string $fileId
     ): JsonResponse {
         $modelSlug = $request->route()?->getAction('modelSlug') ?? throw new \RuntimeException('Model slug not found in route');
-        /** @var class-string<\Blafast\Foundation\Contracts\HasApiStructure&\Illuminate\Database\Eloquent\Model> $modelClass */
+        /** @var class-string<HasApiStructure&Model> $modelClass */
         $modelClass = $this->registry->resolve($modelSlug);
         $model = $this->findModel($modelClass, $id);
 
@@ -295,7 +296,7 @@ class DynamicResourceController extends Controller
      *
      * @param  class-string<HasApiStructure>  $modelClass
      *
-     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     * @throws NotFoundHttpException
      */
     protected function validateCollection(string $modelClass, string $collection): void
     {
@@ -304,7 +305,7 @@ class DynamicResourceController extends Controller
         $collections = $structure['media_collections'] ?? [];
 
         if (! isset($collections[$collection])) {
-            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException(
+            throw new NotFoundHttpException(
                 "Collection '{$collection}' not found for this resource."
             );
         }

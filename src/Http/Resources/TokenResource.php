@@ -6,9 +6,10 @@ namespace Blafast\Foundation\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
- * @mixin \Laravel\Sanctum\PersonalAccessToken
+ * @mixin PersonalAccessToken
  */
 class TokenResource extends JsonResource
 {

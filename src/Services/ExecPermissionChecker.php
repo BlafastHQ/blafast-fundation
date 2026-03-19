@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Services;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Service for checking exec permissions on model methods.
@@ -46,7 +47,7 @@ class ExecPermissionChecker
     /**
      * Get all executable methods for user on a model.
      *
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      * @return array<int, string>
      */
     public function executableMethods(
@@ -78,7 +79,7 @@ class ExecPermissionChecker
     /**
      * Get the model slug from a model class.
      *
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $modelClass
+     * @param  class-string<Model>  $modelClass
      */
     protected function getModelSlug(string $modelClass): string
     {

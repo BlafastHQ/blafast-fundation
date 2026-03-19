@@ -7,7 +7,7 @@ namespace Blafast\Foundation\Tests\Fixtures;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Blafast\Foundation\Tests\Fixtures\ProductModel>
+ * @extends Factory<ProductModel>
  */
 class ProductModelFactory extends Factory
 {

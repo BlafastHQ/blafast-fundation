@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Models;
 
 use Blafast\Foundation\Database\Factories\AddressFactory;
+use Blafast\Foundation\Observers\AddressObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Address Model
@@ -35,10 +37,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property bool $is_primary
  * @property bool $is_verified
  * @property array|null $metadata
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \Illuminate\Database\Eloquent\Model $addressable
- * @property-read \Blafast\Foundation\Models\Country $country
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read Model $addressable
+ * @property-read Country $country
  * @property-read string $formatted_address
  * @property-read string $type_name
  *
@@ -50,7 +52,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  *
  * @use HasFactory<AddressFactory>
  */
-#[ObservedBy([\Blafast\Foundation\Observers\AddressObserver::class])]
+#[ObservedBy([AddressObserver::class])]
 class Address extends Model
 {
     /** @use HasFactory<AddressFactory> */

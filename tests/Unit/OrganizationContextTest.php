@@ -11,8 +11,8 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist
-    if (! class_exists(\App\Models\User::class)) {
-        class_alias(User::class, \App\Models\User::class);
+    if (! class_exists(App\Models\User::class)) {
+        class_alias(User::class, App\Models\User::class);
     }
 });
 

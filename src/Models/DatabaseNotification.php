@@ -9,6 +9,7 @@ use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\DatabaseNotification as BaseDatabaseNotification;
+use Illuminate\Support\Carbon;
 
 /**
  * Custom DatabaseNotification model with organization scoping.
@@ -22,9 +23,9 @@ use Illuminate\Notifications\DatabaseNotification as BaseDatabaseNotification;
  * @property string $notifiable_id
  * @property string|null $organization_id
  * @property array $data
- * @property \Illuminate\Support\Carbon|null $read_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $read_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Organization|null $organization
  */
 class DatabaseNotification extends BaseDatabaseNotification

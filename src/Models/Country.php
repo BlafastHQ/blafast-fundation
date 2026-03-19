@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Country Model
@@ -24,9 +25,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $phone_code
  * @property string $currency_id
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \Blafast\Foundation\Models\Currency $currency
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read Currency $currency
  *
  * @method static \Blafast\Foundation\Database\Factories\CountryFactory factory($count = null, $state = [])
  * @method static Builder|Country active()

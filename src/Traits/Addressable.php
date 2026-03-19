@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Traits;
 
 use Blafast\Foundation\Models\Address;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  *
  * Provides address management functionality to models.
  *
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Blafast\Foundation\Models\Address> $addresses
+ * @property-read Collection<int, Address> $addresses
  */
 trait Addressable
 {
@@ -59,9 +60,9 @@ trait Addressable
     /**
      * Get all addresses of a specific type.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, Address>
+     * @return Collection<int, Address>
      */
-    public function addressesOfType(int $type): \Illuminate\Database\Eloquent\Collection
+    public function addressesOfType(int $type): Collection
     {
         return $this->addresses()->ofType($type)->get();
     }

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Http\Resources;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \Illuminate\Database\Eloquent\Model
+ * @mixin Model
  *
  * @property-read string $id
  * @property-read string $name
  * @property-read string $email
- * @property-read \Carbon\Carbon|null $created_at
- * @property-read \Carbon\Carbon|null $updated_at
+ * @property-read Carbon|null $created_at
+ * @property-read Carbon|null $updated_at
  */
 class UserResource extends JsonResource
 {

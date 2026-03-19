@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Filters;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\QueryBuilder\Filters\Filter;
 
 /**
@@ -16,7 +17,7 @@ use Spatie\QueryBuilder\Filters\Filter;
  * - To date: filter[created_at][to]=2024-12-31
  * - Range: filter[created_at][from]=2024-01-01&filter[created_at][to]=2024-12-31
  *
- * @implements Filter<\Illuminate\Database\Eloquent\Model>
+ * @implements Filter<Model>
  */
 class DateRangeFilter implements Filter
 {

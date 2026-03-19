@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
@@ -108,7 +109,7 @@ test('superadmin is exempt from rate limiting', function () {
     $superadmin = User::factory()->create();
 
     // Create Superadmin role and assign it
-    $role = \Blafast\Foundation\Models\Role::create([
+    $role = Role::create([
         'name' => 'Superadmin',
         'guard_name' => 'api',
     ]);

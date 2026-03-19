@@ -6,10 +6,12 @@ namespace Blafast\Foundation\Models;
 
 use Blafast\Foundation\Database\Factories\CurrencyFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Currency Model
@@ -22,9 +24,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $symbol
  * @property int $decimal_places
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \Blafast\Foundation\Models\Country> $countries
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read Collection<int, Country> $countries
  *
  * @method static \Blafast\Foundation\Database\Factories\CurrencyFactory factory($count = null, $state = [])
  * @method static Builder|Currency active()

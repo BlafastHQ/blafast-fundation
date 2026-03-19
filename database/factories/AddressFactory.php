@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Database\Factories;
 
 use Blafast\Foundation\Models\Address;
 use Blafast\Foundation\Models\Country;
+use Blafast\Foundation\Models\Currency;
 use Blafast\Foundation\Tests\Fixtures\AddressableModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -140,7 +141,7 @@ class AddressFactory extends Factory
                     'iso_alpha_3' => 'USA',
                     'iso_numeric' => '840',
                     'phone_code' => '+1',
-                    'currency_id' => \Blafast\Foundation\Models\Currency::factory(),
+                    'currency_id' => Currency::factory(),
                     'is_active' => true,
                 ]
             );
@@ -169,7 +170,7 @@ class AddressFactory extends Factory
                     'iso_alpha_3' => 'FRA',
                     'iso_numeric' => '250',
                     'phone_code' => '+33',
-                    'currency_id' => \Blafast\Foundation\Models\Currency::factory(),
+                    'currency_id' => Currency::factory(),
                     'is_active' => true,
                 ]
             );

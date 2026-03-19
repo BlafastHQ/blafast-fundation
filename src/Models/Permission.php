@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Permission\Models\Permission as SpatiePermission;
 
 class Permission extends SpatiePermission
@@ -57,9 +59,9 @@ class Permission extends SpatiePermission
     /**
      * Get the organization that owns the permission.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\Blafast\Foundation\Models\Organization, $this>
+     * @return BelongsTo<Organization, $this>
      */
-    public function organization(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
@@ -67,10 +69,10 @@ class Permission extends SpatiePermission
     /**
      * Scope a query to global permissions (no organization).
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<Permission>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Permission>
+     * @param  Builder<Permission>  $query
+     * @return Builder<Permission>
      */
-    public function scopeGlobal(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeGlobal(Builder $query): Builder
     {
         return $query->whereNull('organization_id');
     }
@@ -78,10 +80,10 @@ class Permission extends SpatiePermission
     /**
      * Scope a query to organization-specific permissions.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<Permission>  $query
-     * @return \Illuminate\Database\Eloquent\Builder<Permission>
+     * @param  Builder<Permission>  $query
+     * @return Builder<Permission>
      */
-    public function scopeForOrganization(\Illuminate\Database\Eloquent\Builder $query, string $organizationId): \Illuminate\Database\Eloquent\Builder
+    public function scopeForOrganization(Builder $query, string $organizationId): Builder
     {
         return $query->where('organization_id', $organizationId);
     }

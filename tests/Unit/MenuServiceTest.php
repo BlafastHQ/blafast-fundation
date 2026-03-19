@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Dto\MenuItem;
 use Blafast\Foundation\Services\MenuRegistry;
 use Blafast\Foundation\Services\MenuService;
 use Blafast\Foundation\Services\MetadataCacheService;
@@ -57,7 +58,7 @@ test('getForUser includes items without permission requirement', function () {
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
     $menuItems = [
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'dashboard',
             route: 'dashboard',
             permission: null
@@ -87,12 +88,12 @@ test('getForUser filters items based on permissions', function () {
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
     $menuItems = [
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'admin',
             route: 'admin',
             permission: 'view_admin'
         ),
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'secret',
             route: 'secret',
             permission: 'view_secret'
@@ -123,16 +124,16 @@ test('getForUser filters children recursively', function () {
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
     $menuItems = [
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'parent',
             permission: 'view_parent',
             children: [
-                new \Blafast\Foundation\Dto\MenuItem(
+                new MenuItem(
                     label: 'child1',
                     route: 'child1',
                     permission: 'view_child1'
                 ),
-                new \Blafast\Foundation\Dto\MenuItem(
+                new MenuItem(
                     label: 'child2',
                     route: 'child2',
                     permission: 'view_child2'
@@ -165,12 +166,12 @@ test('getForUser excludes parent without accessible children or route', function
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
     $menuItems = [
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'parent',
             permission: 'view_parent',
             // No route/url, only children
             children: [
-                new \Blafast\Foundation\Dto\MenuItem(
+                new MenuItem(
                     label: 'child',
                     route: 'child',
                     permission: 'view_child'
@@ -224,7 +225,7 @@ test('getCacheTags includes menu and user tags', function () {
     $this->context->shouldReceive('id')->andReturn('org-123');
 
     $this->registry->shouldReceive('all')->andReturn([
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'billing',
             tag: 'billing'
         ),
@@ -248,11 +249,11 @@ test('getCacheTags includes child tags', function () {
     $this->context->shouldReceive('hasContext')->andReturn(false);
 
     $this->registry->shouldReceive('all')->andReturn([
-        new \Blafast\Foundation\Dto\MenuItem(
+        new MenuItem(
             label: 'parent',
             tag: 'parent',
             children: [
-                new \Blafast\Foundation\Dto\MenuItem(
+                new MenuItem(
                     label: 'child',
                     tag: 'parent.child'
                 ),

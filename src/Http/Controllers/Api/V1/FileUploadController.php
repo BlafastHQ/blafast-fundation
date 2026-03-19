@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Spatie\MediaLibrary\HasMedia;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -58,7 +59,7 @@ class FileUploadController extends Controller
             throw new \InvalidArgumentException('No file uploaded');
         }
 
-        /** @var \Spatie\MediaLibrary\HasMedia $model */
+        /** @var HasMedia $model */
         $media = $model->addMedia($file)
             ->usingName($request->input('name', $file->getClientOriginalName()))
             ->withCustomProperties($request->input('properties', []))
@@ -92,7 +93,7 @@ class FileUploadController extends Controller
 
         $this->authorize('update', $model);
 
-        /** @var \Spatie\MediaLibrary\HasMedia $model */
+        /** @var HasMedia $model */
         $media = $model->getMedia($collection)->firstWhere('uuid', $fileId);
 
         if (! $media) {

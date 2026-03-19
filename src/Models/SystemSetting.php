@@ -7,6 +7,7 @@ namespace Blafast\Foundation\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * System-wide settings model.
@@ -21,8 +22,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $group
  * @property string|null $description
  * @property bool $is_public
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class SystemSetting extends Model
 {

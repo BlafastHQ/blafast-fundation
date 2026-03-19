@@ -52,7 +52,7 @@ beforeEach(function () {
     });
 
     Route::get('/api/test/generic', function () {
-        throw new \Exception('Something went wrong.');
+        throw new Exception('Something went wrong.');
     });
 });
 
@@ -208,19 +208,19 @@ test('generic exception includes debug info in development', function () {
         ],
     ]);
 
-    expect($response->json('errors.0.meta.exception'))->toBe(\Exception::class);
+    expect($response->json('errors.0.meta.exception'))->toBe(Exception::class);
 });
 
 test('non-API request does not return JSON:API format', function () {
     Route::get('/non-api/test', function () {
-        throw new \Exception('Non-API exception');
+        throw new Exception('Non-API exception');
     });
 
     // The exception handler should return null for non-API requests
     // so Laravel's default exception handler takes over
     $handler = new JsonApiExceptionHandler;
     $request = Request::create('/non-api/test');
-    $exception = new \Exception('Non-API exception');
+    $exception = new Exception('Non-API exception');
 
     $result = $handler->render($request, $exception);
 

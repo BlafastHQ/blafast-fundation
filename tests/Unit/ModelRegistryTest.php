@@ -19,7 +19,7 @@ test('registry can register a model', function () {
 
 test('registry throws exception when registering non-api-structure model', function () {
     $this->registry->register(Model::class);
-})->throws(\InvalidArgumentException::class, 'must implement HasApiStructure');
+})->throws(InvalidArgumentException::class, 'must implement HasApiStructure');
 
 test('registry can get a registered model', function () {
     $this->registry->register(Organization::class);

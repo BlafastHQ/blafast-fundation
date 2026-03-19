@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Tests;
 
 use Blafast\Foundation\BlafastServiceProvider;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
+use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Laravel\Sanctum\SanctumServiceProvider;
+use LaravelJsonApi\Laravel\ServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\Permission\PermissionServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -24,9 +30,9 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            \Laravel\Sanctum\SanctumServiceProvider::class,
-            \Spatie\Permission\PermissionServiceProvider::class,
-            \LaravelJsonApi\Laravel\ServiceProvider::class,
+            SanctumServiceProvider::class,
+            PermissionServiceProvider::class,
+            ServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }
@@ -52,7 +58,7 @@ class TestCase extends Orchestra
         ]);
         config()->set('auth.providers.users', [
             'driver' => 'eloquent',
-            'model' => \Blafast\Foundation\Tests\Fixtures\User::class,
+            'model' => User::class,
         ]);
         config()->set('auth.guards.web', [
             'driver' => 'session',
@@ -63,8 +69,8 @@ class TestCase extends Orchestra
         config()->set('permission.teams', true);
         config()->set('permission.column_names.team_foreign_key', 'organization_id');
         config()->set('permission.column_names.model_morph_key', 'model_uuid');
-        config()->set('permission.models.permission', \Blafast\Foundation\Models\Permission::class);
-        config()->set('permission.models.role', \Blafast\Foundation\Models\Role::class);
+        config()->set('permission.models.permission', Permission::class);
+        config()->set('permission.models.role', Role::class);
     }
 
     protected function defineDatabaseMigrations(): void

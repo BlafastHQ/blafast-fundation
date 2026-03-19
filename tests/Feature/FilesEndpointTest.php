@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\ProductModel;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -31,7 +32,7 @@ beforeEach(function () {
     });
 
     // Ensure the service provider is booted
-    app()->register(\Blafast\Foundation\Providers\DynamicRouteServiceProvider::class);
+    app()->register(DynamicRouteServiceProvider::class);
 
     // Register the ProductModel for dynamic routing
     $registry = app(ModelRegistry::class);

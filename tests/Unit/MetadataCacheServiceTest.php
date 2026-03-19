@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Dto\ModelMeta;
 use Blafast\Foundation\Events\MetadataCacheInvalidated;
 use Blafast\Foundation\Events\MetadataCacheMiss;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\MetadataCacheService;
+use Blafast\Foundation\Services\ModelMetaService;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Support\Facades\Cache;
@@ -207,17 +209,17 @@ test('invalidateAll clears all metadata cache', function () {
 
 test('warmModel pre-populates cache for a model', function () {
     // Mock the ModelMetaService to avoid complex dependencies
-    $metaService = Mockery::mock(\Blafast\Foundation\Services\ModelMetaService::class);
+    $metaService = Mockery::mock(ModelMetaService::class);
     $metaService->shouldReceive('compile')
         ->once()
         ->with(Organization::class, null)
-        ->andReturn(new \Blafast\Foundation\Dto\ModelMeta(
+        ->andReturn(new ModelMeta(
             model: Organization::class,
             label: 'Organization',
             slug: 'organization',
         ));
 
-    app()->instance(\Blafast\Foundation\Services\ModelMetaService::class, $metaService);
+    app()->instance(ModelMetaService::class, $metaService);
 
     $this->service->warmModel(Organization::class);
 });

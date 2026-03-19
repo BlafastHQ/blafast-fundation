@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Blafast\Foundation\Database\Seeders\PermissionSeeder;
 use Blafast\Foundation\Database\Seeders\RoleSeeder;
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Role;
+use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,7 +22,7 @@ beforeEach(function () {
     (new PermissionSeeder)->run();
 
     // Ensure the service provider is booted
-    app()->register(\Blafast\Foundation\Providers\DynamicRouteServiceProvider::class);
+    app()->register(DynamicRouteServiceProvider::class);
 
     // Register Organization model for testing
     $registry = app(ModelRegistry::class);
@@ -37,7 +39,7 @@ beforeEach(function () {
     $this->user = User::factory()->create();
 
     // Get Superadmin role
-    $superadminRole = \Blafast\Foundation\Models\Role::where('name', 'Superadmin')
+    $superadminRole = Role::where('name', 'Superadmin')
         ->where('guard_name', 'api')
         ->first();
 

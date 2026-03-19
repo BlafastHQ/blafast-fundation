@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Jobs;
 
+use App\Models\User;
 use Blafast\Foundation\Services\MethodExecutionService;
 
 /**
@@ -48,7 +49,7 @@ class ExecuteModelMethod extends BlaFastJob
         }
 
         // Find the user if provided
-        $user = $this->userId ? \App\Models\User::find($this->userId) : null;
+        $user = $this->userId ? User::find($this->userId) : null;
 
         // Execute the method (without re-queueing)
         $result = $service->executeMethod($model, $method, $this->parameters);

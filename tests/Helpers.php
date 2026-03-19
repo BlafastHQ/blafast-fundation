@@ -1,15 +1,17 @@
 <?php
 
 declare(strict_types=1);
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Helper function to create test users.
  */
-function createTestUser(): \App\Models\User
+function createTestUser(): User
 {
-    return \App\Models\User::create([
+    return User::create([
         'name' => fake()->name(),
         'email' => fake()->unique()->email(),
-        'password' => \Illuminate\Support\Facades\Hash::make('password'),
+        'password' => Hash::make('password'),
     ]);
 }

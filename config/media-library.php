@@ -1,6 +1,29 @@
 <?php
 
 declare(strict_types=1);
+use Blafast\Foundation\Models\Media;
+use Spatie\ImageOptimizer\Optimizers\Avifenc;
+use Spatie\ImageOptimizer\Optimizers\Cwebp;
+use Spatie\ImageOptimizer\Optimizers\Gifsicle;
+use Spatie\ImageOptimizer\Optimizers\Jpegoptim;
+use Spatie\ImageOptimizer\Optimizers\Optipng;
+use Spatie\ImageOptimizer\Optimizers\Pngquant;
+use Spatie\ImageOptimizer\Optimizers\Svgo;
+use Spatie\MediaLibrary\Conversions\DefaultConversionFileNamer;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Avif;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Image;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Pdf;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Svg;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Video;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Webp;
+use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
+use Spatie\MediaLibrary\Downloaders\DefaultDownloader;
+use Spatie\MediaLibrary\ResponsiveImages\Jobs\GenerateResponsiveImagesJob;
+use Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred;
+use Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator;
+use Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer;
+use Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator;
+use Spatie\MediaLibrary\Support\UrlGenerator\DefaultUrlGenerator;
 
 return [
 
@@ -36,7 +59,7 @@ return [
     /*
      * The fully qualified class name of the media model.
      */
-    'media_model' => Blafast\Foundation\Models\Media::class,
+    'media_model' => Media::class,
 
     /*
      * When enabled, media collections will be serialised using the default
@@ -47,7 +70,7 @@ return [
     /*
      * The class that contains the strategy for determining a media file's path.
      */
-    'path_generator' => Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator::class,
+    'path_generator' => DefaultPathGenerator::class,
 
     /*
      * Here you can specify which path generator should be used for the given class.
@@ -60,7 +83,7 @@ return [
      * When URLs to files get generated, this class will be called. Use the default
      * if your files are stored locally above the site root or on s3.
      */
-    'url_generator' => Spatie\MediaLibrary\Support\UrlGenerator\DefaultUrlGenerator::class,
+    'url_generator' => DefaultUrlGenerator::class,
 
     /*
      * Moves media on updating to keep path consistent. Enable it only with a custom
@@ -80,34 +103,34 @@ return [
      * the optimizers that will be used by default.
      */
     'image_optimizers' => [
-        Spatie\ImageOptimizer\Optimizers\Jpegoptim::class => [
+        Jpegoptim::class => [
             '-m85', // set maximum quality to 85%
             '--force', // ensure that progressive generation is always done also if a little bigger
             '--strip-all', // this strips out all text information such as comments and EXIF data
             '--all-progressive', // this will make sure the resulting image is a progressive one
         ],
-        Spatie\ImageOptimizer\Optimizers\Pngquant::class => [
+        Pngquant::class => [
             '--force', // required parameter for this package
         ],
-        Spatie\ImageOptimizer\Optimizers\Optipng::class => [
+        Optipng::class => [
             '-i0', // this will result in a non-interlaced, progressive scanned image
             '-o2', // this set the optimization level to two (multiple IDAT compression trials)
             '-quiet', // required parameter for this package
         ],
-        Spatie\ImageOptimizer\Optimizers\Svgo::class => [
+        Svgo::class => [
             '--disable=cleanupIDs', // disabling because it is known to cause troubles
         ],
-        Spatie\ImageOptimizer\Optimizers\Gifsicle::class => [
+        Gifsicle::class => [
             '-b', // required parameter for this package
             '-O3', // this produces the slowest but best results
         ],
-        Spatie\ImageOptimizer\Optimizers\Cwebp::class => [
+        Cwebp::class => [
             '-m 6', // for the slowest compression method in order to get the best compression.
             '-pass 10', // for maximizing the amount of analysis pass.
             '-mt', // multithreading for some speed improvements.
             '-q 90', // quality factor that brings the least noticeable changes.
         ],
-        Spatie\ImageOptimizer\Optimizers\Avifenc::class => [
+        Avifenc::class => [
             '-a cq-level=23', // constant quality level, lower values mean better quality
             '-j all', // number of jobs (worker threads, "all" uses all available cores)
             '--min 0', // min quantizer for color
@@ -123,12 +146,12 @@ return [
      * These generators will be used to create an image of media files.
      */
     'image_generators' => [
-        Spatie\MediaLibrary\Conversions\ImageGenerators\Image::class,
-        Spatie\MediaLibrary\Conversions\ImageGenerators\Webp::class,
-        Spatie\MediaLibrary\Conversions\ImageGenerators\Avif::class,
-        Spatie\MediaLibrary\Conversions\ImageGenerators\Pdf::class,
-        Spatie\MediaLibrary\Conversions\ImageGenerators\Svg::class,
-        Spatie\MediaLibrary\Conversions\ImageGenerators\Video::class,
+        Image::class,
+        Webp::class,
+        Avif::class,
+        Pdf::class,
+        Svg::class,
+        Video::class,
     ],
 
     /*
@@ -160,8 +183,8 @@ return [
      * your custom jobs extend the ones provided by the package.
      */
     'jobs' => [
-        'perform_conversions' => Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob::class,
-        'generate_responsive_images' => Spatie\MediaLibrary\ResponsiveImages\Jobs\GenerateResponsiveImagesJob::class,
+        'perform_conversions' => PerformConversionsJob::class,
+        'generate_responsive_images' => GenerateResponsiveImagesJob::class,
     ],
 
     /*
@@ -169,7 +192,7 @@ return [
      * This is particularly useful when the url of the image is behind a firewall and
      * need to add additional flags, possibly using curl.
      */
-    'media_downloader' => Spatie\MediaLibrary\Downloaders\DefaultDownloader::class,
+    'media_downloader' => DefaultDownloader::class,
 
     'remote' => [
         /*
@@ -193,7 +216,7 @@ return [
          *
          * https://docs.spatie.be/laravel-medialibrary/v11/advanced-usage/generating-responsive-images
          */
-        'width_calculator' => Spatie\MediaLibrary\ResponsiveImages\WidthCalculator\FileSizeOptimizedWidthCalculator::class,
+        'width_calculator' => FileSizeOptimizedWidthCalculator::class,
 
         /*
          * By default rendering media to a responsive image will add some javascript and a tiny placeholder.
@@ -205,7 +228,7 @@ return [
          * This class will generate the tiny placeholder used for progressive image loading. By default
          * the media library will use a tiny blurred jpg image.
          */
-        'tiny_placeholder_generator' => Spatie\MediaLibrary\ResponsiveImages\TinyPlaceholderGenerator\Blurred::class,
+        'tiny_placeholder_generator' => Blurred::class,
     ],
 
     /*
@@ -234,10 +257,10 @@ return [
     /*
      * This is the class that is responsible for naming generated files.
      */
-    'conversion_file_namer' => Spatie\MediaLibrary\Conversions\DefaultConversionFileNamer::class,
+    'conversion_file_namer' => DefaultConversionFileNamer::class,
 
     /*
      * This is the class that is responsible for naming the original files.
      */
-    'file_namer' => Spatie\MediaLibrary\Support\FileNamer\DefaultFileNamer::class,
+    'file_namer' => DefaultFileNamer::class,
 ];

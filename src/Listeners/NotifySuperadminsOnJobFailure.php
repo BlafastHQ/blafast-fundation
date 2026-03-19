@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Listeners;
 
 use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Notifications\JobFailedNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
@@ -53,7 +54,7 @@ class NotifySuperadminsOnJobFailure
     /**
      * Get all users with Superadmin role.
      *
-     * @return \Illuminate\Support\Collection<int, \stdClass>
+     * @return Collection<int, \stdClass>
      */
     protected function getSuperadmins()
     {

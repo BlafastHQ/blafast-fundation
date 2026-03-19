@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Http\Middleware;
 
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\OrganizationUser;
 use Blafast\Foundation\Services\OrganizationContext;
 use Closure;
 use Illuminate\Http\JsonResponse;
@@ -137,7 +138,7 @@ class ResolveOrganizationContext
             return false;
         }
 
-        /** @var \Blafast\Foundation\Models\OrganizationUser|null $pivot */
+        /** @var OrganizationUser|null $pivot */
         $pivot = $userWithPivot->pivot;
 
         if (! $pivot) {
