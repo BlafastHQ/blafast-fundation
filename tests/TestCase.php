@@ -33,6 +33,7 @@ class TestCase extends Orchestra
 
     public function getEnvironmentSetUp($app): void
     {
+        $migration = include __DIR__.'/../database/migrations/create_blafast_foundation_tables.php.stub';
         config()->set('database.default', 'testing');
         config()->set('database.connections.testing', [
             'driver' => 'sqlite',

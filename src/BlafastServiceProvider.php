@@ -214,11 +214,6 @@ class BlafastServiceProvider extends PackageServiceProvider
                 __DIR__.'/../config/blafast-fundation.php' => config_path('blafast-fundation.php'),
             ], 'blafast-config');
 
-            // Publish migrations
-            $this->publishes([
-                __DIR__.'/../database/migrations' => database_path('migrations'),
-            ], 'blafast-migrations');
-
             // Publish views
             $this->publishes([
                 __DIR__.'/../resources/views' => resource_path('views/vendor/blafast-fundation'),
