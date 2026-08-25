@@ -125,9 +125,9 @@ class ProcessDeferredApiRequest extends BlaFastJob
         $server['HTTP_X_DEFERRED_REQUEST_ID'] = $deferred->id;
         $server['HTTP_X_DEFERRED_EXECUTION'] = 'true';
 
-        if ($deferred->organization_id !== null) {
-            $server['HTTP_X_ORGANIZATION_ID'] = $deferred->organization_id;
-        }
+        // organization_id is NOT NULL by schema — every deferred request belongs
+        // to an organization, and org.resolve re-validates the membership.
+        $server['HTTP_X_ORGANIZATION_ID'] = $deferred->organization_id;
 
         $method = strtoupper($deferred->http_method);
         $uri = '/'.ltrim($deferred->endpoint, '/');
