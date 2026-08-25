@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -69,7 +68,8 @@ class OrganizationUser extends Pivot
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // Task 21 (M19): the configured user model, not a hard App import.
+        return $this->belongsTo(config('auth.providers.users.model'));
     }
 
     /**

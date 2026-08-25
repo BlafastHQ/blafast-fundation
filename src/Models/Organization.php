@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
-use App\Models\User;
 use Blafast\Foundation\Api\ApiStructureBuilder;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Database\Factories\OrganizationFactory;
@@ -130,7 +129,7 @@ class Organization extends Model implements HasApiStructure
      */
     public function users(): BelongsToMany
     {
-        $userModel = config('auth.providers.users.model', User::class);
+        $userModel = config('auth.providers.users.model');
 
         return $this->belongsToMany($userModel)
             ->using(OrganizationUser::class)

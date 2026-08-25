@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Console;
 
-use App\Models\User;
 use Blafast\Foundation\Events\RegisterScheduledTasks;
 use Blafast\Foundation\Notifications\ScheduledTaskFailedNotification;
 use Illuminate\Console\Scheduling\Schedule;
@@ -112,9 +111,10 @@ class ScheduleServiceProvider extends ServiceProvider
 
         try {
             // Get Superadmin users if Spatie Permission package is installed
-            if (class_exists(Role::class)) {
-                // @phpstan-ignore staticMethod.notFound
-                $superadmins = User::role('Superadmin')->get();
+            $userModel = config('auth.providers.users.model');
+
+            if (class_exists(Role::class) && is_string($userModel) && class_exists($userModel) && method_exists($userModel, 'scopeRole')) {
+                $superadmins = $userModel::role('Superadmin')->get();
 
                 if ($superadmins->isNotEmpty()) {
                     Notification::send($superadmins, new ScheduledTaskFailedNotification($message));

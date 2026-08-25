@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Jobs;
 
-use App\Models\User;
 use Blafast\Foundation\Services\MethodExecutionService;
 
 /**
@@ -49,7 +48,12 @@ class ExecuteModelMethod extends BlaFastJob
         }
 
         // Find the user if provided
-        $user = $this->userId ? User::find($this->userId) : null;
+        // Task 21 (M19): resolve the CONFIGURED user model — the old hard import
+        // of the default host user class fataled for custom user namespaces.
+        $userModel = config('auth.providers.users.model');
+        $user = ($this->userId && is_string($userModel) && class_exists($userModel))
+            ? $userModel::find($this->userId)
+            : null;
 
         // Execute the method (without re-queueing)
         $result = $service->executeMethod($model, $method, $this->parameters);

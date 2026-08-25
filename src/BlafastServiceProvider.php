@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation;
 
-use App\Models\User;
 use Blafast\Foundation\Commands\BlafastCommand;
 use Blafast\Foundation\Commands\CleanupActivityLogCommand;
 use Blafast\Foundation\Commands\DeferredCleanupCommand;
@@ -56,7 +55,6 @@ use Blafast\Foundation\Services\OrganizationContext;
 use Blafast\Foundation\Services\PaginationService;
 use Blafast\Foundation\Services\QueryBuilderService;
 use Blafast\Foundation\Services\SettingsService;
-use Blafast\Foundation\Tests\Fixtures\AddressableModel;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -382,25 +380,24 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register JSON:API exception handler
         $this->registerExceptionHandler();
 
-        // Register morph map for polymorphic relationships
+        // Register morph map for polymorphic relationships (task 21/H18).
+        // NON-enforcing on purpose: the old enforceMorphMap() with an incomplete
+        // {organization, user} set made every OTHER host morph model (tags, media
+        // causers, …) throw ClassMorphViolation; and the old testing-only branch
+        // probed the package's own dev fixtures from production code, leaving a
+        // host's test suite with NO user alias at all. The user alias resolves
+        // from the auth config in ALL environments.
         $morphMap = [
             'organization' => Organization::class,
         ];
 
-        // In testing environment, use test fixtures
-        if ($this->app->environment('testing')) {
-            if (class_exists(Tests\Fixtures\User::class)) {
-                $morphMap['user'] = Tests\Fixtures\User::class;
-            }
-            if (class_exists(AddressableModel::class)) {
-                $morphMap['addressable_model'] = AddressableModel::class;
-            }
-        } elseif (class_exists(User::class)) {
-            // Add User class if it exists in non-testing environment
-            $morphMap['user'] = User::class;
+        $userModel = config('auth.providers.users.model');
+
+        if (is_string($userModel) && class_exists($userModel)) {
+            $morphMap['user'] = $userModel;
         }
 
-        Relation::enforceMorphMap($morphMap);
+        Relation::morphMap($morphMap);
 
         // Register cache invalidation event listeners
         $this->registerCacheInvalidationListeners();
