@@ -50,7 +50,7 @@ class ModelMetaService
      */
     private function buildMeta(string $modelClass, ?Authenticatable $user): ModelMeta
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
         $slug = $structure['slug'];
 

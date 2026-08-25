@@ -54,7 +54,6 @@ class DynamicResourceController extends Controller
         $paginator = $this->pagination->paginate(
             $query,
             $request,
-            /** @phpstan-ignore staticMethod.notFound */
             $modelClass::getApiStructure()
         );
 
@@ -196,7 +195,7 @@ class DynamicResourceController extends Controller
      */
     protected function transformModel(Model $model, string $modelClass): array
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
 
         $resource = [
@@ -209,7 +208,7 @@ class DynamicResourceController extends Controller
         // Task 14 (H13): LOADED relations (eager-loaded via validated ?include=)
         // are serialized — before this, ?include= ran the extra queries and
         // returned a byte-identical payload.
-        /** @phpstan-ignore staticMethod.notFound */
+
         $relationships = $this->buildRelationships($model, $modelClass::getApiIncludes());
 
         if ($relationships !== []) {
@@ -308,7 +307,7 @@ class DynamicResourceController extends Controller
      */
     protected function validateCollection(string $modelClass, string $collection): void
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
         $collections = $structure['media_collections'] ?? [];
 

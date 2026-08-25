@@ -114,7 +114,7 @@ class FileUploadController extends Controller
      */
     protected function validateCollection(string $modelClass, string $collection): void
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
         $collections = $structure['media_collections'] ?? [];
 

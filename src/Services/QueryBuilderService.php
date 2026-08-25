@@ -30,7 +30,7 @@ class QueryBuilderService
      */
     public function buildQuery(string $modelClass, Request $request): Builder
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
 
         // spatie/query-builder v7 signatures are variadics (AllowedFilter|string
@@ -39,7 +39,7 @@ class QueryBuilderService
         $query = QueryBuilder::for($modelClass, $request)
             ->allowedFilters(...$this->buildFilters($modelClass, $structure))
             ->allowedSorts(...$this->buildSorts($structure))
-            /** @phpstan-ignore staticMethod.notFound */
+
             ->allowedIncludes(...$modelClass::getApiIncludes());
 
         // Apply search if present
@@ -62,8 +62,8 @@ class QueryBuilderService
      */
     public function buildShowQuery(string $modelClass, Request $request): Builder
     {
+        /** @var Builder<Model> */
         return QueryBuilder::for($modelClass, $request)
-            /** @phpstan-ignore staticMethod.notFound */
             ->allowedIncludes(...$modelClass::getApiIncludes())
             ->getEloquentBuilder();
     }
