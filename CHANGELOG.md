@@ -34,6 +34,16 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Changed (Task 14)
+- **Response shape:** dynamic show/index responses now carry a `relationships`
+  member with embedded `{type,id,attributes}` objects for relations loaded via
+  a validated `?include=` (before, `?include=` ran the queries and returned a
+  byte-identical payload). Unknown includes are a 400 on BOTH index and show
+  (show used to ignore them silently). `/meta` advertises relation filters
+  under their registered `{relation}.{field}` names; `Organization`'s
+  primaryAddress filter targets the real `city` column. The `Addressable`
+  trait's non-relation helper is renamed `getPrimaryAddress()`.
+
 ### Changed (Task 12)
 - **Breaking:** `Route::dynamicResource()` routes now default to
   `auth:sanctum` + `throttle:api` + `org.resolve`; caller middleware APPENDS and

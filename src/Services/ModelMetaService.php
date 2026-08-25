@@ -146,7 +146,7 @@ class ModelMetaService
         // For now, return all fields
         // Permission-based filtering can be added later when we have field-level permissions
         return array_map(function ($field) {
-            return [
+            $mapped = [
                 'name' => $field['name'],
                 'label' => $field['label'],
                 'type' => $field['type'],
@@ -156,6 +156,16 @@ class ModelMetaService
                 'required' => $field['required'] ?? false,
                 'readonly' => $field['readonly'] ?? false,
             ];
+
+            // Task 14 (H15): keep the relation metadata — the resource needs it to
+            // advertise the REGISTERED filter name ({relation}.{field}).
+            foreach (['relation_name', 'relation_field'] as $key) {
+                if (isset($field[$key])) {
+                    $mapped[$key] = $field[$key];
+                }
+            }
+
+            return $mapped;
         }, $fields);
     }
 

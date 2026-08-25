@@ -85,15 +85,13 @@ test('show endpoint supports includes parameter for relationships', function () 
     expect($response->json('data.id'))->toBe($org->id);
 });
 
-test('show endpoint ignores invalid includes parameter', function () {
+test('show endpoint rejects invalid includes parameter', function () {
     $org = Organization::factory()->create();
 
-    // Request with invalid include
-    $response = $this->getJson("/api/v1/organization/{$org->id}?include=nonexistent,invalid");
-
-    // Should still return successfully, just ignoring invalid includes
-    $response->assertStatus(200);
-    expect($response->json('data.id'))->toBe($org->id);
+    // Task 14 (H13): show validates includes through the same spatie path as
+    // index — an unknown include is a 400, no longer silently ignored.
+    $this->getJson("/api/v1/organization/{$org->id}?include=nonexistent,invalid")
+        ->assertStatus(400);
 });
 
 test('show endpoint allows multiple valid includes', function () {
@@ -107,11 +105,13 @@ test('show endpoint allows multiple valid includes', function () {
 test('show endpoint validates includes against allowed list', function () {
     $org = Organization::factory()->create();
 
-    // Request with mix of valid and invalid includes
-    $response = $this->getJson("/api/v1/organization/{$org->id}?include=users,invalid_relation");
+    // Task 14 (H13): a mix containing an invalid include fails validation —
+    // identical to the index behaviour.
+    $this->getJson("/api/v1/organization/{$org->id}?include=users,invalid_relation")
+        ->assertStatus(400);
 
-    // Should succeed and only load valid includes (invalid ones are ignored)
-    $response->assertStatus(200);
+    $this->getJson("/api/v1/organization/{$org->id}?include=users")
+        ->assertStatus(200);
 });
 
 test('show endpoint works without includes parameter', function () {
@@ -179,6 +179,7 @@ test('show endpoint handles whitespace in includes', function () {
     $include = urlencode(' users , ');
     $response = $this->getJson("/api/v1/organization/{$org->id}?include={$include}");
 
-    // Should still work despite whitespace (handled by query builder)
-    $response->assertStatus(200);
+    // Task 14: spatie's validation does NOT trim — ' users ' is an unknown
+    // include and fails with 400, identically on index and show.
+    $response->assertStatus(400);
 });

@@ -51,7 +51,7 @@ test('can add primary address', function () {
     expect($address->is_primary)->toBeTrue();
 });
 
-test('primaryAddress returns the primary address', function () {
+test('getPrimaryAddress returns the primary address', function () {
     $addressable = AddressableModel::factory()->create();
 
     $address = $addressable->addAddress([
@@ -62,8 +62,8 @@ test('primaryAddress returns the primary address', function () {
         'country_id' => $this->country->id,
     ], isPrimary: true);
 
-    expect($addressable->primaryAddress())->not->toBeNull()
-        ->and($addressable->primaryAddress()->id)->toBe($address->id);
+    expect($addressable->getPrimaryAddress())->not->toBeNull()
+        ->and($addressable->getPrimaryAddress()->id)->toBe($address->id);
 });
 
 test('billingAddress returns the primary billing address', function () {

@@ -60,8 +60,14 @@ class ModelMetaResource extends JsonResource
                     return null;
                 }
 
+                // Task 14 (H15): relation filters are REGISTERED as
+                // "{relation}.{field}" — advertise the name that actually works.
+                $name = ($field['type'] ?? '') === 'relation'
+                    ? $field['name'].'.'.($field['relation_field'] ?? 'id')
+                    : $field['name'];
+
                 return [
-                    'field' => $field['name'],
+                    'field' => $name,
                     'type' => $field['type'],
                 ];
             }, $fields)

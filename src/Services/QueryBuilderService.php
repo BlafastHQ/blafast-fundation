@@ -53,6 +53,22 @@ class QueryBuilderService
     }
 
     /**
+     * Build a query for a single-resource lookup with spatie-validated includes
+     * (task 14/H13): show() used a raw array_intersect that silently ignored
+     * unknown includes while index 400'd on them — one validation path now.
+     *
+     * @param  class-string<HasApiStructure&Model>  $modelClass
+     * @return Builder<Model>
+     */
+    public function buildShowQuery(string $modelClass, Request $request): Builder
+    {
+        return QueryBuilder::for($modelClass, $request)
+            /** @phpstan-ignore staticMethod.notFound */
+            ->allowedIncludes(...$modelClass::getApiIncludes())
+            ->getEloquentBuilder();
+    }
+
+    /**
      * Build allowed filters from API structure.
      *
      * Creates appropriate filter types based on field metadata:

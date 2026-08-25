@@ -266,7 +266,10 @@ class Organization extends Model implements HasApiStructure
             ->string('peppol_id', 'organizations.fields.peppol_id')
             ->datetime('created_at', 'organizations.fields.created_at', sortable: true)
             ->datetime('updated_at', 'organizations.fields.updated_at', sortable: true)
-            ->relation('primaryAddress', 'full_address', 'organizations.fields.primary_address')
+            // Task 14 (H15): the relation FILTER targets a real column — the old
+            // `full_address` is a computed accessor, and the registered
+            // primaryAddress.full_address filter produced invalid SQL.
+            ->relation('primaryAddress', 'city', 'organizations.fields.primary_address')
             ->sortable('name', 'slug', 'created_at', 'updated_at')
             ->filterable('name', 'slug', 'is_active')
             ->searchable('name', 'slug', 'vat_number')

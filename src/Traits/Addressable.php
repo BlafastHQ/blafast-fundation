@@ -29,8 +29,13 @@ trait Addressable
 
     /**
      * Get the primary address.
+     *
+     * Renamed from primaryAddress() (task 14/H15): a non-relation helper wearing
+     * a relation's name let any model using this trait WITHOUT Organization's
+     * real BelongsTo override advertise `primaryAddress` as an include and break
+     * at eager-load time.
      */
-    public function primaryAddress(): ?Address
+    public function getPrimaryAddress(): ?Address
     {
         return $this->addresses()->primary()->first();
     }
