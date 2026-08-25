@@ -149,17 +149,20 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register ModelRegistry as a singleton
         $this->app->singleton(ModelRegistry::class);
 
-        // Register ModelMetaService as a singleton
-        $this->app->singleton(ModelMetaService::class);
+        // SCOPED, not singleton (task 19/H23): it captures OrganizationContext in
+        // its constructor — a singleton held a cleared context from the second
+        // job/request onward in long-lived workers (Horizon/Octane).
+        $this->app->scoped(ModelMetaService::class);
 
-        // Register MetadataCacheService as a singleton
-        $this->app->singleton(MetadataCacheService::class);
+        // Scoped for the same reason (task 19): buildKey() computed `global`
+        // cache keys for org-scoped data on the second job in one process.
+        $this->app->scoped(MetadataCacheService::class);
 
         // Register MenuRegistry as a singleton
         $this->app->singleton(MenuRegistry::class);
 
-        // Register MenuService as a singleton
-        $this->app->singleton(MenuService::class);
+        // Scoped for the same reason (task 19).
+        $this->app->scoped(MenuService::class);
 
         // Register QueryBuilderService as a singleton
         $this->app->singleton(QueryBuilderService::class);
@@ -167,8 +170,9 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Register FileService as a singleton
         $this->app->singleton(FileService::class);
 
-        // Register SettingsService as a singleton
-        $this->app->singleton(SettingsService::class);
+        // Scoped for the same reason (task 19): org settings silently fell back
+        // to system defaults inside workers.
+        $this->app->scoped(SettingsService::class);
 
         // Register ModuleManifest as a singleton
         $this->app->singleton(ModuleManifest::class, function ($app) {
