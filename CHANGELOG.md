@@ -34,6 +34,17 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Fixed (Task 15)
+- **The deferred (202/poll) subsystem actually works now.** Deferred requests
+  execute in process as the original user with the organization context restored
+  by the real middleware stack — the old implementation replayed over HTTP with
+  the Authorization header stripped, so every `auth:sanctum` target answered 401
+  … which was then stored as a *successful* result. **Contract change:**
+  non-2xx outcomes are recorded as failures (`error_code = HTTP_{status}`, real
+  status + body stored); 5xx and transport errors are retried per
+  `max_attempts` with queue backoff before failing. Poll clients must treat
+  `status = failed` + `result_status_code` as the real downstream outcome.
+
 ### Changed (Task 14)
 - **Response shape:** dynamic show/index responses now carry a `relationships`
   member with embedded `{type,id,attributes}` objects for relations loaded via

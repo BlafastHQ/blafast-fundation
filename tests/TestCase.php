@@ -141,5 +141,28 @@ class TestCase extends Orchestra
         $router->get('api/v1/test-can/{permission}', function (string $permission) {
             return response()->json(['can' => request()->user()->can($permission)]);
         })->middleware(['auth:sanctum', 'org.resolve']);
+
+        // Probe routes for deferred execution (task 15): echo proves the executed
+        // request sees the original user + org context; the other two exercise the
+        // outcome classification (terminal 422, retryable 500-until-warm).
+        $router->post('api/v1/test-deferred/echo', function () {
+            return response()->json([
+                'user_id' => request()->user()->id,
+                'org_id' => organization_id(),
+                'payload' => request()->input('data'),
+            ]);
+        })->middleware(['auth:sanctum', 'org.resolve', 'deferred']);
+
+        $router->post('api/v1/test-deferred/unprocessable', function () {
+            return response()->json(['error' => 'nope'], 422);
+        })->middleware(['auth:sanctum', 'org.resolve', 'deferred']);
+
+        $router->post('api/v1/test-deferred/flaky', function () {
+            $hits = cache()->increment('test-deferred-flaky-hits');
+
+            return $hits < 2
+                ? response()->json(['error' => 'warming up'], 500)
+                : response()->json(['ok' => true]);
+        })->middleware(['auth:sanctum', 'org.resolve', 'deferred']);
     }
 }
