@@ -174,9 +174,8 @@ php artisan vendor:publish --tag=sanctum-migrations
 
 ## Open handoffs
 
-- **Task 4 — run CI remotely.** All three pipelines (GitHub Actions `run-tests.yml`,
-  `.gitlab-ci.yml`, `.forgejo/workflows/ci.yml`) are authored and their commands verified
-  locally (host + a `php:8.4-cli` container, both DB drivers, deliberate-red check). Remote
-  execution needs the branch pushed and GitLab/Forgejo remotes + runners configured — the
-  repo's only remote is GitHub. Push `ralph/fix-optimize` (or merge) and confirm the legs go
-  green; the test jobs pass when the failing set is a subset of `tests/BASELINE.md`.
+- **Task 4 — run CI remotely (GitLab/Forgejo legs only).** `ralph/fix-optimize` was pushed
+  2026-08-25 and the GitHub Actions runs are **green** (run-tests matrix, PHPStan, Pint) —
+  with `tests/BASELINE.md` now empty, the test jobs require a fully green suite. Remaining:
+  `.gitlab-ci.yml` and `.forgejo/workflows/ci.yml` are authored and locally verified, but the
+  repo has no GitLab/Forgejo remotes or runners — configure those and push to run them.
