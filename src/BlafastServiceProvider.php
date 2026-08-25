@@ -75,23 +75,12 @@ class BlafastServiceProvider extends PackageServiceProvider
             ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library', 'activitylog', 'queue'])
             ->hasViews()
             ->hasRoute('api')
-            ->hasMigrations([
-                'create_organizations_table',
-                'create_organization_user_table',
-                'create_addresses_table',
-                'create_countries_table',
-                'create_currencies_table',
-                'create_system_settings_table',
-                'add_settings_to_organizations_table',
-                'create_deferred_endpoint_configs_table',
-                'create_deferred_api_requests_table',
-                'create_permission_tables',
-                'create_media_table',
-                'create_activity_log_table',
-                'create_notifications_table',
-                'create_jobs_table',
-            ])
-            ->runsMigrations()
+            // Real timestamped migrations, FK-ordered by filename. discoversMigrations()
+            // registers every file in database/migrations with the Migrator AND exposes
+            // the `blafast-fundation-migrations` publish tag (the fork path for hosts
+            // that want to own the schema — pair publishing with
+            // FOUNDATION_RUN_MIGRATIONS=false, or every migration runs twice).
+            ->discoversMigrations()
             ->hasCommands([
                 BlafastCommand::class,
                 MetadataCacheCommand::class,
@@ -104,6 +93,15 @@ class BlafastServiceProvider extends PackageServiceProvider
                 DeferredCleanupCommand::class,
                 SchedulerHealthCheckCommand::class,
             ]);
+
+        // Auto-run the package migrations on `php artisan migrate` (default). Hosts
+        // that publish the migrations to fork them must disable this via
+        // FOUNDATION_RUN_MIGRATIONS=false (or run_migrations in the published
+        // config), otherwise each migration is registered twice. Read with an env
+        // fallback because the package config is not merged yet at register time.
+        if (config('blafast-fundation.run_migrations', env('FOUNDATION_RUN_MIGRATIONS', true))) {
+            $package->runsMigrations();
+        }
     }
 
     /**

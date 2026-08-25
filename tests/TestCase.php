@@ -96,73 +96,28 @@ class TestCase extends Orchestra
     }
 
     /**
-     * Runs `migrate:fresh` (wipes the schema), then builds the entire test schema by
-     * including each migration file and calling `->up()` in FK order: first the
-     * test-specific tables (users — organization_user and deferred_api_requests have
-     * FKs to it), then Sanctum's vendor table exactly as a host application would get
-     * it, then the package's own `.php.stub` migrations.
+     * The package's own migrations are real timestamped `.php` files registered by
+     * BlafastServiceProvider (discoversMigrations + runsMigrations) — exactly what a
+     * host application gets. Here we only register the test-support paths, DIRECTLY
+     * with the Migrator: testbench's loadMigrationsFrom() must not be used, because
+     * once RefreshDatabaseState::$migrated is true (every pgsql test after the first)
+     * it switches to an immediate MigrateProcessor->up() with a tearDown ->rollback()
+     * that drops the tables mid-suite.
      *
-     * Everything goes through the include mechanism — deliberately NOT through
-     * testbench's loadMigrationsFrom(): once RefreshDatabaseState::$migrated is true
-     * (every pgsql test after the first), that helper switches to an immediate
-     * MigrateProcessor->up() with a tearDown ->rollback() that DROPS the tables
-     * mid-suite. And the Migrator itself only accepts `*.php` files, so the shipped
-     * stubs could never be registered with it anyway (audit H20).
+     * RefreshDatabase's `migrate:fresh` then runs everything in filename order:
+     * Sanctum's vendor table (2019_…, exactly as a host gets it) → the test users /
+     * addressable tables (2026_01_04_…, FK targets of organization_user and
+     * deferred_api_requests) → the package migrations (2026_08_25_…, FK-ordered).
      *
      * The vendor spatie permission migrations are deliberately absent: the package
-     * ships its own permission schema (UUID keys, organization_id team column) in
-     * create_permission_tables.php.stub, and that is what must be exercised
-     * (audit H20/C6).
-     *
-     * No return type: the signature must stay compatible with the untyped
-     * RefreshDatabase::migrateDatabases() this overrides.
-     *
-     * @return void
+     * ships its own permission schema (UUID keys, organization_id team column) and
+     * that is what must be exercised (audit H20/C6).
      */
-    protected function migrateDatabases()
+    protected function defineDatabaseMigrations(): void
     {
-        $this->artisan('migrate:fresh', $this->migrateFreshUsing());
-
-        $files = [
-            ...glob(__DIR__.'/database/migrations/*.php') ?: [],
-            __DIR__.'/../vendor/laravel/sanctum/database/migrations/2019_12_14_000001_create_personal_access_tokens_table.php',
-            ...static::packageMigrationStubs(),
-        ];
-
-        foreach ($files as $file) {
-            $migration = include $file;
-            $migration->up();
-        }
-    }
-
-    /**
-     * The package's migration stubs in FK dependency order:
-     * currencies ← countries ← addresses ← organizations ← every org-scoped table.
-     * (`users` comes from tests/database/migrations and already exists when this
-     * list runs.)
-     *
-     * @return list<string>
-     */
-    public static function packageMigrationStubs(): array
-    {
-        $dir = __DIR__.'/../database/migrations/';
-
-        return array_map(fn (string $name): string => $dir.$name.'.php.stub', [
-            'create_currencies_table',
-            'create_countries_table',
-            'create_addresses_table',
-            'create_organizations_table',
-            'create_organization_user_table',
-            'create_system_settings_table',
-            'add_settings_to_organizations_table',
-            'create_permission_tables',
-            'create_deferred_endpoint_configs_table',
-            'create_deferred_api_requests_table',
-            'create_media_table',
-            'create_activity_log_table',
-            'create_notifications_table',
-            'create_jobs_table',
-        ]);
+        $migrator = $this->app['migrator'];
+        $migrator->path(__DIR__.'/database/migrations');
+        $migrator->path(__DIR__.'/../vendor/laravel/sanctum/database/migrations');
     }
 
     protected function defineRoutes($router): void

@@ -7,6 +7,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Migrations
+    |--------------------------------------------------------------------------
+    |
+    | When true (default), the package's migrations run automatically with
+    | `php artisan migrate`. Set to false when you publish the migrations to
+    | fork them (`php artisan vendor:publish --tag=blafast-fundation-migrations`)
+    | — leaving auto-run enabled after publishing registers every migration
+    | twice and `migrate` fails on "already exists".
+    |
+    */
+
+    'run_migrations' => env('FOUNDATION_RUN_MIGRATIONS', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | API Configuration
     |--------------------------------------------------------------------------
     |

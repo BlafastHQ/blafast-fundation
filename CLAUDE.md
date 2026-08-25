@@ -6,10 +6,10 @@
 
 ## Tooling
 
-- **Tests: Pest 4** on orchestra/testbench — `composer test` runs on **sqlite `:memory:` by default** (fast, no services). Real-Postgres lane (workspace docker stack, port 55433): `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=55433 DB_DATABASE=blafast_fundation_test DB_USERNAME=blafast DB_PASSWORD=blafast composer test` — create the database once with `docker compose exec postgres psql -U blafast -c 'CREATE DATABASE blafast_fundation_test'` from the workspace root. The suite builds its schema by including the shipped `.php.stub` migrations directly (`TestCase::migrateDatabases()`, FK order) — the package's own permission stub runs, not the vendor spatie migrations.
+- **Tests: Pest 4** on orchestra/testbench — `composer test` runs on **sqlite `:memory:` by default** (fast, no services). Real-Postgres lane (workspace docker stack, port 55433): `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=55433 DB_DATABASE=blafast_fundation_test DB_USERNAME=blafast DB_PASSWORD=blafast composer test` — create the database once with `docker compose exec postgres psql -U blafast -c 'CREATE DATABASE blafast_fundation_test'` from the workspace root. The suite's schema comes from the package's own timestamped migrations (registered by the provider, run by `migrate:fresh`) plus the test users/addressable tables and Sanctum's vendor migration — the package's own permission migration runs, not the vendor spatie ones.
 - `composer analyse` — PHPStan/larastan (baseline in `phpstan-baseline.neon`). `composer format` — Pint.
 - CI: GitHub Actions — run-tests matrix (PHP 8.3/8.4 × Laravel 11/12 × prefer-lowest/prefer-stable, ubuntu + windows), phpstan, auto Pint fix, dependabot auto-merge.
-- `BlafastServiceProvider` (spatie package-tools) publishes/overrides host configs `blafast-fundation`, `permission`, `auth`, `sanctum`, `jsonapi`, `media-library`, `activitylog`, `queue`, ships migrations as stubs, and registers all commands/middleware/policies/macros below.
+- `BlafastServiceProvider` (spatie package-tools) publishes/overrides host configs `blafast-fundation`, `permission`, `auth`, `sanctum`, `jsonapi`, `media-library`, `activitylog`, `queue`, ships **real timestamped migrations** (auto-run on `php artisan migrate`; publish tag `blafast-fundation-migrations` for forking, paired with `FOUNDATION_RUN_MIGRATIONS=false`), and registers all commands/middleware/policies/macros below.
 
 ## Multi-tenancy (organizations)
 
