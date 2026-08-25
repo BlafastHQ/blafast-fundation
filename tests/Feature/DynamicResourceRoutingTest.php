@@ -3,8 +3,11 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
+use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function () {
@@ -21,6 +24,17 @@ beforeEach(function () {
         ->group(function () {
             Route::dynamicResource(Organization::class);
         });
+
+    // Task 13: /meta is authenticated + viewAny-gated now. A superadmin viewer
+    // (global context) keeps the guest-behaviour tests meaningful via explicit
+    // auth clears where needed.
+    $viewer = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $viewer->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $viewer->assignRole('Superadmin');
+    $viewer->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($viewer, 'sanctum');
 });
 
 // Note: Route naming tests removed due to Laravel RouteCollection indexing issue in tests.
@@ -52,6 +66,7 @@ test('index endpoint lists organizations', function () {
     // Create some organizations
     Organization::factory()->count(3)->create();
 
+    app('auth')->forgetGuards(); // guest
     $response = $this->getJson('/api/v1/organization');
 
     $response->assertStatus(401); // Task 12: auth:sanctum is a route default now — guests are 401, not a policy 403
@@ -60,6 +75,7 @@ test('index endpoint lists organizations', function () {
 test('show endpoint returns single organization', function () {
     $org = Organization::factory()->create();
 
+    app('auth')->forgetGuards(); // guest
     $response = $this->getJson("/api/v1/organization/{$org->id}");
 
     $response->assertStatus(401); // Task 12: auth:sanctum is a route default now — guests are 401, not a policy 403
@@ -130,6 +146,7 @@ test('dynamic resources macro can register multiple models', function () {
 
     // Verify routes work by accessing the index endpoint
     // Note: Meta endpoint is now global at /api/v1/meta/{slug}
+    app('auth')->forgetGuards(); // guest
     $response = $this->getJson('/api/v1/test/organization');
     $response->assertStatus(401); // Task 12: guests are 401 under the secure default
 });

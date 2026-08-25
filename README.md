@@ -43,10 +43,18 @@ php artisan vendor:publish --tag="blafast-fundation-views"
 
 ## Usage
 
-```php
-$blafast = new Blafast\Blafast();
-echo $blafast->echoPhrase('Hello, Blafast!');
-```
+See [`CLAUDE.md`](CLAUDE.md) for the full feature map (multi-tenancy, dynamic
+model API, permissions, modules/menus/settings, deferred requests) and
+[`docs/HOST-REQUIREMENTS.md`](docs/HOST-REQUIREMENTS.md) for everything a host
+application must configure.
+
+### Model metadata endpoint
+
+`GET /api/v1/meta/{slug}` is **authenticated** (`auth:sanctum` + `org.resolve`)
+and enforces the model's `viewAny` ability; RPC methods are filtered to what the
+requesting user may execute (superadmins see all). Anonymous requests receive
+401 — the endpoint describes every field, filter and RPC pattern of a model and
+is deliberately not public.
 
 ## Testing
 

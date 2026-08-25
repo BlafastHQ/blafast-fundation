@@ -36,7 +36,7 @@ class ModelMetaResource extends JsonResource
                     'fields' => $this->resource->fields,
                     'filters' => $this->buildFilters($this->resource->fields),
                     'sorts' => $this->buildSorts($this->resource->fields),
-                    'allowed_includes' => $this->resource->search['allowed_includes'] ?? [],
+                    'allowed_includes' => $this->resource->allowedIncludes,
                     'methods' => $this->when(! empty($this->resource->methods), $this->resource->methods),
                     'media_collections' => $this->when(! empty($this->resource->mediaCollections), $this->resource->mediaCollections),
                     'search' => $this->when($this->resource->search !== null, $this->resource->search),

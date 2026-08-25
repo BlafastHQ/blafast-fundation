@@ -52,9 +52,13 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
             });
         });
 
-    // Model metadata endpoint - public but requires viewAny permission
+    // Model metadata endpoint — authenticated, viewAny enforced by the controller
+    // (task 13/H11: it used to be anonymous, handing guests the COMPLETE method
+    // catalogue while authenticated low-privilege users got a filtered one; the
+    // endpoint is a reconnaissance surface listing every model, field and RPC
+    // pattern). org.resolve gives the permission checks their team context.
     Route::get('meta/{modelSlug}', ModelMetaController::class)
-        ->middleware('throttle:api')
+        ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
         ->name('meta.show');
 
     // User menu endpoint - requires authentication

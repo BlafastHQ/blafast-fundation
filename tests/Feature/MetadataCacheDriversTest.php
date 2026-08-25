@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\MetadataCacheService;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\SalesOrderModel;
@@ -11,6 +12,7 @@ use Blafast\Foundation\Tests\Fixtures\User;
 use Blafast\Foundation\Traits\ExposesApiStructure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Task 11 (C3/M1/M16): metadata caching across drivers WITHOUT tag support —
@@ -50,6 +52,9 @@ it('serves /meta with the file cache driver — no tags 500 (C3)', function () {
     $viewer = User::factory()->create();
     Permission::findOrCreate('list_organization', 'api');
     $viewer->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $viewer->assignRole('Superadmin');
+    $viewer->unsetRelation('roles')->unsetRelation('permissions');
 
     $this->actingAs($viewer, 'sanctum')
         ->getJson('/api/v1/meta/organization')
@@ -96,24 +101,39 @@ it('gives each subclass of a shared base its own structure and slug (M16)', func
 it('closes the stale-advertisement window: a revoked exec grant disappears from /meta (M2)', function () {
     app(ModelRegistry::class)->register(SalesOrderModel::class);
 
+    // A NON-superadmin org member: superadmins legitimately see every method,
+    // so only a scoped member can demonstrate the revoke.
+    $org = Organization::factory()->create();
     $user = User::factory()->create();
+    $org->addUser($user, 'User');
+
+    $registrar = app(PermissionRegistrar::class);
+    $registrar->setPermissionsTeamId($org->id);
     Permission::findOrCreate('exec.sales-order-model', 'api');
     Permission::findOrCreate('list_sales-order-model', 'api');
-    $user->givePermissionTo(['exec.sales-order-model', 'list_sales-order-model']);
+    $role = Role::findOrCreate('SOAdmin', 'api');
+    $role->givePermissionTo(['exec.sales-order-model', 'list_sales-order-model']);
+    $user->assignRole($role);
+    $registrar->setPermissionsTeamId(null);
+    $user->unsetRelation('roles')->unsetRelation('permissions');
+
+    $headers = ['X-Organization-Id' => $org->id];
 
     $first = $this->actingAs($user, 'sanctum')
-        ->getJson('/api/v1/meta/sales-order-model')
+        ->getJson('/api/v1/meta/sales-order-model', $headers)
         ->assertOk()
         ->json();
     expect(json_encode($first))->toContain('approve');
 
     // Revoke → the spatie PermissionDetachedEvent fires (events_enabled) → the
-    // listener invalidates this user's cached meta.
-    $user->revokePermissionTo('exec.sales-order-model');
+    // listener invalidates the cached meta.
+    $registrar->setPermissionsTeamId($org->id);
+    $role->revokePermissionTo('exec.sales-order-model');
+    $registrar->setPermissionsTeamId(null);
     $user->unsetRelation('roles')->unsetRelation('permissions');
 
     $second = $this->actingAs($user, 'sanctum')
-        ->getJson('/api/v1/meta/sales-order-model')
+        ->getJson('/api/v1/meta/sales-order-model', $headers)
         ->assertOk()
         ->json();
     expect(json_encode($second))->not->toContain('"approve"');

@@ -91,6 +91,9 @@ class ModelMetaService
             mediaCollections: $mediaCollections,
             search: $search,
             pagination: $pagination,
+            // M14: the resource used to read search['allowed_includes'], a key that
+            // never existed — /meta always advertised zero includes.
+            allowedIncludes: $structure['allowed_includes'] ?? [],
         );
     }
 
@@ -171,7 +174,9 @@ class ModelMetaService
 
         foreach ($apiMethods as $methodSlug => $config) {
             // Check if user can execute this method
-            if ($user && ! $this->canExecuteMethod($user, $slug, $methodSlug)) {
+            // No user means NO methods — the old `$user &&` short-circuit inverted
+            // the filter and served guests the full catalogue (H11).
+            if ($user === null || ! $this->canExecuteMethod($user, $slug, $methodSlug)) {
                 continue;
             }
 

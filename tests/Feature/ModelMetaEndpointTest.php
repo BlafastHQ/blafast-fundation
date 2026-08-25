@@ -3,12 +3,28 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\ModelRegistry;
+use Blafast\Foundation\Tests\Fixtures\SalesOrderModel;
+use Blafast\Foundation\Tests\Fixtures\User;
+use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     // Register the Organization model
     $registry = app(ModelRegistry::class);
     $registry->register(Organization::class);
+
+    // Task 13 (H11): /meta requires auth + viewAny now — these tests used to hit
+    // it anonymously, which was exactly the reconnaissance hole. A superadmin
+    // gets global context (no org header) where the global grant stays visible.
+    $user = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $user->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $user->assignRole('Superadmin');
+    $user->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($user, 'sanctum');
 });
 
 test('meta endpoint returns correct structure', function () {
@@ -152,4 +168,57 @@ test('meta response is cacheable', function () {
     $response2 = $this->getJson('/api/v1/meta/organization');
 
     expect($response1->json('data'))->toEqual($response2->json('data'));
+});
+
+test('anonymous requests get 401, not the method catalogue (H11)', function () {
+    // A fresh app instance would still hold the actingAs user; spoof a guest by
+    // clearing resolved auth guards.
+    app('auth')->forgetGuards();
+
+    $this->getJson('/api/v1/meta/organization')->assertStatus(401);
+});
+
+test('an authenticated user sees exactly the methods they may execute', function () {
+    app(ModelRegistry::class)->register(SalesOrderModel::class);
+
+    // A non-superadmin needs a real org context (org.resolve) and ORG-SCOPED grants.
+    $org = Organization::factory()->create();
+    $viewer = User::factory()->create();
+    $org->addUser($viewer, 'User');
+
+    $registrar = app(PermissionRegistrar::class);
+    $registrar->setPermissionsTeamId($org->id);
+    Permission::findOrCreate('list_sales-order-model', 'api');
+    $role = Role::findOrCreate('MetaViewer', 'api');
+    $role->givePermissionTo('list_sales-order-model');
+    $viewer->assignRole($role);
+    $registrar->setPermissionsTeamId(null);
+    $viewer->unsetRelation('roles')->unsetRelation('permissions');
+
+    // Without the exec grant: meta OK, zero methods advertised.
+    $meta = $this->actingAs($viewer, 'sanctum')
+        ->getJson('/api/v1/meta/sales-order-model', ['X-Organization-Id' => $org->id])
+        ->assertOk()
+        ->json();
+    expect(json_encode($meta))->not->toContain('"approve"');
+
+    // With the exec grant: the method appears (the permission-change listener
+    // invalidates the cached meta).
+    $registrar->setPermissionsTeamId($org->id);
+    Permission::findOrCreate('exec.sales-order-model', 'api');
+    $role->givePermissionTo('exec.sales-order-model');
+    $registrar->setPermissionsTeamId(null);
+    $viewer->unsetRelation('roles')->unsetRelation('permissions');
+
+    $meta = $this->actingAs($viewer, 'sanctum')
+        ->getJson('/api/v1/meta/sales-order-model', ['X-Organization-Id' => $org->id])
+        ->assertOk()
+        ->json();
+    expect(json_encode($meta))->toContain('approve');
+});
+
+test('meta reports the three declared organization includes (M14)', function () {
+    $this->getJson('/api/v1/meta/organization')
+        ->assertOk()
+        ->assertJsonPath('data.attributes.allowed_includes', ['primaryAddress', 'users', 'addresses']);
 });

@@ -148,6 +148,15 @@ test('cache is invalidated when permission is revoked from user', function () {
 });
 
 test('metadata endpoint uses cached response', function () {
+    // Task 13: /meta requires auth + viewAny now (superadmin => global context).
+    $metaUser = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $metaUser->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $metaUser->assignRole('Superadmin');
+    $metaUser->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($metaUser, 'sanctum');
+
     // First request should cache the response
     $response1 = $this->getJson('/api/v1/meta/organization');
     $response1->assertStatus(200);
@@ -161,6 +170,15 @@ test('metadata endpoint uses cached response', function () {
 });
 
 test('metadata endpoint cache is invalidated on model update', function () {
+    // Task 13: /meta requires auth + viewAny now (superadmin => global context).
+    $metaUser = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $metaUser->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $metaUser->assignRole('Superadmin');
+    $metaUser->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($metaUser, 'sanctum');
+
     // First request to populate cache
     $response1 = $this->getJson('/api/v1/meta/organization');
     $response1->assertStatus(200);
@@ -261,6 +279,15 @@ test('cache invalidation respects cache disabled configuration', function () {
 });
 
 test('multiple concurrent requests use cached data', function () {
+    // Task 13: /meta requires auth + viewAny now (superadmin => global context).
+    $metaUser = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $metaUser->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $metaUser->assignRole('Superadmin');
+    $metaUser->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($metaUser, 'sanctum');
+
     // First request populates cache
     $response1 = $this->getJson('/api/v1/meta/organization');
     $response1->assertStatus(200);

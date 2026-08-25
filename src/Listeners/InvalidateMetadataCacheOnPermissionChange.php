@@ -28,22 +28,20 @@ class InvalidateMetadataCacheOnPermissionChange
      */
     public function handle(object $event): void
     {
-        // Extract user from event
-        $user = $this->extractUser($event);
+        // Permission topology changed. The stale entries belong to an UNKNOWN set
+        // of users: role-targeted events (givePermissionTo on a role) carry the
+        // ROLE as the event model, and even direct user grants tag no user-specific
+        // meta entries. Invalidate the metadata cache wholesale — these events are
+        // rare and the cache rebuilds lazily (task 13; the old code returned
+        // silently for role events).
+        $this->cache->invalidateAll();
 
-        if (! $user) {
-            return;
-        }
-
-        // Invalidate menu cache for the affected user
-        $this->cache->invalidateMenuForUser(
-            $user->getAuthIdentifier(),
-            $this->context->id()
-        );
-
-        // If organization context exists, invalidate org metadata
-        if ($this->context->hasContext()) {
-            $this->cache->invalidateOrganization($this->context->id());
+        // Belt-and-suspenders for the user-addressable menu keys.
+        if ($user = $this->extractUser($event)) {
+            $this->cache->invalidateMenuForUser(
+                $user->getAuthIdentifier(),
+                $this->context->id()
+            );
         }
     }
 
