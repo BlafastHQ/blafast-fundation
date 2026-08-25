@@ -80,6 +80,26 @@ class OrganizationContext
     }
 
     /**
+     * Set the organization context for a QUEUED JOB (task 17): jobs have no
+     * authenticated user, so `user()` is deliberately null here — the one state
+     * where hasContext() true + a null user is by design. Replaces the old
+     * reflection write into the private property, and keeps the spatie team id
+     * in sync (task 5).
+     */
+    public function setForJob(Organization $organization): void
+    {
+        $this->organization = $organization;
+        $this->user = null;
+        $this->isGlobalContext = false;
+
+        $this->syncPermissionsTeamId($organization->id);
+
+        Log::debug('Organization context set for job', [
+            'organization_id' => $organization->id,
+        ]);
+    }
+
+    /**
      * Run a callback in USER-LESS global context (task 12): the escape hatch for
      * seeders, scheduled commands and migrations now that OrganizationScope fails
      * closed — with no context at all, scoped queries return zero rows.

@@ -6,7 +6,6 @@ namespace Blafast\Foundation\Jobs\Middleware;
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\OrganizationContext;
-use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Job middleware to restore organization context.
@@ -30,23 +29,31 @@ class RestoreOrganizationContext
     {
         $context = app(OrganizationContext::class);
 
-        // Restore organization context if we have an organization ID
-        if ($this->organizationId) {
+        if ($this->organizationId !== null) {
             $organization = Organization::find($this->organizationId);
-            if ($organization) {
-                // Manually set organization context for job execution
-                // Jobs don't have a user context, so we use reflection to set just the organization
-                // (task 17 replaces this with an explicit setForJob() API and makes the
-                // missing-organization path fail closed).
-                $reflection = new \ReflectionClass($context);
-                $orgProperty = $reflection->getProperty('organization');
-                $orgProperty->setAccessible(true);
-                $orgProperty->setValue($context, $organization);
 
-                // C1: the reflection write bypasses set(), so sync the spatie team id
-                // explicitly — org-scoped permission checks inside the job depend on it.
-                app(PermissionRegistrar::class)->setPermissionsTeamId($organization->id);
+            if ($organization === null) {
+                // FAIL CLOSED (task 17/H9): the job was dispatched for an
+                // organization that no longer resolves — it must not run at all.
+                // (Under task 12's fail-closed scope it would otherwise read
+                // silent EMPTY result sets: safer than the old all-tenants leak,
+                // but just as wrong.) Deletion is permanent ⇒ fail, not release.
+                $exception = new \RuntimeException(
+                    "Organization [{$this->organizationId}] no longer exists; the job cannot run in its context."
+                );
+
+                if (method_exists($job, 'fail')) {
+                    $job->fail($exception);
+
+                    return;
+                }
+
+                throw $exception;
             }
+
+            // Explicit job-context API — replaces the old reflection write that
+            // bypassed set()'s invariants (task 17). Also syncs the team id.
+            $context->setForJob($organization);
         }
 
         try {
