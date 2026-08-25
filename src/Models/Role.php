@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Permission\Models\Role as SpatieRole;
 
+/**
+ * @property string|null $organization_id
+ */
 class Role extends SpatieRole
 {
     use HasFactory;

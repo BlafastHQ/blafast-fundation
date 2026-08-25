@@ -124,9 +124,9 @@ class AuthController extends Controller
     {
         $abilities = $request->input('abilities', ['*']);
 
-        /** @phpstan-ignore-next-line */
         $configuredExpiration = config('blafast-fundation.auth.token.expiration');
 
+        /** @phpstan-ignore-next-line */
         $token = $request->user()->createToken(
             $request->name,
             $abilities,
