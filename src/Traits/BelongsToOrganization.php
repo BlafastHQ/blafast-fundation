@@ -94,14 +94,10 @@ trait BelongsToOrganization
             ->where('organization_id', $organizationId);
     }
 
-    /**
-     * Scope a query to only include models for a specific organization.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeForOrganization(Builder $query, string $organizationId): Builder
-    {
-        return $query->where($this->getTable().'.organization_id', $organizationId);
-    }
+    // The named scope scopeForOrganization() is deliberately GONE (task 20/M6):
+    // it shadowed the static above with divergent semantics — resolved through
+    // the query builder it did NOT strip the global scope, so cross-tenant calls
+    // yielded `organization_id = <context> AND organization_id = <requested>`
+    // and silently returned nothing. One variant, one semantic; the fluent call
+    // style now fails loudly (BadMethodCallException) instead of lying.
 }

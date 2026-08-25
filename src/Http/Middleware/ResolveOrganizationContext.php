@@ -121,8 +121,14 @@ class ResolveOrganizationContext
             return null;
         }
 
-        // Validate user belongs to organization
-        if (! $organization->hasUser($user)) {
+        // ANY membership row (active or not) — hasUser() is active-only since
+        // task 20, but this middleware distinguishes 403 ORGANIZATION_ACCESS_DENIED
+        // (no membership at all) from 403 MEMBERSHIP_INACTIVE (checked next).
+        $isMember = $organization->users()
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if (! $isMember) {
             return null;
         }
 

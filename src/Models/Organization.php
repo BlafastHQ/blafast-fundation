@@ -208,6 +208,22 @@ class Organization extends Model implements HasApiStructure
      */
     public function addUser(object $user, string $role, array $metadata = []): void
     {
+        // Reactivation-aware (task 20/H24): removeUser() is a SOFT leave, and the
+        // pivot is unique(user_id, organization_id) — a raw attach() threw a 500
+        // on re-inviting a former member, with no reactivation path anywhere.
+        // The existing row is restored to a clean state, preserving the history.
+        if ($this->users()->where('user_id', $user->id)->exists()) {
+            $this->users()->updateExistingPivot($user->id, [
+                'role' => $role,
+                'is_active' => true,
+                'joined_at' => now(),
+                'left_at' => null,
+                'metadata' => $metadata,
+            ]);
+
+            return;
+        }
+
         $this->users()->attach($user->id, [
             'role' => $role,
             'is_active' => true,
@@ -236,7 +252,13 @@ class Organization extends Model implements HasApiStructure
      */
     public function hasUser(object $user): bool
     {
-        return $this->users()->where('user_id', $user->id)->exists();
+        // ACTIVE memberships only (task 20/H24): the unfiltered check let
+        // ex-members through OrganizationContext::set()/with() — the programmatic
+        // path was weaker than the HTTP middleware's.
+        return $this->users()
+            ->where('user_id', $user->id)
+            ->wherePivot('is_active', true)
+            ->exists();
     }
 
     /**
