@@ -49,6 +49,48 @@ parameters:
 			path: database/factories/OrganizationFactory.php
 
 		-
+			message: '#^Property Blafast\\Foundation\\Api\\ApiMethodBuilder\:\:\$slug is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Api/ApiMethodBuilder.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$last_used_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$tokenable_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Activity\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\Activity\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\Activity\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Activity.php
+
+		-
 			message: '#^Method Blafast\\Foundation\\Models\\Address\:\:addressable\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, Blafast\\Foundation\\Models\\Address\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(Blafast\\Foundation\\Models\\Address\)\>\.$#'
 			identifier: return.type
 			count: 1
@@ -85,6 +127,18 @@ parameters:
 			path: src/Models/Currency.php
 
 		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<static\(Blafast\\Foundation\\Models\\DeferredApiRequest\)\>\:\:where\(\) expects array\<int\|model property of static\(Blafast\\Foundation\\Models\\DeferredApiRequest\), mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: Illuminate\\Database\\Eloquent\\Builder\<static\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of static\(Blafast\\Foundation\\Models\\DeferredApiRequest\), non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Models/DeferredApiRequest.php
+
+		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<static\(Blafast\\Foundation\\Models\\DeferredEndpointConfig\)\>\:\:where\(\) expects array\<int\|model property of static\(Blafast\\Foundation\\Models\\DeferredEndpointConfig\), mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: Illuminate\\Database\\Eloquent\\Builder\<static\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of static\(Blafast\\Foundation\\Models\\DeferredEndpointConfig\), non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Models/DeferredEndpointConfig.php
+
+		-
 			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Blafast\\Foundation\\Models\\Address\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\MorphMany\: TRelatedModel, TDeclaringModel$#'
 			identifier: generics.lessTypes
 			count: 1
@@ -99,6 +153,12 @@ parameters:
 		-
 			message: '#^Method Blafast\\Foundation\\Models\\Organization\:\:primaryAddress\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Address, Blafast\\Foundation\\Models\\Organization\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Address, \$this\(Blafast\\Foundation\\Models\\Organization\)\>\.$#'
 			identifier: return.type
+			count: 1
+			path: src/Models/Organization.php
+
+		-
+			message: '#^Parameter \#1 \$attributes of method Illuminate\\Database\\Eloquent\\Relations\\HasOneOrMany\<Blafast\\Foundation\\Models\\Address,Illuminate\\Database\\Eloquent\\Model,Illuminate\\Database\\Eloquent\\Collection\<int, Blafast\\Foundation\\Models\\Address\>\>\:\:create\(\) expects array\<model property of Blafast\\Foundation\\Models\\Address, mixed\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Models/Organization.php
 
@@ -121,16 +181,34 @@ parameters:
 			path: src/Models/OrganizationUser.php
 
 		-
-			message: '#^Method Blafast\\Foundation\\Models\\Activity\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\Activity\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\Activity\)\>\.$#'
-			identifier: return.type
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:where\(\) expects array\<int\|model property of Illuminate\\Database\\Eloquent\\Model, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of Illuminate\\Database\\Eloquent\\Model, non\-falsy\-string given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Models/Activity.php
+			path: src/Scopes/OrganizationScope.php
 
 		-
-			message: '#^Trait Blafast\\Foundation\\Traits\\BelongsToOrganization is used zero times and is not analysed\.$#'
+			message: '#^Method Blafast\\Foundation\\Services\\QueryBuilderService\:\:buildQuery\(\) should return Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\> but returns Illuminate\\Database\\Eloquent\\Builder\<Blafast\\Foundation\\Contracts\\HasApiStructure&Illuminate\\Database\\Eloquent\\Model\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Services/QueryBuilderService.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$filters of method Spatie\\QueryBuilder\\QueryBuilder\<Blafast\\Foundation\\Contracts\\HasApiStructure&Illuminate\\Database\\Eloquent\\Model\>\:\:allowedFilters\(\) expects Spatie\\QueryBuilder\\AllowedFilter\|string, array\<int, Spatie\\QueryBuilder\\AllowedFilter\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/QueryBuilderService.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$sorts of method Spatie\\QueryBuilder\\QueryBuilder\<Blafast\\Foundation\\Contracts\\HasApiStructure&Illuminate\\Database\\Eloquent\\Model\>\:\:allowedSorts\(\) expects Spatie\\QueryBuilder\\AllowedSort\|string, array\<int, Spatie\\QueryBuilder\\AllowedSort\|string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Services/QueryBuilderService.php
+
+		-
+			message: '#^Trait Blafast\\Foundation\\Traits\\ExposesApiMethods is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1
-			path: src/Traits/BelongsToOrganization.php
+			path: src/Traits/ExposesApiMethods.php
 
 		-
 			message: '#^Trait Blafast\\Foundation\\Traits\\HasMediaCollections is used zero times and is not analysed\.$#'
@@ -143,15 +221,3 @@ parameters:
 			identifier: trait.unused
 			count: 1
 			path: src/Traits/LogsOrganizationActivity.php
-
-		-
-			message: '#^Property Blafast\\Foundation\\Api\\ApiMethodBuilder\:\:\$slug is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: src/Api/ApiMethodBuilder.php
-
-		-
-			message: '#^Trait Blafast\\Foundation\\Traits\\ExposesApiMethods is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Traits/ExposesApiMethods.php

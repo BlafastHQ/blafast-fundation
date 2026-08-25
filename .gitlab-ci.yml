@@ -1,0 +1,63 @@
+# GitLab CI (task 4 / audit C8) — quality (Pint + PHPStan level 5) and the test
+# suite on BOTH drivers. Pass criterion for tests: tests/check-baseline.php — the
+# failing set must be a SUBSET of tests/BASELINE.md (audit-known failures that
+# Phases 2-6 of tasks/fix-optimize-tasks.md burn down); any NEW failing test
+# breaks the pipeline.
+
+stages:
+  - quality
+  - test
+
+default:
+  image: php:8.4-cli
+  before_script:
+    - apt-get update -yqq
+    - apt-get install -yqq git unzip libpq-dev libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libicu-dev libonig-dev
+    - docker-php-ext-configure gd --with-freetype --with-jpeg
+    - docker-php-ext-install -j"$(nproc)" pdo_pgsql intl zip bcmath pcntl gd exif
+    - echo "memory_limit=-1" > /usr/local/etc/php/conf.d/zz-memory.ini
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --prefer-dist --no-interaction --no-progress
+
+pint:
+  stage: quality
+  script:
+    - vendor/bin/pint --test
+
+phpstan:
+  stage: quality
+  script:
+    - vendor/bin/phpstan analyse --no-progress
+
+pest-sqlite:
+  stage: test
+  script:
+    - vendor/bin/pest --ci || true
+    - php tests/check-baseline.php build/report.junit.xml tests/BASELINE.md
+  artifacts:
+    when: always
+    reports:
+      junit: build/report.junit.xml
+
+pest-pgsql:
+  stage: test
+  services:
+    - name: postgres:17
+      alias: postgres
+  variables:
+    POSTGRES_DB: blafast_fundation_test
+    POSTGRES_USER: blafast
+    POSTGRES_PASSWORD: blafast
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_DATABASE: blafast_fundation_test
+    DB_USERNAME: blafast
+    DB_PASSWORD: blafast
+  script:
+    - vendor/bin/pest --ci || true
+    - php tests/check-baseline.php build/report.junit.xml tests/BASELINE.md
+  artifacts:
+    when: always
+    reports:
+      junit: build/report.junit.xml

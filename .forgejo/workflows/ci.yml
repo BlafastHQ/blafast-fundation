@@ -1,0 +1,54 @@
+# Forgejo Actions (GitHub-compatible syntax) — quality (Pint + PHPStan level 5)
+# and the test suite (task 4 / audit C8). php:8.4-cli is pinned because Forgejo
+# runners differ from GitHub-hosted ones; the sqlite lane runs here (service
+# containers are runner-dependent — GitHub Actions and GitLab CI cover the
+# Postgres lane). Pass criterion: tests/check-baseline.php — the failing set
+# must be a SUBSET of tests/BASELINE.md; any NEW failing test breaks the build.
+name: CI
+on:
+  push:
+    branches: [main, develop, "*.x"]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: docker
+    container:
+      image: php:8.4-cli
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PHP extensions + Composer
+        run: |
+          apt-get update -yqq
+          apt-get install -yqq git unzip libpq-dev libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libicu-dev libonig-dev
+          docker-php-ext-configure gd --with-freetype --with-jpeg
+          docker-php-ext-install -j"$(nproc)" pdo_pgsql intl zip bcmath pcntl gd exif
+          echo "memory_limit=-1" > /usr/local/etc/php/conf.d/zz-memory.ini
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Pint
+        run: vendor/bin/pint --test
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
+
+  pest:
+    runs-on: docker
+    container:
+      image: php:8.4-cli
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PHP extensions + Composer
+        run: |
+          apt-get update -yqq
+          apt-get install -yqq git unzip libpq-dev libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libicu-dev libonig-dev
+          docker-php-ext-configure gd --with-freetype --with-jpeg
+          docker-php-ext-install -j"$(nproc)" pdo_pgsql intl zip bcmath pcntl gd exif
+          echo "memory_limit=-1" > /usr/local/etc/php/conf.d/zz-memory.ini
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Run Pest (sqlite) + baseline gate
+        run: |
+          vendor/bin/pest --ci || true
+          php tests/check-baseline.php build/report.junit.xml tests/BASELINE.md
