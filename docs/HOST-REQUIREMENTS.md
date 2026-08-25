@@ -80,6 +80,22 @@ code must opt out explicitly — `Model::withoutOrganizationScope()`,
 and migrations. Audit any host command/job/Filament resource that queries a
 scoped model outside a request: it now reads nothing instead of everything.
 
+## RPC methods: slugs and the queued contract (Task 27)
+
+`apiMethods()` may be the documented plain list — the builder embeds the slug and
+every consumer (meta, permission sync, exec checks, `call/{slug}` routing) keys by
+it. If you previously worked around the numeric-key bug by hand-keying the array,
+that still works (an explicit `slug` in the definition wins over the array key).
+If `blafast:permissions:sync` ever ran against a plain-list model, delete the junk
+`exec.{model}.0`-style permission rows — nothing can ever match them.
+
+**Behaviour change:** `->queued()` methods now return **202 Accepted** with a
+deferred-request id and a poll link (`GET /api/v1/deferred/{id}`) where the stored
+result appears once processed — not the old HTTP 200 with a fabricated
+`executed_at`. They degrade to synchronous execution (normal 200 + result) in
+global superadmin context, for calls carrying file parameters, or when
+`blafast-fundation.deferred.enabled` is off. The `ExecuteModelMethod` job is gone.
+
 ## Dependency slimming (Task 25)
 
 `spatie/laravel-tags` and `laravel-json-api/laravel` are no longer installed by

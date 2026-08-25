@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Traits;
 
+use Blafast\Foundation\Api\ApiMethodNormalizer;
 use Blafast\Foundation\Dto\ApiMethod;
 
 /**
@@ -23,7 +24,7 @@ trait ExposesApiMethods
     {
         $methods = [];
 
-        foreach (static::apiMethods() as $slug => $config) {
+        foreach (ApiMethodNormalizer::normalize(static::apiMethods()) as $slug => $config) {
             $methods[$slug] = ApiMethod::fromArray($slug, $config);
         }
 
@@ -35,7 +36,7 @@ trait ExposesApiMethods
      */
     public static function getApiMethod(string $slug): ?ApiMethod
     {
-        $methods = static::apiMethods();
+        $methods = ApiMethodNormalizer::normalize(static::apiMethods());
 
         if (! isset($methods[$slug])) {
             return null;
@@ -49,7 +50,7 @@ trait ExposesApiMethods
      */
     public static function hasApiMethod(string $slug): bool
     {
-        return isset(static::apiMethods()[$slug]);
+        return isset(ApiMethodNormalizer::normalize(static::apiMethods())[$slug]);
     }
 
     /**
@@ -61,7 +62,7 @@ trait ExposesApiMethods
     {
         $httpMethod = strtoupper($httpMethod);
 
-        return collect(static::apiMethods())
+        return collect(ApiMethodNormalizer::normalize(static::apiMethods()))
             ->filter(fn ($config) => strtoupper($config['http_method'] ?? 'POST') === $httpMethod)
             ->keys()
             ->toArray();
@@ -74,7 +75,7 @@ trait ExposesApiMethods
      */
     public static function getApiMethodSlugs(): array
     {
-        return array_keys(static::apiMethods());
+        return array_keys(ApiMethodNormalizer::normalize(static::apiMethods()));
     }
 
     /**

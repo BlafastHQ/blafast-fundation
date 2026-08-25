@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Services;
 
+use Blafast\Foundation\Api\ApiMethodNormalizer;
 use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Models\Role;
 use Illuminate\Database\Eloquent\Model;
@@ -73,12 +74,9 @@ class BlaFastPermissionRegistrar
             ]
         );
 
-        /**
-         * @var array<string, array<string, mixed>> $apiMethods
-         *
-         * @phpstan-ignore-next-line Method exists on models with ExposesApiMethods trait
-         */
-        $apiMethods = $modelClass::apiMethods();
+        // Task 27 (M15): normalized slug keys — a plain-list declaration no
+        // longer creates unreachable exec.{model}.0 grants.
+        $apiMethods = ApiMethodNormalizer::for($modelClass);
 
         // Method-level exec permissions
         foreach ($apiMethods as $methodSlug => $config) {
@@ -160,12 +158,7 @@ class BlaFastPermissionRegistrar
      */
     protected function applyExecRights(string $slug, array $execRights, string $modelClass, ?string $organizationId): void
     {
-        /**
-         * @var array<string, array<string, mixed>> $apiMethods
-         *
-         * @phpstan-ignore-next-line Method exists on models with ExposesApiMethods trait
-         */
-        $apiMethods = $modelClass::apiMethods();
+        $apiMethods = ApiMethodNormalizer::for($modelClass);
         $allMethods = array_keys($apiMethods);
 
         foreach ($execRights as $roleName => $methods) {

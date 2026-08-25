@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Http\Controllers\Api\V1;
 
 use Blafast\Foundation\Contracts\HasApiMethods;
 use Blafast\Foundation\Dto\ApiMethod;
+use Blafast\Foundation\Services\DeferredRequestService;
 use Blafast\Foundation\Services\ExecPermissionChecker;
 use Blafast\Foundation\Services\MethodExecutionService;
 use Blafast\Foundation\Services\ModelRegistry;
@@ -29,6 +30,7 @@ class ModelMethodController extends Controller
         private ModelRegistry $registry,
         private MethodExecutionService $executionService,
         private ExecPermissionChecker $permissionChecker,
+        private DeferredRequestService $deferredService,
     ) {}
 
     /**
@@ -63,7 +65,19 @@ class ModelMethodController extends Controller
         // 7. Extract and validate parameters
         $parameters = $this->extractAndValidateParameters($request, $method);
 
-        // 8. Execute method
+        // 8. Queued methods go through the deferred infrastructure (task 27 /
+        // M7): 202 with a trackable id and a poll link where the stored result
+        // becomes retrievable — never a fabricated executed_at with HTTP 200.
+        // When the request cannot be deferred (a deferred REPLAY, global
+        // superadmin context, file parameters, subsystem disabled), it
+        // degrades to honest synchronous execution below.
+        if ($method->queued && $this->deferredService->canDefer($request)) {
+            return $this->deferredService->respond(
+                $this->deferredService->defer($request)
+            );
+        }
+
+        // 9. Execute method
         $result = $this->executionService->execute(
             $model,
             $method,
@@ -71,7 +85,7 @@ class ModelMethodController extends Controller
             $request->user()
         );
 
-        // 9. Return response
+        // 10. Return response
         return $this->formatResponse($model, $method, $result);
     }
 

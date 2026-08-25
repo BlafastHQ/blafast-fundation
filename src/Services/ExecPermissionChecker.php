@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Services;
 
+use Blafast\Foundation\Api\ApiMethodNormalizer;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 
@@ -58,7 +59,7 @@ class ExecPermissionChecker
             return [];
         }
 
-        $apiMethods = $modelClass::apiMethods();
+        $apiMethods = ApiMethodNormalizer::for($modelClass);
         $allMethods = array_keys($apiMethods);
 
         // Get model slug

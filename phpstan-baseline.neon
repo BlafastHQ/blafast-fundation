@@ -43,12 +43,6 @@ parameters:
 			path: database/factories/OrganizationFactory.php
 
 		-
-			message: '#^Property Blafast\\Foundation\\Api\\ApiMethodBuilder\:\:\$slug is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: src/Api/ApiMethodBuilder.php
-
-		-
 			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$created_at\.$#'
 			identifier: property.notFound
 			count: 1

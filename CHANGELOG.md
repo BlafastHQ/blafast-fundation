@@ -4,6 +4,27 @@ All notable changes to `blafast-fundation` will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (Tasks 26-27, RPC)
+- **The documented plain-list `apiMethods()` pattern works** (Task 27): the builder
+  emits the slug and one normalizer keys every consumer by `slug ?? key` — before,
+  plain lists produced numeric keys everywhere (meta advertised `slug => 0`,
+  permission sync created unmatchable `exec.{model}.0`, `call/{slug}` 404'd).
+- `array:<type>` parameters validate per element under `attribute.*` and return 422
+  — the raw-modifier parent rule that 500'd every modified-array input is gone
+  (Task 26).
+- RPC arguments are cast to the PHP types after validation and bound by NAME via
+  reflection: GET string integers no longer TypeError, unprovided optionals fall
+  through to the PHP signature default instead of a forced null, and declaration
+  order no longer has to match the signature (Task 26). `file` parameters reach the
+  method and are logged as a placeholder instead of crashing the activity write.
+
+### Changed (Task 27)
+- **Breaking:** `->queued()` RPC methods return **202** with a deferred-request id
+  and poll link (result retrievable at `GET /api/v1/deferred/{id}`) instead of
+  HTTP 200 with a fabricated `executed_at` and no way to learn the outcome. They
+  degrade to synchronous execution in global context, for file parameters, or when
+  the deferred subsystem is disabled. The `ExecuteModelMethod` job is removed.
+
 ### Removed (Task 25)
 - **Production dependencies dropped:** `spatie/laravel-tags` (never used) and
   `laravel-json-api/laravel` (zero schemas registered — the JSON:API responses and

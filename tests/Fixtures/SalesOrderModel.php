@@ -44,15 +44,18 @@ class SalesOrderModel extends Model implements HasApiMethods, HasApiStructure
 
     public static function apiMethods(): array
     {
+        // The DOCUMENTED plain-list pattern (task 27 / M15): no hand-keying —
+        // build() emits the slug and ApiMethodNormalizer keys every consumer
+        // by it. Before, this exact shape yielded numeric keys everywhere
+        // (meta advertised slug 0, permissions were exec.{model}.0, call/
+        // {slug} 404'd).
         return [
-            // Keyed by method slug explicitly — apiMethods() as a plain list gives the
-            // registrar/controller numeric keys (exec.{slug}.0); task 27 normalizes it.
-            'approve' => ApiMethodBuilder::make('approve', 'approve')->post()->build(),
+            ApiMethodBuilder::make('approve', 'approve')->post()->build(),
             // Task 26 fixtures: every ApiMethodParameterType + the H16/H17 traps.
-            'print' => ApiMethodBuilder::make('print', 'printLabels')->get()
+            ApiMethodBuilder::make('print', 'printLabels')->get()
                 ->optionalParam('copies', 'integer')
                 ->build(),
-            'notify' => ApiMethodBuilder::make('notify', 'notifyPeople')->post()
+            ApiMethodBuilder::make('notify', 'notifyPeople')->post()
                 ->requiredParam('emails', 'array:email')
                 ->optionalParam('at', 'array:datetime')
                 ->optionalParam('weights', 'array:float')
@@ -60,11 +63,11 @@ class SalesOrderModel extends Model implements HasApiMethods, HasApiStructure
             // Declared order (carrier, boxes) deliberately DIFFERS from the PHP
             // signature ship(int $boxes, string $carrier) — positional binding
             // misbinds this pair; named binding must not.
-            'ship' => ApiMethodBuilder::make('ship', 'ship')->post()
+            ApiMethodBuilder::make('ship', 'ship')->post()
                 ->optionalParam('carrier', 'string', 'ups')
                 ->requiredParam('boxes', 'integer')
                 ->build(),
-            'echo-types' => ApiMethodBuilder::make('echo-types', 'echoTypes')->post()
+            ApiMethodBuilder::make('echo-types', 'echoTypes')->post()
                 ->requiredParam('note', 'string')
                 ->requiredParam('count', 'integer')
                 ->requiredParam('ratio', 'float')
@@ -78,7 +81,7 @@ class SalesOrderModel extends Model implements HasApiMethods, HasApiStructure
                 ->requiredParam('size', 'enum:a4,letter')
                 ->optionalParam('doc', 'file')
                 ->build(),
-            'approve-later' => ApiMethodBuilder::make('approve-later', 'approveLater')->post()
+            ApiMethodBuilder::make('approve-later', 'approveLater')->post()
                 ->optionalParam('copies', 'integer')
                 ->queued()
                 ->build(),

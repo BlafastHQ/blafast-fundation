@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Services;
 
 use Blafast\Foundation\Dto\ApiMethod;
-use Blafast\Foundation\Jobs\ExecuteModelMethod;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
@@ -19,7 +18,14 @@ use Illuminate\Http\UploadedFile;
 class MethodExecutionService
 {
     /**
-     * Execute a model method.
+     * Execute a model method synchronously.
+     *
+     * Task 27 (M7): the queued branch is gone — `->queued()` methods are
+     * routed through the deferred-request infrastructure by the controller
+     * (202 + poll link), and a deferred REPLAY lands here to run for real.
+     * The old branch returned ['queued' => true] which the controller wrapped
+     * in a method-result envelope with a fabricated `executed_at = now()`,
+     * HTTP 200, no job id and no retrievable result.
      */
     public function execute(
         Model $model,
@@ -27,12 +33,6 @@ class MethodExecutionService
         array $parameters,
         ?Authenticatable $user
     ): mixed {
-        // Handle queued execution
-        if ($method->queued) {
-            return $this->queueExecution($model, $method, $parameters, $user);
-        }
-
-        // Execute synchronously
         $result = $this->executeMethod($model, $method, $parameters);
 
         // Log the execution
@@ -70,36 +70,6 @@ class MethodExecutionService
         }
 
         return $model->{$methodName}(...$arguments);
-    }
-
-    /**
-     * Queue method execution for background processing.
-     *
-     * @return array<string, mixed>
-     */
-    protected function queueExecution(
-        Model $model,
-        ApiMethod $method,
-        array $parameters,
-        ?Authenticatable $user
-    ): array {
-        // Dispatch job
-        $job = new ExecuteModelMethod(
-            get_class($model),
-            // @phpstan-ignore property.notFound
-            $model->id,
-            $method->slug,
-            $parameters,
-            // @phpstan-ignore property.notFound
-            $user?->id
-        );
-
-        dispatch($job);
-
-        return [
-            'queued' => true,
-            'message' => 'Method execution has been queued.',
-        ];
     }
 
     /**

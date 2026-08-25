@@ -102,11 +102,14 @@ it('binds by name when the declared order differs from the PHP signature', funct
 it('executes a queued method with the same inputs in the worker', function () {
     config()->set('queue.default', 'sync');
 
-    // '2' (string) exercises the cast-before-queue path end-to-end: the job
-    // must receive int 2 and bind it into `int $copies = 1`.
+    // Task 27: a GLOBAL-context superadmin cannot defer (organization_id is
+    // NOT NULL) so the queued method degrades to honest synchronous execution
+    // — the '2' (string) input still exercises cast + named binding into
+    // `int $copies = 1`. The 202/deferred contract is covered in
+    // RpcSlugAndQueueTest with an organization context.
     callRpc('approve-later', ['copies' => '2'])
         ->assertOk()
-        ->assertJsonPath('data.attributes.result.queued', true);
+        ->assertJsonPath('data.attributes.result.copies', 2);
 
     expect($this->order->fresh()->reference)->toBe('approved-x2');
 });

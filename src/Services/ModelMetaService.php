@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Services;
 
+use Blafast\Foundation\Api\ApiMethodNormalizer;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Dto\ModelMeta;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -177,8 +178,9 @@ class ModelMetaService
      */
     private function buildMethods(string $modelClass, ?Authenticatable $user): array
     {
-        /** @phpstan-ignore staticMethod.notFound */
-        $apiMethods = $modelClass::apiMethods();
+        // Task 27 (M15): slug-keyed via the one normalizer — array position
+        // in the model's declaration is meaningless.
+        $apiMethods = ApiMethodNormalizer::for($modelClass);
         $slug = $modelClass::getApiSlug();
         $methods = [];
 

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Blafast\Foundation\Jobs\ExecuteModelMethod;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Notifications\JobFailedNotification;
@@ -58,7 +57,7 @@ it('notifies a real Superadmin when a BlaFastJob fails (H19)', function () {
     Notification::assertSentTo($superadmin, JobFailedNotification::class);
 });
 
-it('executes a queued RPC with a custom-namespace user class (M19)', function () {
+it('executes an RPC with a custom-namespace user class (M19)', function () {
     Schema::create('test_sales_orders', function ($table) {
         $table->uuid('id')->primary();
         $table->string('reference');
@@ -70,9 +69,15 @@ it('executes a queued RPC with a custom-namespace user class (M19)', function ()
     $user = User::factory()->create();
     $order = SalesOrderModel::create(['reference' => 'SO-9']);
 
-    // The old hard App\Models\User import fataled with "class not found" here.
-    (new ExecuteModelMethod(SalesOrderModel::class, $order->id, 'approve', [], $user->id))
-        ->handle(app(MethodExecutionService::class));
+    // The old queued mechanism (ExecuteModelMethod, deleted in task 27 when
+    // ->queued() moved onto the deferred-request infrastructure) carried a
+    // hard App\Models\User import that fataled for custom user namespaces.
+    // The execution service is user-model-agnostic; the QUEUED path with this
+    // suite's custom-namespace user is proven end-to-end in
+    // RpcSlugAndQueueTest ('202 with a trackable id') and the replay-as-
+    // original-user contract in DeferredExecutionTest.
+    $method = SalesOrderModel::getApiMethod('approve');
+    app(MethodExecutionService::class)->execute($order, $method, [], $user);
 
     expect($order->fresh()->approved)->toBeTrue();
 });
