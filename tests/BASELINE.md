@@ -12,8 +12,7 @@ task 3's driver-parity point — the two lanes fail the identical set. Four
 order-flaky Country/Currency factory unique-collisions are included even though
 they only fire on some random seeds, and one deferred-middleware test that only
 fails on the prefer-lowest dependency leg (the deferred subsystem is Phase 4's —
-tasks 15/16 own it). Task 10 pruned the healed query/pagination/menu-adjacent
-entries. Count: 38.
+tasks 15/16 own it). Tasks 10–11 pruned healed entries. Count: 31.
 
 - Tests\Feature\AuthenticationTest::create token requires name
 - Tests\Feature\AuthenticationTest::login requires device name
@@ -36,13 +35,6 @@ entries. Count: 38.
 - Tests\Feature\MenuEndpointTest::user-menu works with role-based permissions
 - Tests\Feature\MenuRegistryServiceTest::complex module interaction scenario
 - Tests\Feature\MenuRegistryServiceTest::real-world billing module scenario
-- Tests\Feature\MetadataCacheCommandTest::status command displays cache configuration
-- Tests\Feature\MetadataCacheInvalidationTest::cache invalidation works with file driver fallback
-- Tests\Feature\MetadataCacheInvalidationTest::cache is invalidated when permission is assigned directly to user
-- Tests\Feature\MetadataCacheInvalidationTest::cache is invalidated when permission is revoked from user
-- Tests\Feature\MetadataCacheInvalidationTest::cache is invalidated when role is attached to user
-- Tests\Feature\MetadataCacheInvalidationTest::cache is invalidated when role is detached from user
-- Tests\Feature\MetadataCacheInvalidationTest::permission change listener handles events without user gracefully
 - Tests\Feature\RateLimitingTest::api rate limiter allows requests under limit
 - Tests\Feature\RateLimitingTest::api rate limiter is per-ip when not authenticated
 - Tests\Feature\RateLimitingTest::api rate limiter is per-user when authenticated

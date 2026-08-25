@@ -62,6 +62,9 @@ test('remember uses fallback without tagging', function () {
     Cache::shouldReceive('supportsTags')
         ->andReturn(false);
 
+    // Task 11 (M1): the fallback reads the tag version counters into the key.
+    Cache::shouldReceive('get')->andReturn(0);
+
     Cache::shouldReceive('remember')
         ->once()
         ->andReturn('cached-value');

@@ -22,6 +22,7 @@ class ModelMetaService
     public function __construct(
         private OrganizationContext $context,
         private ExecPermissionChecker $permissionChecker,
+        private MetadataCacheService $cache,
     ) {}
 
     /**
@@ -31,12 +32,15 @@ class ModelMetaService
      */
     public function compile(string $modelClass, ?Authenticatable $user = null): ModelMeta
     {
-        $cacheKey = $this->getCacheKey($modelClass, $user);
-
-        return Cache::tags($this->getCacheTags($modelClass))
-            ->remember($cacheKey, 600, function () use ($modelClass, $user) {
-                return $this->buildMeta($modelClass, $user);
-            });
+        // Single guarded cache layer (C3): this used to call Cache::tags()
+        // directly — a BadMethodCallException (HTTP 500) on file/database/dynamodb
+        // stores, bypassing MetadataCacheService's careful supportsTags() guard
+        // from inside its own callback.
+        return $this->cache->remember(
+            $this->getCacheKey($modelClass, $user),
+            $this->getCacheTags($modelClass),
+            fn () => $this->buildMeta($modelClass, $user),
+        );
     }
 
     /**
@@ -265,6 +269,9 @@ class ModelMetaService
      */
     public function invalidate(string $modelClass): void
     {
-        Cache::tags($this->getCacheTags($modelClass))->flush();
+        // Guarded path (C3): Cache::tags() throws on non-tagging stores; the
+        // outer service flushes tags where supported and bumps version counters
+        // elsewhere (M1).
+        $this->cache->invalidateByTags($this->getCacheTags($modelClass));
     }
 }

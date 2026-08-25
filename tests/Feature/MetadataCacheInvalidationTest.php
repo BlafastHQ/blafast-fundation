@@ -77,7 +77,7 @@ test('cache is invalidated when role is attached to user', function () {
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $role = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+    $role = Role::create(['name' => 'admin', 'guard_name' => 'api']);
 
     // Warm the cache
     $service = app(MetadataCacheService::class);
@@ -95,7 +95,7 @@ test('cache is invalidated when role is detached from user', function () {
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $role = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+    $role = Role::create(['name' => 'admin', 'guard_name' => 'api']);
     $user->assignRole($role);
 
     // Warm the cache
@@ -114,7 +114,7 @@ test('cache is invalidated when permission is assigned directly to user', functi
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'web']);
+    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'api']);
 
     // Warm the cache
     $service = app(MetadataCacheService::class);
@@ -132,7 +132,7 @@ test('cache is invalidated when permission is revoked from user', function () {
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'web']);
+    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'api']);
     $user->givePermissionTo($permission);
 
     // Warm the cache

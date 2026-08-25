@@ -64,6 +64,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Spatie\Permission\Events\PermissionAttachedEvent;
+use Spatie\Permission\Events\PermissionDetachedEvent;
+use Spatie\Permission\Events\RoleAttachedEvent;
+use Spatie\Permission\Events\RoleDetachedEvent;
 use Spatie\Permission\PermissionRegistrar;
 
 class BlafastServiceProvider extends PackageServiceProvider
@@ -190,13 +194,16 @@ class BlafastServiceProvider extends PackageServiceProvider
      */
     private function applyRequiredFrameworkConfig(): void
     {
-        // spatie permission — the multi-tenant RBAC contract.
+        // spatie permission — the multi-tenant RBAC contract. events_enabled makes
+        // spatie fire its Role/PermissionAttached/Detached class events, which the
+        // metadata-cache invalidation listeners depend on (M2).
         config([
             'permission.teams' => true,
             'permission.column_names.team_foreign_key' => 'organization_id',
             'permission.column_names.model_morph_key' => 'model_uuid',
             'permission.models.permission' => Permission::class,
             'permission.models.role' => Role::class,
+            'permission.events_enabled' => true,
         ]);
 
         // activitylog — the package's uuid + organization-scoped Activity model.
@@ -412,13 +419,15 @@ class BlafastServiceProvider extends PackageServiceProvider
         Event::listen('eloquent.created:*', InvalidateMetadataCacheOnModelUpdate::class);
         Event::listen('eloquent.deleted:*', InvalidateMetadataCacheOnModelUpdate::class);
 
-        // Listen to Spatie permission package events for cache invalidation
-        // These events are fired when roles/permissions are assigned to users
+        // Listen to spatie's REAL class events (M2): the old string names
+        // ('permission.attached', …) are never dispatched by spatie — it fires
+        // these event classes, and only when permission.events_enabled is true
+        // (set by applyRequiredFrameworkConfig()).
         if (class_exists(PermissionRegistrar::class)) {
-            Event::listen('permission.attached', InvalidateMetadataCacheOnPermissionChange::class);
-            Event::listen('permission.detached', InvalidateMetadataCacheOnPermissionChange::class);
-            Event::listen('role.attached', InvalidateMetadataCacheOnPermissionChange::class);
-            Event::listen('role.detached', InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen(PermissionAttachedEvent::class, InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen(PermissionDetachedEvent::class, InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen(RoleAttachedEvent::class, InvalidateMetadataCacheOnPermissionChange::class);
+            Event::listen(RoleDetachedEvent::class, InvalidateMetadataCacheOnPermissionChange::class);
         }
     }
 

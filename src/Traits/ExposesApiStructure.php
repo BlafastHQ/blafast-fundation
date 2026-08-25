@@ -15,11 +15,14 @@ use Illuminate\Support\Str;
 trait ExposesApiStructure
 {
     /**
-     * Cached API structure to avoid repeated calculations.
+     * Cached API structures, keyed by CONCRETE class (M16): a plain static is
+     * shared across subclasses of a common base, so the first model compiled
+     * used to win — the second child of an abstract base silently served the
+     * first child's fields AND slug.
      *
-     * @var array<string, mixed>|null
+     * @var array<class-string, array<string, mixed>>
      */
-    protected static ?array $cachedApiStructure = null;
+    protected static array $cachedApiStructure = [];
 
     /**
      * Get the compiled API structure with caching.
@@ -28,11 +31,7 @@ trait ExposesApiStructure
      */
     public static function getApiStructure(): array
     {
-        if (static::$cachedApiStructure === null) {
-            static::$cachedApiStructure = static::apiStructure();
-        }
-
-        return static::$cachedApiStructure;
+        return static::$cachedApiStructure[static::class] ??= static::apiStructure();
     }
 
     /**
@@ -236,6 +235,6 @@ trait ExposesApiStructure
      */
     public static function clearApiStructureCache(): void
     {
-        static::$cachedApiStructure = null;
+        unset(static::$cachedApiStructure[static::class]);
     }
 }

@@ -68,9 +68,12 @@ test('status command displays cache configuration', function () {
     $this->artisan('blafast:cache:metadata status')
         ->expectsTable(['Setting', 'Value'], [
             ['Cache Driver', config('cache.default')],
-            ['Supports Tagging', in_array(config('cache.default'), ['redis', 'memcached']) ? 'Yes' : 'No'],
+            // Same truth the command prints: the ARRAY store DOES support tags —
+            // the old hardcoded redis/memcached list wrongly expected 'No' here.
+            ['Supports Tagging', Cache::supportsTags() ? 'Yes' : 'No'],
             ['TTL', '600 seconds'],
-            ['Registered Models', '1'],
+            ['Prefix', 'blafast:metadata:'],
+            ['Registered Models', (string) count(app(ModelRegistry::class)->all())],
         ])
         ->assertExitCode(0);
 });
