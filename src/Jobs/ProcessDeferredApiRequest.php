@@ -148,6 +148,10 @@ class ProcessDeferredApiRequest extends BlaFastJob
             $content
         ));
 
+        // Server-side loop-guard marker (task 16/M8): the attribute bag is not
+        // client-controllable, unlike the informational headers above.
+        $request->attributes->set('blafast.deferred_execution', true);
+
         // Pre-authenticate the sanctum guard for this in-process cycle.
         auth()->guard('sanctum')->setUser($user);
         $request->setUserResolver(fn () => $user);

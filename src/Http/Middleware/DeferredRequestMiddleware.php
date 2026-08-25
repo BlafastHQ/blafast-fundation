@@ -33,13 +33,26 @@ class DeferredRequestMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip if already a deferred execution (prevent infinite loop)
-        if ($request->header('X-Deferred-Execution') === 'true') {
+        // Kill switch (task 16: the config key existed but nothing read it).
+        if (! config('blafast-fundation.deferred.enabled', true)) {
+            return $next($request);
+        }
+
+        // Loop guard on the SERVER-SIDE attribute bag (M8): the old client-supplied
+        // X-Deferred-Execution header let any caller run force_deferred endpoints
+        // synchronously, defeating load-shedding. Attributes are unforgeable.
+        if ($request->attributes->get('blafast.deferred_execution') === true) {
             return $next($request);
         }
 
         // Skip if no authenticated user
         if (! $request->user()) {
+            return $next($request);
+        }
+
+        // M11: in global (superadmin) context there is no organization_id and the
+        // column is NOT NULL — deliberately degrade to synchronous execution.
+        if (! $this->orgContext->hasContext()) {
             return $next($request);
         }
 
@@ -53,6 +66,20 @@ class DeferredRequestMiddleware
         // Check if request should be deferred
         if (! $this->shouldDefer($request, $config)) {
             return $next($request);
+        }
+
+        // M10: multipart uploads cannot be deferred — the encrypted:json cast
+        // serializes UploadedFile objects to {} and the temp files are gone before
+        // the job runs. Reject clearly instead of silently losing the upload.
+        if ($request->allFiles() !== []) {
+            return response()->json([
+                'errors' => [[
+                    'status' => '422',
+                    'code' => 'DEFERRED_FILES_UNSUPPORTED',
+                    'title' => 'Cannot Defer File Uploads',
+                    'detail' => 'Requests carrying file uploads cannot be deferred. Retry without the defer header.',
+                ]],
+            ], 422);
         }
 
         // Create and dispatch deferred request
@@ -117,8 +144,11 @@ class DeferredRequestMiddleware
             return true;
         }
 
-        // Otherwise, check for explicit defer header
-        return $request->header('X-Blafast-Defer') === 'true';
+        // Otherwise, check for the explicit defer header (name configurable —
+        // task 16 wires the previously dead deferred.header_name key).
+        $headerName = (string) config('blafast-fundation.deferred.header_name', 'X-Blafast-Defer');
+
+        return $request->header($headerName) === 'true';
     }
 
     /**
