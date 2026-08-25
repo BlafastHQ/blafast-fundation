@@ -80,6 +80,24 @@ code must opt out explicitly — `Model::withoutOrganizationScope()`,
 and migrations. Audit any host command/job/Filament resource that queries a
 scoped model outside a request: it now reads nothing instead of everything.
 
+## Organization-scoped notifications (Task 18)
+
+`App\Models\User` must override `notifications()` to route through the
+package's org-scoped model — Laravel offers no config to swap its base
+`DatabaseNotification`, and without the override notifications are NOT
+tenant-isolated (a member of orgs A and B reads both orgs' notifications):
+
+```php
+public function notifications(): MorphMany
+{
+    return $this->morphMany(\Blafast\Foundation\Models\DatabaseNotification::class, 'notifiable')->latest();
+}
+```
+
+See `stubs/User.stub`. The package logs a boot-time warning when the base model
+is still in use. Notifications written with no org context (system jobs) carry
+`organization_id = NULL` and stay visible in every context.
+
 ## The User model's permission guard (Task 5)
 
 `App\Models\User` must declare:

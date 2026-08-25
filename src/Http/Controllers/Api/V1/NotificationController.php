@@ -59,8 +59,10 @@ class NotificationController extends Controller
             $query->where('type', $type);
         }
 
-        // Paginate results
-        $paginator = $this->pagination->paginate($query, $request);
+        // Paginate results. getQuery() unwraps the MorphMany relation to the
+        // Builder the paginator requires — latent until task 18 made a user WITH
+        // notifications actually reach this line.
+        $paginator = $this->pagination->paginate($query->getQuery(), $request);
 
         return response()->json(
             array_merge(

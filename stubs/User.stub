@@ -13,6 +13,16 @@ class User extends Model
      */
     protected $guard_name = 'api';
 
+    /**
+     * Required: route notifications through the package's organization-scoped
+     * model — Laravel offers no config to swap its base DatabaseNotification,
+     * and without this override notifications are NOT tenant-isolated.
+     */
+    public function notifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\Blafast\Foundation\Models\DatabaseNotification::class, 'notifiable')->latest();
+    }
+
     public string $id;
 
     public string $name;

@@ -30,6 +30,7 @@ use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnModelUpdate;
 use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
 use Blafast\Foundation\Listeners\NotifySuperadminsOnJobFailure;
 use Blafast\Foundation\Models\Activity;
+use Blafast\Foundation\Models\DatabaseNotification;
 use Blafast\Foundation\Models\DeferredApiRequest;
 use Blafast\Foundation\Models\Media;
 use Blafast\Foundation\Models\Organization;
@@ -62,6 +63,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Spatie\Permission\Events\PermissionAttachedEvent;
@@ -231,6 +233,36 @@ class BlafastServiceProvider extends PackageServiceProvider
     }
 
     /**
+     * Warn (never throw — notifications are not security-critical the way the
+     * guard/teams contract is) when the host User's notifications() resolves
+     * Laravel's base DatabaseNotification instead of the package's org-scoped
+     * model (task 18).
+     */
+    private function warnWhenNotificationsAreUnscoped(): void
+    {
+        try {
+            $userClass = config('auth.providers.users.model');
+
+            if (! is_string($userClass) || ! class_exists($userClass) || ! method_exists($userClass, 'notifications')) {
+                return;
+            }
+
+            $related = (new $userClass)->notifications()->getRelated();
+
+            if (! $related instanceof DatabaseNotification) {
+                Log::warning(
+                    'blafast-fundation: '.$userClass.'::notifications() resolves '.$related::class
+                    .' — notifications are NOT organization-scoped. Override notifications() to use '
+                    .DatabaseNotification::class.' (see stubs/User.stub).'
+                );
+            }
+        } catch (\Throwable) {
+            // A host model that cannot be constructed statelessly is not this
+            // check's problem — never break boot for a warning.
+        }
+    }
+
+    /**
      * Boot-time sanity check of the host contract (H21). Public static so hosts
      * (and tests) can invoke it directly, e.g. from a deploy smoke check.
      *
@@ -276,6 +308,11 @@ class BlafastServiceProvider extends PackageServiceProvider
         // Fail loudly on a broken host contract — a silent wrong-guard denial (or a
         // silent teams=false cross-tenant leak) is far worse than a boot error (H21).
         static::assertHostConfiguration();
+
+        // Task 18: warn when the host User still routes notifications through
+        // Laravel's base model — the org scope and autofill would be dead code and
+        // notifications NOT tenant-isolated.
+        $this->warnWhenNotificationsAreUnscoped();
 
         // Register middleware aliases
         $router = $this->app->make(Router::class);
