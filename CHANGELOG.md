@@ -34,6 +34,20 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Fixed (Task 9)
+- **Behaviour change:** `GET /settings/resolved` now returns only `is_public`
+  system settings to non-superadmin users — any authenticated member could read
+  every system setting before. Superadmins keep the full set (and
+  `/settings/system`). Hosts that read private values through `resolved` must
+  use per-key server-side reads (`blafast_setting()`) or the system index.
+- Organization settings endpoints authorize a real ability (`manageSettings` →
+  `update_organization`); the old nonexistent `manage` ability denied everyone,
+  superadmins included.
+- Organization settings writes are atomic (lock + re-read in a transaction) —
+  concurrent writers no longer erase each other's keys.
+- `systemUpdate` persists `is_public`/`group`/`description`; `/settings/resolved`
+  resolves dotted keys exactly like per-key `get()`.
+
 ### Fixed (Task 7)
 - Permission slugs unified on `getApiSlug()` (kebab-case) across the registrar,
   checker, metadata and routes — `permissions:sync` used `Str::snake()`, so every

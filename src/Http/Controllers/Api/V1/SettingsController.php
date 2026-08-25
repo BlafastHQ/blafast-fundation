@@ -63,7 +63,10 @@ class SettingsController extends Controller
         $this->settings->setSystem(
             $key,
             $request->input('value'),
-            $request->input('type')
+            $request->input('type'),
+            $request->has('is_public') ? $request->boolean('is_public') : null,
+            $request->input('group'),
+            $request->input('description'),
         );
 
         $setting = SystemSetting::where('key', $key)->firstOrFail();
@@ -93,7 +96,9 @@ class SettingsController extends Controller
      */
     public function organizationIndex(Request $request): JsonResponse
     {
-        $this->authorize('manage', Organization::class);
+        // H5: the old `manage` ability existed nowhere (no policy method, no gate
+        // definition) — Laravel denied by default for EVERYONE, superadmins included.
+        $this->authorize('manageSettings', Organization::class);
 
         $settings = $this->settings->getOrganizationSettings();
 
@@ -111,11 +116,10 @@ class SettingsController extends Controller
      */
     public function organizationUpdate(UpdateOrganizationSettingsRequest $request): JsonResponse
     {
-        $this->authorize('manage', Organization::class);
+        $this->authorize('manageSettings', Organization::class);
 
-        foreach ($request->input('settings', []) as $key => $value) {
-            $this->settings->setOrganization($key, $value);
-        }
+        // One atomic lock+re-read write for the whole batch (M4).
+        $this->settings->setOrganizationMany($request->input('settings', []));
 
         return response()->json([
             'data' => [
@@ -133,11 +137,16 @@ class SettingsController extends Controller
      */
     public function resolved(Request $request): JsonResponse
     {
+        // H4: plain members only see PUBLIC system settings here; superadmins keep
+        // the full set (they can read everything via systemIndex anyway).
+        $user = $request->user();
+        $publicOnly = ! ($user && method_exists($user, 'isSuperadmin') && $user->isSuperadmin());
+
         return response()->json([
             'data' => [
                 'type' => 'resolved-settings',
                 'id' => organization_id() ?? 'system',
-                'attributes' => $this->settings->all(),
+                'attributes' => $this->settings->all(publicSystemOnly: $publicOnly),
             ],
         ]);
     }

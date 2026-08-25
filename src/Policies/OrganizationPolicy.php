@@ -48,4 +48,21 @@ class OrganizationPolicy
     {
         return $user->can('delete_organization');
     }
+
+    /**
+     * Determine whether the user can manage the current organization's settings
+     * (task 9 / H5 — the controller used to authorize a `manage` ability that
+     * existed nowhere, denying everyone by default). Class-based check: the
+     * target organization is the resolved context. Superadmins pass explicitly —
+     * under an org context their global grants are invisible to the team-scoped
+     * permission lookup.
+     */
+    public function manageSettings(Authenticatable $user): bool
+    {
+        if (method_exists($user, 'isSuperadmin') && $user->isSuperadmin()) {
+            return true;
+        }
+
+        return $user->can('update_organization');
+    }
 }
