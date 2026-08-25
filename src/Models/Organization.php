@@ -37,7 +37,7 @@ use Illuminate\Support\Str;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read Address|null $primaryAddress
- * @property-read Collection<int, User> $users
+ * @property-read Collection<int, Model> $users
  * @property-read Collection<int, Address> $addresses
  *
  * @method static \Blafast\Foundation\Database\Factories\OrganizationFactory factory($count = null, $state = [])

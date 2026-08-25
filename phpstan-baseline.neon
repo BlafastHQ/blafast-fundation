@@ -121,18 +121,6 @@ parameters:
 			path: src/Models/Currency.php
 
 		-
-			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<static\(Blafast\\Foundation\\Models\\DeferredApiRequest\)\>\:\:where\(\) expects array\<int\|model property of static\(Blafast\\Foundation\\Models\\DeferredApiRequest\), mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: Illuminate\\Database\\Eloquent\\Builder\<static\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of static\(Blafast\\Foundation\\Models\\DeferredApiRequest\), non\-falsy\-string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Models/DeferredApiRequest.php
-
-		-
-			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<static\(Blafast\\Foundation\\Models\\DeferredEndpointConfig\)\>\:\:where\(\) expects array\<int\|model property of static\(Blafast\\Foundation\\Models\\DeferredEndpointConfig\), mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: Illuminate\\Database\\Eloquent\\Builder\<static\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<static\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of static\(Blafast\\Foundation\\Models\\DeferredEndpointConfig\), non\-falsy\-string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Models/DeferredEndpointConfig.php
-
-		-
 			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\MorphMany\<Blafast\\Foundation\\Models\\Address\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\MorphMany\: TRelatedModel, TDeclaringModel$#'
 			identifier: generics.lessTypes
 			count: 1
@@ -164,12 +152,6 @@ parameters:
 
 		-
 			message: '#^Method Blafast\\Foundation\\Models\\OrganizationUser\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\OrganizationUser\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\OrganizationUser\)\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Models/OrganizationUser.php
-
-		-
-			message: '#^Method Blafast\\Foundation\\Models\\OrganizationUser\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, Blafast\\Foundation\\Models\\OrganizationUser\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(Blafast\\Foundation\\Models\\OrganizationUser\)\>\.$#'
 			identifier: return.type
 			count: 1
 			path: src/Models/OrganizationUser.php

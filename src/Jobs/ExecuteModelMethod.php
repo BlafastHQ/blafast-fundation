@@ -59,7 +59,6 @@ class ExecuteModelMethod extends BlaFastJob
         $result = $service->executeMethod($model, $method, $this->parameters);
 
         // Log the execution
-        // @phpstan-ignore argument.type
         $service->logExecution($model, $method, $this->parameters, $result, $user);
     }
 }
