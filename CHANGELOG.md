@@ -5,6 +5,14 @@ All notable changes to `blafast-fundation` will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **Breaking (Task 24):** file uploads are safe by default. Collections that declare no
+  `accepted_mimes` now enforce a default MIME allow-list (raster images, PDF, plain
+  text/CSV, Office OpenXML — never SVG/HTML/scripts) instead of accepting everything;
+  the default media disk is the package-shipped **private** `blafast-private`
+  (temporary signed URLs; override via `BLAFAST_MEDIA_DISK` or by defining the disk
+  yourself), and stored filenames are normalised (slugged basename + lowercase
+  extension). Public serving is an explicit per-collection `->useDisk('public')`
+  opt-in. See `docs/HOST-REQUIREMENTS.md`.
 - **Breaking (Task 2):** migrations are now real timestamped `.php` files that run
   automatically with `php artisan migrate` — no `vendor:publish` step. Hosts that DO
   publish them (tag `blafast-fundation-migrations`) must set

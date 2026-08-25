@@ -80,6 +80,17 @@ code must opt out explicitly — `Model::withoutOrganizationScope()`,
 and migrations. Audit any host command/job/Filament resource that queries a
 scoped model outside a request: it now reads nothing instead of everything.
 
+## Upload safety defaults (Task 24)
+
+Uploads through the package's file endpoints enforce a MIME allow-list: a media
+collection that declares no `accepted_mimes` gets a safe default (raster
+images, PDF, plain text/CSV, Office OpenXML — never SVG/HTML/scripts), and the
+default disk is the package-shipped **private** `blafast-private` (temporary
+signed URLs; define your own `filesystems.disks.blafast-private` or set
+`BLAFAST_MEDIA_DISK` to override). Public serving is an explicit per-collection
+opt-in: `->useDisk('public')` in `registerMediaCollections()`. Stored filenames
+are normalised (slugged basename + lowercase extension).
+
 ## JSON:API error rendering scope (Task 22)
 
 By default the package's JSON:API error renderer applies **only to its own

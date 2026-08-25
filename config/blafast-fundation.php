@@ -145,8 +145,10 @@ return [
     */
 
     'media' => [
-        // Wired by task 24 (private-by-default upload disk).
-        'disk' => env('BLAFAST_MEDIA_DISK', 'public'),
+        // Default upload disk (task 24): private by default — the provider ships
+        // a `blafast-private` local disk (visibility private, temporary URLs).
+        // Collections opt into a public disk explicitly via ->useDisk().
+        'disk' => env('BLAFAST_MEDIA_DISK', 'blafast-private'),
 
         // Maximum upload size in bytes.
         'max_file_size' => env('BLAFAST_MEDIA_MAX_FILE_SIZE', 10 * 1024 * 1024),

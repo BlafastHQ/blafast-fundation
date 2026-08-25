@@ -40,9 +40,9 @@ it('has no unconsumed config key (the M20 sweep, automated)', function () {
         return false;
     })->values();
 
-    // Deliberate forward-wired exceptions: media.disk (task 24) and
-    // media.queue_conversions (task 25) — kept per the plan's cross-references.
-    $allowed = ['media.disk', 'media.queue_conversions'];
+    // Deliberate forward-wired exception: media.queue_conversions (task 25) —
+    // kept per the plan's cross-reference. (media.disk went live with task 24.)
+    $allowed = ['media.queue_conversions'];
 
     expect($unread->diff($allowed)->all())->toBe([]);
 });

@@ -49,6 +49,10 @@ class ProductModel extends Model implements HasApiStructure, HasMedia
 
         $this->addMediaCollection('private_files')
             ->useDisk('private');
+
+        // Task 24 fixture: NO explicit disk (inherits the private default) and
+        // no declared mimes (exercises the default allow-list).
+        $this->addMediaCollection('attachments');
     }
 
     /**
@@ -83,6 +87,10 @@ class ProductModel extends Model implements HasApiStructure, HasMedia
                     'label' => 'Private Files',
                     'multiple' => true,
                     'disk' => 'private',
+                ],
+                'attachments' => [
+                    'label' => 'Attachments',
+                    'multiple' => true,
                 ],
             ],
             'allowed_includes' => [],

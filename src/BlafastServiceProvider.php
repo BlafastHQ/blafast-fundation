@@ -224,6 +224,24 @@ class BlafastServiceProvider extends PackageServiceProvider
             config(['media-library.media_model' => Media::class]);
         }
 
+        // Task 24 (M17): uploads default to a genuinely PRIVATE disk. Simply
+        // pointing at Laravel's stock `local` is not enough — isPrivateDisk()
+        // requires visibility=private (or s3), so `local` would still hand out
+        // permanent public URLs. Collections opt into public explicitly via
+        // ->useDisk(); `serve` enables local temporary URLs.
+        if (! config('filesystems.disks.blafast-private')) {
+            config(['filesystems.disks.blafast-private' => [
+                'driver' => 'local',
+                'root' => storage_path('app/blafast-private'),
+                'visibility' => 'private',
+                'serve' => true,
+                'throw' => false,
+                'report' => false,
+            ]]);
+        }
+
+        config(['media-library.disk_name' => config('blafast-fundation.media.disk', 'blafast-private')]);
+
         // The `api` guard every package route/permission runs on — created only
         // when absent, pointing at the host's own user provider.
         if (! config('auth.guards.api')) {
