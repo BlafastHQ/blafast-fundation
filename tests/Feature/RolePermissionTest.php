@@ -9,9 +9,6 @@ use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\BlaFastPermissionRegistrar;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed roles and permissions directly

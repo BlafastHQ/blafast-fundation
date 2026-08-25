@@ -7,9 +7,6 @@ use Blafast\Foundation\Models\Country;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\OrganizationUser;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist

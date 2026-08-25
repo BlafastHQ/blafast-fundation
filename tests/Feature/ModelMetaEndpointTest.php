@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\ModelRegistry;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Register the Organization model

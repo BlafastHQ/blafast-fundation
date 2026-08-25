@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Services\PaginationService;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create test users for pagination

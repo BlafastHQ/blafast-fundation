@@ -5,11 +5,8 @@ declare(strict_types=1);
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Ensure the service provider is booted

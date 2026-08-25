@@ -10,7 +10,9 @@ use Spatie\Permission\Models\Role;
 
 require_once __DIR__.'/Helpers.php';
 
-uses(TestCase::class, RefreshDatabase::class)
+// RefreshDatabase is composed inside TestCase itself (see the note there) —
+// listing it here would shadow TestCase's migrateDatabases() override.
+uses(TestCase::class)
     ->in('Feature', 'Unit', 'Traits', 'Models');
 
 // Global test helpers for authentication and organization context

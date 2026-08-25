@@ -6,10 +6,7 @@ use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\OrganizationUser;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist

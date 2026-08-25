@@ -5,9 +5,6 @@ declare(strict_types=1);
 use Blafast\Foundation\Dto\MenuItem;
 use Blafast\Foundation\Facades\MenuRegistry as MenuRegistryFacade;
 use Blafast\Foundation\Services\MenuRegistry;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 test('MenuRegistry is registered as singleton', function () {
     $registry1 = app(MenuRegistry::class);

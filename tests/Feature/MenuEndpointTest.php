@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Services\MenuRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Setup permissions

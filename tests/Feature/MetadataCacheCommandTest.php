@@ -5,11 +5,8 @@ declare(strict_types=1);
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\MetadataCacheService;
 use Blafast\Foundation\Services\ModelRegistry;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Enable caching for tests

@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create test route for rate limiting

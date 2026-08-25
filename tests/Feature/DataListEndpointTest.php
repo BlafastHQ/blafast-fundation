@@ -9,12 +9,9 @@ use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\actingAs;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed roles and permissions
