@@ -101,8 +101,12 @@ class ResolveOrganizationContext
             return $organizationId;
         }
 
-        // Fallback to session for SPA convenience
-        return $request->session()->get('organization_id');
+        // Fallback to session for SPA convenience. Guarded (H3): stateless token
+        // routes have no StartSession, and an unguarded $request->session() throws —
+        // turning the designed 400 MISSING_ORGANIZATION into a 500.
+        return $request->hasSession()
+            ? $request->session()->get('organization_id')
+            : null;
     }
 
     /**

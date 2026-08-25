@@ -26,6 +26,15 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     use HasRoles;
     use HasUuids;
 
+    /**
+     * The package's whole permission runtime lives on the `api` guard. Without an
+     * explicit guard, spatie falls back to config-order guard detection, and a
+     * sanctum-authenticated request resolves `web` — every can()/hasPermissionTo()
+     * then throws PermissionDoesNotExist for api-guard permissions (task 5).
+     * Hosts must declare the same — see stubs/User.stub / docs/HOST-REQUIREMENTS.md.
+     */
+    protected $guard_name = 'api';
+
     protected $fillable = [
         'id',
         'name',

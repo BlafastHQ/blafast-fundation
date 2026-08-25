@@ -128,5 +128,11 @@ class TestCase extends Orchestra
         $router->get('api/v1/test/{any}', function () {
             return response()->json(['message' => 'Test endpoint']);
         })->middleware(['auth:sanctum', 'org.resolve', 'deferred'])->where('any', '.*');
+
+        // Probe route for permission checks THROUGH the full middleware stack (task 5):
+        // proves the org context resolved by org.resolve drives spatie's team id.
+        $router->get('api/v1/test-can/{permission}', function (string $permission) {
+            return response()->json(['can' => request()->user()->can($permission)]);
+        })->middleware(['auth:sanctum', 'org.resolve']);
     }
 }

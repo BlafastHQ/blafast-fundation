@@ -43,6 +43,20 @@ Postgres.
 | `jobs`, `job_batches`, `failed_jobs` | Framework-identical schema — silently **skipped** (the Laravel skeleton already ships them). |
 | `permissions`, `roles`, `model_has_*`, `role_has_permissions`, `media`, `activity_log`, `notifications` | Package-shaped (has `organization_id`) → skipped, `migrate` twice is a no-op. **Vendor-shaped** (bigint spatie permission/medialibrary/activitylog tables, Laravel's stock notifications) → `migrate` **aborts with a RuntimeException** naming the table: the package needs uuid keys + organization scope, and skipping silently would break every query at runtime. Migrate your data to the package shape (or drop the vendor tables) first. |
 
+## The User model's permission guard (Task 5)
+
+`App\Models\User` must declare:
+
+```php
+protected $guard_name = 'api';
+```
+
+The package's whole permission runtime (roles, permissions, policies, menu
+filtering) lives on the `api` guard. Without an explicit guard, spatie's guard
+detection falls back to config order and resolves the session guard on
+sanctum-authenticated requests — every `can()`/`hasPermissionTo()` then throws
+`PermissionDoesNotExist` for api-guard permissions. See `stubs/User.stub`.
+
 ## The users table (Tasks 2–3)
 
 `App\Models\User` must have a **UUID primary key** (`HasUuids`) — see `stubs/User.stub`.

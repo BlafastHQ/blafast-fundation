@@ -6,7 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
+    /**
+     * Required: the blafast-fundation permission runtime lives on the `api` guard.
+     * Without this, spatie's guard detection resolves the session guard on
+     * sanctum-authenticated requests and every permission check fails.
+     */
+    protected $guard_name = 'api';
+
     public string $id;
+
     public string $name;
+
     public string $email;
 }

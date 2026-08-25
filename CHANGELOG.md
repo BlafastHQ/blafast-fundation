@@ -25,7 +25,19 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - `AuthController::revokeToken()` returns 404 for non-numeric token ids instead of a
   Postgres 500 (Task 3).
 
+### Fixed
+- The spatie permission team id now follows the organization context on every
+  transition — request middleware, job middleware, `OrganizationContext`
+  `set/setGlobalContext/clear/with*` (Task 5). Org-scoped roles and permissions
+  finally resolve per organization; before, every check ran against team NULL and
+  denied all members.
+- A stateless request without `X-Organization-Id` gets the designed
+  `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
+
 ### Host actions required
+- `App\Models\User` must declare `protected $guard_name = 'api';` (Task 5) — see
+  `stubs/User.stub`. Without it, spatie resolves the session guard on
+  sanctum-authenticated requests and every api-guard permission check throws.
 - None for a fresh install (`composer require` + `php artisan migrate`).
 - Hosts with vendor spatie permission/medialibrary/activitylog tables or Laravel's stock
   `notifications` table: migrate them to the package shape first —
