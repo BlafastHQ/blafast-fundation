@@ -12,28 +12,13 @@ task 3's driver-parity point — the two lanes fail the identical set. Four
 order-flaky Country/Currency factory unique-collisions are included even though
 they only fire on some random seeds, and one deferred-middleware test that only
 fails on the prefer-lowest dependency leg (the deferred subsystem is Phase 4's —
-tasks 15/16 own it). Count: 62.
+tasks 15/16 own it). Task 10 pruned the healed query/pagination/menu-adjacent
+entries. Count: 38.
 
 - Tests\Feature\AuthenticationTest::create token requires name
 - Tests\Feature\AuthenticationTest::login requires device name
 - Tests\Feature\AuthenticationTest::login requires email
 - Tests\Feature\AuthenticationTest::login requires password
-- Tests\Feature\DataListEndpointTest::list endpoint combines filters and sorting
-- Tests\Feature\DataListEndpointTest::list endpoint combines search with filters
-- Tests\Feature\DataListEndpointTest::list endpoint cursor pagination works correctly
-- Tests\Feature\DataListEndpointTest::list endpoint rejects non-allowed filters
-- Tests\Feature\DataListEndpointTest::list endpoint rejects non-allowed sorts
-- Tests\Feature\DataListEndpointTest::list endpoint respects pagination per_page parameter
-- Tests\Feature\DataListEndpointTest::list endpoint returns correct JSON:API structure
-- Tests\Feature\DataListEndpointTest::list endpoint returns empty array when no results match filters
-- Tests\Feature\DataListEndpointTest::list endpoint returns paginated results
-- Tests\Feature\DataListEndpointTest::list endpoint supports date range filtering
-- Tests\Feature\DataListEndpointTest::list endpoint supports exact filtering on boolean fields
-- Tests\Feature\DataListEndpointTest::list endpoint supports exact filtering on UUID fields
-- Tests\Feature\DataListEndpointTest::list endpoint supports ILIKE search across multiple fields
-- Tests\Feature\DataListEndpointTest::list endpoint supports partial filtering on string fields
-- Tests\Feature\DataListEndpointTest::list endpoint supports sorting ascending
-- Tests\Feature\DataListEndpointTest::list endpoint supports sorting descending
 - Tests\Feature\DeferredApiRequestTest::`Deferred Request Middleware` → it defers request with X-Blafast-Defer header when config exists
 - Tests\Feature\DynamicResourceRoutingTest::dynamic resources macro can register multiple models
 - Tests\Feature\MenuEndpointTest::user-menu endpoint returns JSON:API formatted response
@@ -68,11 +53,3 @@ tasks 15/16 own it). Count: 62.
 - Tests\Models\CountryTest::byIsoAlpha2 scope filters by ISO alpha-2 code
 - Tests\Models\CountryTest::byIsoAlpha3 scope filters by ISO alpha-3 code
 - Tests\Models\CurrencyTest::active scope returns only active currencies
-- Tests\Unit\QueryBuilderServiceTest::applySearch adds ILIKE search to query
-- Tests\Unit\QueryBuilderServiceTest::applySearch is case insensitive
-- Tests\Unit\QueryBuilderServiceTest::applySearch searches across multiple fields
-- Tests\Unit\QueryBuilderServiceTest::buildQuery applies filters from request
-- Tests\Unit\QueryBuilderServiceTest::buildQuery applies sorts from request
-- Tests\Unit\QueryBuilderServiceTest::buildQuery combines filters, sorts, and search
-- Tests\Unit\QueryBuilderServiceTest::buildQuery handles empty search parameter
-- Tests\Unit\QueryBuilderServiceTest::buildQuery returns Eloquent Builder instance

@@ -70,13 +70,12 @@ it('lists a registered model with the list grant and 403s without it', function 
     Permission::findOrCreate('list_sales-order-model', 'api');
     $granted->givePermissionTo('list_sales-order-model');
 
-    // Authorization contract: the granted user is NOT 403. (The body itself
-    // still 500s on the C5/H12 filter-pipeline crash that task 10 owns — any
-    // model with a filterable field hits it; tighten to assertOk() with task 10.)
-    $granted_status = $this->actingAs($granted, 'sanctum')
+    // Tightened with task 10 (the C5/H12 filter-pipeline crash is fixed):
+    // the granted user gets a real 200 with rows.
+    $this->actingAs($granted, 'sanctum')
         ->getJson('/api/v1/sales-order-model')
-        ->status();
-    expect($granted_status)->not->toBe(403);
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
 
     $stranger = User::factory()->create();
     $this->actingAs($stranger, 'sanctum')
