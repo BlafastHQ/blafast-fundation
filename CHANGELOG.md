@@ -34,6 +34,16 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Changed (Task 6)
+- **Breaking:** the package no longer ships/publishes `auth.php`,
+  `permission.php`, `sanctum.php`, `queue.php`, `media-library.php`,
+  `activitylog.php`. Required settings (spatie teams mode + models, the
+  activitylog/medialibrary models, an `api` guard when absent) are applied
+  imperatively by the provider and verified by a boot-time sanity check that
+  fails with an actionable message. Hosts that relied on the shipped `queue.php`
+  tuning or `SANCTUM_EXPIRATION` default must set those themselves — see
+  `docs/HOST-REQUIREMENTS.md`.
+
 ### Host actions required
 - `App\Models\User` must declare `protected $guard_name = 'api';` (Task 5) — see
   `stubs/User.stub`. Without it, spatie resolves the session guard on

@@ -13,6 +13,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\SanctumServiceProvider;
 use LaravelJsonApi\Laravel\ServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\Activitylog\ActivitylogServiceProvider;
+use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Spatie\Permission\PermissionServiceProvider;
 
 class TestCase extends Orchestra
@@ -38,6 +40,11 @@ class TestCase extends Orchestra
         return [
             SanctumServiceProvider::class,
             PermissionServiceProvider::class,
+            // Loaded via package discovery in a real host; testbench discovers
+            // nothing, and since the package no longer ships copies of their
+            // configs (task 6/H21) these providers must merge their own.
+            MediaLibraryServiceProvider::class,
+            ActivitylogServiceProvider::class,
             ServiceProvider::class,
             BlafastServiceProvider::class,
         ];

@@ -29,7 +29,10 @@ use Blafast\Foundation\Listeners\InvalidateMetadataCacheOnPermissionChange;
 use Blafast\Foundation\Listeners\NotifySuperadminsOnJobFailure;
 use Blafast\Foundation\Models\Activity;
 use Blafast\Foundation\Models\DeferredApiRequest;
+use Blafast\Foundation\Models\Media;
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Models\SystemSetting;
 use Blafast\Foundation\Policies\ActivityPolicy;
 use Blafast\Foundation\Policies\DeferredApiRequestPolicy;
@@ -72,7 +75,14 @@ class BlafastServiceProvider extends PackageServiceProvider
          */
         $package
             ->name('blafast-fundation')
-            ->hasConfigFile(['blafast-fundation', 'permission', 'auth', 'sanctum', 'jsonapi', 'media-library', 'activitylog', 'queue'])
+            // Only the package's own configs (H21). The old list shipped whole
+            // framework/vendor configs (auth, permission, sanctum, queue, …) through
+            // mergeConfigFrom — a top-level merge the HOST wins, so the required
+            // teams/guard/model settings never took effect in a normally-installed
+            // host (spatie silently ran with teams=false: a cross-tenant leak).
+            // Required framework settings are now applied imperatively in
+            // applyRequiredFrameworkConfig() and verified by a boot-time check.
+            ->hasConfigFile(['blafast-fundation', 'jsonapi'])
             ->hasViews()
             ->hasRoute('api')
             // Real timestamped migrations, FK-ordered by filename. discoversMigrations()
@@ -114,6 +124,10 @@ class BlafastServiceProvider extends PackageServiceProvider
         // merge above — so `config()` is authoritative and no env() call is needed;
         // bootPackageMigrations() only reads the flag at boot time, after this runs.
         $this->package->runsMigrations((bool) config('blafast-fundation.run_migrations', true));
+
+        // H21: the settings the package cannot function without, applied imperatively
+        // (a config-file merge is won by the host and silently disabled all of them).
+        $this->applyRequiredFrameworkConfig();
 
         // Register OrganizationContext as a scoped singleton (per-request)
         $this->app->scoped(OrganizationContext::class, function () {
@@ -163,10 +177,96 @@ class BlafastServiceProvider extends PackageServiceProvider
     }
 
     /**
+     * Apply the framework/vendor settings the package cannot function without
+     * (H21). Imperative on purpose: registering whole `auth`/`permission`/…
+     * config files went through mergeConfigFrom, a top-level merge the host
+     * wins — so in a normally-installed host spatie ran with `teams = false`
+     * (every org role applied globally: a cross-tenant leak), the wrong
+     * Role/Permission models, and no `api` guard. Only the specific required
+     * keys are written; everything else the host owns stays untouched.
+     */
+    private function applyRequiredFrameworkConfig(): void
+    {
+        // spatie permission — the multi-tenant RBAC contract.
+        config([
+            'permission.teams' => true,
+            'permission.column_names.team_foreign_key' => 'organization_id',
+            'permission.column_names.model_morph_key' => 'model_uuid',
+            'permission.models.permission' => Permission::class,
+            'permission.models.role' => Role::class,
+        ]);
+
+        // activitylog — the package's uuid + organization-scoped Activity model.
+        config([
+            'activitylog.activity_model' => Activity::class,
+            'activitylog.subject_returns_soft_deleted_models' => true,
+            'activitylog.default_auth_driver' => 'sanctum',
+        ]);
+
+        // medialibrary — the package's uuid + organization-scoped Media model (the
+        // schema has a uuid PK, so the vendor model's getKey() would be null and
+        // every URL/path generation crashes). A host's own custom model is kept.
+        if (in_array(config('media-library.media_model'), [null, \Spatie\MediaLibrary\MediaCollections\Models\Media::class], true)) {
+            config(['media-library.media_model' => Media::class]);
+        }
+
+        // The `api` guard every package route/permission runs on — created only
+        // when absent, pointing at the host's own user provider.
+        if (! config('auth.guards.api')) {
+            config(['auth.guards.api' => [
+                'driver' => 'sanctum',
+                'provider' => config('auth.defaults.provider', 'users'),
+            ]]);
+        }
+    }
+
+    /**
+     * Boot-time sanity check of the host contract (H21). Public static so hosts
+     * (and tests) can invoke it directly, e.g. from a deploy smoke check.
+     *
+     * @throws \RuntimeException when a required setting is missing or fought back
+     */
+    public static function assertHostConfiguration(): void
+    {
+        $guard = config('auth.guards.api');
+        $provider = is_array($guard) ? ($guard['provider'] ?? null) : null;
+
+        if (! is_array($guard) || ! is_string($provider) || ! config("auth.providers.{$provider}")) {
+            throw new \RuntimeException(
+                'blafast-fundation: the [api] auth guard is missing or points at an undefined '
+                .'auth provider — every package route and permission runs on it. Define '
+                .'auth.guards.api (driver "sanctum") with a valid user provider, or set '
+                .'auth.defaults.provider so the package can create the guard itself. '
+                .'See docs/HOST-REQUIREMENTS.md.'
+            );
+        }
+
+        if (config('permission.teams') !== true
+            || config('permission.column_names.team_foreign_key') !== 'organization_id') {
+            throw new \RuntimeException(
+                'blafast-fundation: spatie permission is not in teams mode with '
+                .'team_foreign_key = organization_id. The package applies these settings at '
+                .'register time; something later in the boot process overrode them — with '
+                .'teams off, an organization role would apply to EVERY tenant. '
+                .'See docs/HOST-REQUIREMENTS.md.'
+            );
+        }
+    }
+
+    /**
      * Bootstrap any package services.
      */
     public function packageBooted(): void
     {
+        // Re-applied at boot (idempotent): anything that rewrote these configs
+        // between register and boot — e.g. testbench's environment setup, or a host
+        // provider registered after this one — is corrected before the assert.
+        $this->applyRequiredFrameworkConfig();
+
+        // Fail loudly on a broken host contract — a silent wrong-guard denial (or a
+        // silent teams=false cross-tenant leak) is far worse than a boot error (H21).
+        static::assertHostConfiguration();
+
         // Register middleware aliases
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('org.resolve', ResolveOrganizationContext::class);

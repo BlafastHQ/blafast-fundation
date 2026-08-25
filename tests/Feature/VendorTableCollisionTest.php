@@ -11,6 +11,8 @@ use Laravel\Sanctum\SanctumServiceProvider;
 use LaravelJsonApi\Laravel\ServiceProvider as JsonApiServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RuntimeException;
+use Spatie\Activitylog\ActivitylogServiceProvider;
+use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Spatie\Permission\PermissionServiceProvider;
 
 /**
@@ -30,6 +32,8 @@ class VendorTableCollisionTest extends Orchestra
         return [
             SanctumServiceProvider::class,
             PermissionServiceProvider::class,
+            MediaLibraryServiceProvider::class,
+            ActivitylogServiceProvider::class,
             JsonApiServiceProvider::class,
             BlafastServiceProvider::class,
         ];

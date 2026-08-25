@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Class Spatie\\MediaLibrary\\Conversions\\DefaultConversionFileNamer not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/media-library.php
-
-		-
 			message: '#^Call to an undefined method Faker\\Generator\:\:secondaryAddress\(\)\.$#'
 			identifier: method.notFound
 			count: 3

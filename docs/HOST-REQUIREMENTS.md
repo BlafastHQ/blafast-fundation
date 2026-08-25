@@ -43,6 +43,32 @@ Postgres.
 | `jobs`, `job_batches`, `failed_jobs` | Framework-identical schema — silently **skipped** (the Laravel skeleton already ships them). |
 | `permissions`, `roles`, `model_has_*`, `role_has_permissions`, `media`, `activity_log`, `notifications` | Package-shaped (has `organization_id`) → skipped, `migrate` twice is a no-op. **Vendor-shaped** (bigint spatie permission/medialibrary/activitylog tables, Laravel's stock notifications) → `migrate` **aborts with a RuntimeException** naming the table: the package needs uuid keys + organization scope, and skipping silently would break every query at runtime. Migrate your data to the package shape (or drop the vendor tables) first. |
 
+## Framework configuration (Task 6)
+
+The package no longer ships copies of `auth`/`permission`/`sanctum`/`queue`/
+`media-library`/`activitylog` configs (a config-file merge is won by the host, so
+the required settings silently never applied — with `teams=false`, an org role
+would grant in EVERY tenant). Instead the provider applies the required keys
+imperatively at register + boot time:
+
+- `permission`: `teams = true`, `team_foreign_key = organization_id`,
+  `model_morph_key = model_uuid`, the package's uuid `Role`/`Permission` models;
+- `activitylog`: the package's uuid + org-scoped `Activity` model;
+- `media-library`: the package's uuid `Media` model (unless the host set a
+  custom one);
+- `auth.guards.api`: created **only if absent** — driver `sanctum`, pointing at
+  the host's default user provider. Nothing else in `auth` is touched (your
+  default guard and web login stay yours).
+
+A boot-time sanity check (`BlafastServiceProvider::assertHostConfiguration()`)
+fails loudly with an actionable message if the api guard is missing/broken or
+teams mode was overridden after boot. You may call it from a deploy smoke test.
+
+Host knobs the package deliberately does NOT set any more: queue tuning
+(`after_commit`, batching/failed connections) and `sanctum.expiration` — set
+them in your own configs (`SANCTUM_EXPIRATION=525600` was the old shipped
+default).
+
 ## The User model's permission guard (Task 5)
 
 `App\Models\User` must declare:
