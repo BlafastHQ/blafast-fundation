@@ -8,6 +8,7 @@ use Blafast\Foundation\Dto\ApiMethod;
 use Blafast\Foundation\Jobs\ExecuteModelMethod;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 
 /**
  * Service for executing model methods via API.
@@ -54,8 +55,21 @@ class MethodExecutionService
             );
         }
 
-        // Call the method with parameters
-        return $model->{$methodName}(...array_values($parameters));
+        // Task 26 (H17): bind by NAME, not declaration order. The old
+        // positional splat silently misbound arguments whenever the declared
+        // parameter order drifted from the PHP signature, and forced
+        // null-materialised optionals over PHP defaults. Unknown keys are
+        // dropped rather than becoming an UnknownNamedParameterError.
+        $signature = new \ReflectionMethod($model, $methodName);
+        $arguments = [];
+
+        foreach ($signature->getParameters() as $parameter) {
+            if (array_key_exists($parameter->getName(), $parameters)) {
+                $arguments[$parameter->getName()] = $parameters[$parameter->getName()];
+            }
+        }
+
+        return $model->{$methodName}(...$arguments);
     }
 
     /**
@@ -126,6 +140,13 @@ class MethodExecutionService
             // Redact sensitive parameters
             if ($param && $this->isSensitive($param->name, $param->type)) {
                 $sanitized[$key] = '[REDACTED]';
+            } elseif ($value instanceof UploadedFile) {
+                // Task 26: `file` parameters are not JSON-encodable — logging
+                // the raw object made the activity write throw AFTER the
+                // method had already executed (a 500 on a successful call).
+                $sanitized[$key] = sprintf('[file: %s, %d bytes]', $value->getClientOriginalName(), $value->getSize());
+            } elseif (is_object($value) && ! $value instanceof \JsonSerializable) {
+                $sanitized[$key] = '[object: '.get_debug_type($value).']';
             } else {
                 $sanitized[$key] = $value;
             }

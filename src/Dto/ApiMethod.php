@@ -83,6 +83,10 @@ readonly class ApiMethod
 
         foreach ($this->parameters as $param) {
             $rules["data.attributes.{$param->name}"] = $param->validationRules();
+
+            if (($elementRules = $param->elementValidationRules()) !== null) {
+                $rules["data.attributes.{$param->name}.*"] = $elementRules;
+            }
         }
 
         return $rules;

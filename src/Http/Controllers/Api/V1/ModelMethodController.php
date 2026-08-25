@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -167,16 +168,23 @@ class ModelMethodController extends Controller
      */
     protected function extractAndValidateParameters(Request $request, ApiMethod $method): array
     {
-        // Extract parameters from request
+        // Extract parameters from request. all() (not input()) so `file`
+        // parameters — which live in the file bag — are extracted too.
         $data = $request->isMethod('GET')
             ? $request->query()
-            : $request->input('data.attributes', []);
+            : Arr::get($request->all(), 'data.attributes', []);
 
-        // Build validation rules
+        // Build validation rules. Task 26 (H16): `array:<type>` element rules
+        // are registered under their own "attribute.*" key — the old code
+        // appended the raw modifier to the parent's rules, a guaranteed 500.
         $rules = [];
         foreach ($method->parameters as $param) {
             $key = $request->isMethod('GET') ? $param->name : "data.attributes.{$param->name}";
             $rules[$key] = $param->validationRules();
+
+            if (($elementRules = $param->elementValidationRules()) !== null) {
+                $rules["{$key}.*"] = $elementRules;
+            }
         }
 
         // Validate
@@ -189,11 +197,24 @@ class ModelMethodController extends Controller
             throw new ValidationException($validator);
         }
 
-        // Return validated parameters with defaults applied
+        // Task 26 (H17): pass CAST values, and let unprovided optionals fall
+        // through to the PHP signature default. The old code passed raw
+        // request values (GET integers arrive as strings → TypeError under
+        // strict_types) and materialised missing optionals as null, which
+        // OVERRODE the PHP default (int $copies = 1 → TypeError).
         $validated = [];
         foreach ($method->parameters as $param) {
-            $value = $data[$param->name] ?? $param->default;
-            $validated[$param->name] = $value;
+            if (array_key_exists($param->name, $data)) {
+                $validated[$param->name] = $param->castValue($data[$param->name]);
+
+                continue;
+            }
+
+            if ($param->default !== null) {
+                $validated[$param->name] = $param->default;
+            }
+            // No value, no declared default: omitted entirely — named-argument
+            // binding lets the PHP default (if any) apply.
         }
 
         return $validated;
