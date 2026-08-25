@@ -9,11 +9,8 @@ use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\OrganizationContext;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Seed roles

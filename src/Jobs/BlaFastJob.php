@@ -63,6 +63,15 @@ abstract class BlaFastJob implements ShouldQueue
     }
 
     /**
+     * The organization this job was dispatched under (task 21: public accessor —
+     * the property is protected and the failure listener needs it).
+     */
+    public function organizationId(): ?string
+    {
+        return $this->organizationId;
+    }
+
+    /**
      * Get the middleware the job should pass through.
      *
      * @return array<int, object>

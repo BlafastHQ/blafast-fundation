@@ -26,24 +26,13 @@ class CurrencyFactory extends Factory
      */
     public function definition(): array
     {
-        $currencies = [
-            ['name' => 'US Dollar', 'code' => 'USD', 'symbol' => '$', 'decimal_places' => 2],
-            ['name' => 'Euro', 'code' => 'EUR', 'symbol' => '€', 'decimal_places' => 2],
-            ['name' => 'British Pound', 'code' => 'GBP', 'symbol' => '£', 'decimal_places' => 2],
-            ['name' => 'Japanese Yen', 'code' => 'JPY', 'symbol' => '¥', 'decimal_places' => 0],
-            ['name' => 'Swiss Franc', 'code' => 'CHF', 'symbol' => 'CHF', 'decimal_places' => 2],
-            ['name' => 'Canadian Dollar', 'code' => 'CAD', 'symbol' => 'C$', 'decimal_places' => 2],
-            ['name' => 'Australian Dollar', 'code' => 'AUD', 'symbol' => 'A$', 'decimal_places' => 2],
-            ['name' => 'Chinese Yuan', 'code' => 'CNY', 'symbol' => '¥', 'decimal_places' => 2],
-        ];
-
-        $currency = fake()->randomElement($currencies);
-
+        // Synthetic UNIQUE codes: the old randomElement over a fixed pool of 8
+        // real currencies collided on the unique code column (order-flaky).
         return [
-            'name' => $currency['name'],
-            'code' => $currency['code'],
-            'symbol' => $currency['symbol'],
-            'decimal_places' => $currency['decimal_places'],
+            'name' => 'Currency '.fake()->unique()->numberBetween(1, 99999),
+            'code' => strtoupper(fake()->unique()->lexify('???')),
+            'symbol' => '¤',
+            'decimal_places' => 2,
             'is_active' => true,
         ];
     }

@@ -5,12 +5,9 @@ declare(strict_types=1);
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\QueryBuilderService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = app(QueryBuilderService::class);

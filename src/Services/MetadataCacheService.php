@@ -68,8 +68,12 @@ class MetadataCacheService
                 });
         }
 
-        // Fallback for drivers without tagging (file, database)
-        return Cache::remember($cacheKey, $ttl, $callback);
+        // Fallback for drivers without tagging (file, database): the tag VERSION
+        // counters participate in the key (M1) — invalidateByPattern() increments
+        // them, so a bumped version simply orphans the old entries. Without this,
+        // invalidation was a silent no-op on these drivers and revoked permissions
+        // stayed advertised for the full TTL.
+        return Cache::remember($this->versionedKey($cacheKey, $cacheTags), $ttl, $callback);
     }
 
     /**
@@ -249,7 +253,31 @@ class MetadataCacheService
     {
         foreach ($tags as $tag) {
             $versionKey = self::PREFIX."version:{$tag}";
-            Cache::increment($versionKey);
+            // increment() is a no-op when the key does not exist on some stores —
+            // seed it explicitly so the first invalidation already bumps keys.
+            if (Cache::get($versionKey) === null) {
+                Cache::forever($versionKey, 1);
+            } else {
+                Cache::increment($versionKey);
+            }
         }
+    }
+
+    /**
+     * Suffix a cache key with the current version of every tag (M1) so that
+     * bumping a tag version invalidates all entries carrying it on drivers
+     * without native tag flushing.
+     *
+     * @param  array<int, string>  $tags
+     */
+    protected function versionedKey(string $key, array $tags): string
+    {
+        $versions = [];
+
+        foreach ($tags as $tag) {
+            $versions[] = (int) Cache::get(self::PREFIX."version:{$tag}", 0);
+        }
+
+        return $key.':v'.implode('.', $versions);
     }
 }

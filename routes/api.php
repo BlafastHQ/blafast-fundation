@@ -13,8 +13,6 @@ use Blafast\Foundation\Http\Controllers\Api\V1\NotificationController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ScheduleController;
 use Blafast\Foundation\Http\Controllers\Api\V1\SettingsController;
 use Illuminate\Support\Facades\Route;
-use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
-use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,9 +50,13 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
             });
         });
 
-    // Model metadata endpoint - public but requires viewAny permission
+    // Model metadata endpoint — authenticated, viewAny enforced by the controller
+    // (task 13/H11: it used to be anonymous, handing guests the COMPLETE method
+    // catalogue while authenticated low-privilege users got a filtered one; the
+    // endpoint is a reconnaissance surface listing every model, field and RPC
+    // pattern). org.resolve gives the permission checks their team context.
     Route::get('meta/{modelSlug}', ModelMetaController::class)
-        ->middleware('throttle:api')
+        ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
         ->name('meta.show');
 
     // User menu endpoint - requires authentication
@@ -122,17 +124,6 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
         ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
         ->whereUuid('uuid')
         ->name('model.method');
-
-    // JSON:API resource routes - with API rate limiting
-    JsonApiRoute::server('v1')
-        ->prefix('api/v1')
-        ->middleware('auth:sanctum')
-        ->middleware('throttle:api')
-        ->middleware('org.resolve')
-        ->resources(function (ResourceRegistrar $server) {
-            // JSON:API resources will be registered here
-            // Example: $server->resource('organizations', OrganizationController::class);
-        });
 });
 
 /*

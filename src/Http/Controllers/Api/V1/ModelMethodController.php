@@ -6,6 +6,7 @@ namespace Blafast\Foundation\Http\Controllers\Api\V1;
 
 use Blafast\Foundation\Contracts\HasApiMethods;
 use Blafast\Foundation\Dto\ApiMethod;
+use Blafast\Foundation\Services\DeferredRequestService;
 use Blafast\Foundation\Services\ExecPermissionChecker;
 use Blafast\Foundation\Services\MethodExecutionService;
 use Blafast\Foundation\Services\ModelRegistry;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -28,6 +30,7 @@ class ModelMethodController extends Controller
         private ModelRegistry $registry,
         private MethodExecutionService $executionService,
         private ExecPermissionChecker $permissionChecker,
+        private DeferredRequestService $deferredService,
     ) {}
 
     /**
@@ -62,7 +65,19 @@ class ModelMethodController extends Controller
         // 7. Extract and validate parameters
         $parameters = $this->extractAndValidateParameters($request, $method);
 
-        // 8. Execute method
+        // 8. Queued methods go through the deferred infrastructure (task 27 /
+        // M7): 202 with a trackable id and a poll link where the stored result
+        // becomes retrievable — never a fabricated executed_at with HTTP 200.
+        // When the request cannot be deferred (a deferred REPLAY, global
+        // superadmin context, file parameters, subsystem disabled), it
+        // degrades to honest synchronous execution below.
+        if ($method->queued && $this->deferredService->canDefer($request)) {
+            return $this->deferredService->respond(
+                $this->deferredService->defer($request)
+            );
+        }
+
+        // 9. Execute method
         $result = $this->executionService->execute(
             $model,
             $method,
@@ -70,7 +85,7 @@ class ModelMethodController extends Controller
             $request->user()
         );
 
-        // 9. Return response
+        // 10. Return response
         return $this->formatResponse($model, $method, $result);
     }
 
@@ -167,16 +182,23 @@ class ModelMethodController extends Controller
      */
     protected function extractAndValidateParameters(Request $request, ApiMethod $method): array
     {
-        // Extract parameters from request
+        // Extract parameters from request. all() (not input()) so `file`
+        // parameters — which live in the file bag — are extracted too.
         $data = $request->isMethod('GET')
             ? $request->query()
-            : $request->input('data.attributes', []);
+            : Arr::get($request->all(), 'data.attributes', []);
 
-        // Build validation rules
+        // Build validation rules. Task 26 (H16): `array:<type>` element rules
+        // are registered under their own "attribute.*" key — the old code
+        // appended the raw modifier to the parent's rules, a guaranteed 500.
         $rules = [];
         foreach ($method->parameters as $param) {
             $key = $request->isMethod('GET') ? $param->name : "data.attributes.{$param->name}";
             $rules[$key] = $param->validationRules();
+
+            if (($elementRules = $param->elementValidationRules()) !== null) {
+                $rules["{$key}.*"] = $elementRules;
+            }
         }
 
         // Validate
@@ -189,11 +211,24 @@ class ModelMethodController extends Controller
             throw new ValidationException($validator);
         }
 
-        // Return validated parameters with defaults applied
+        // Task 26 (H17): pass CAST values, and let unprovided optionals fall
+        // through to the PHP signature default. The old code passed raw
+        // request values (GET integers arrive as strings → TypeError under
+        // strict_types) and materialised missing optionals as null, which
+        // OVERRODE the PHP default (int $copies = 1 → TypeError).
         $validated = [];
         foreach ($method->parameters as $param) {
-            $value = $data[$param->name] ?? $param->default;
-            $validated[$param->name] = $value;
+            if (array_key_exists($param->name, $data)) {
+                $validated[$param->name] = $param->castValue($data[$param->name]);
+
+                continue;
+            }
+
+            if ($param->default !== null) {
+                $validated[$param->name] = $param->default;
+            }
+            // No value, no declared default: omitted entirely — named-argument
+            // binding lets the PHP default (if any) apply.
         }
 
         return $validated;

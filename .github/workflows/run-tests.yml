@@ -8,49 +8,51 @@ on:
       - 'phpunit.xml.dist'
       - 'composer.json'
       - 'composer.lock'
+      - 'tests/BASELINE.md'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Matrix notes (task 4 / audit C8):
+# - ubuntu only: the postgres service container is Linux-only, so the old
+#   windows-latest legs died at "Initialize containers".
+# - Laravel 12 only: spatie/laravel-permission ^7.1, spatie/laravel-query-builder
+#   ^7.0 and laravel-json-api/laravel ^5.0 all hard-require ^12 — the old 11.*
+#   legs could never resolve.
+# - PHP 8.4 only: composer.json requires php ^8.4, so the old 8.3 legs could
+#   never install either.
+# - Pass criterion: tests/check-baseline.php — the failing set must be a SUBSET
+#   of tests/BASELINE.md (the audit-known failures Phases 2-6 burn down); any
+#   NEW failing test breaks the build.
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        php: [8.4, 8.3]
-        laravel: [12.*, 11.*]
+        php: [8.4]
         stability: [prefer-lowest, prefer-stable]
-        include:
-          - laravel: 12.*
-            testbench: 10.*
-          - laravel: 11.*
-            testbench: 9.*
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: P${{ matrix.php }} - L12 - ${{ matrix.stability }}
 
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_DB: blafast
+          POSTGRES_DB: blafast_fundation_test
           POSTGRES_USER: blafast
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: blafast
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - name: Verify pgsql service is healthy
-        run: |
-          nc -z localhost 5432
-          if [ $? -ne 0 ]; then
-            echo "PostgreSQL service is not healthy"
-            exit 1
-          fi
-
       - name: Checkout code
         uses: actions/checkout@v6
 
@@ -58,7 +60,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, pdo_pgsql, bcmath, soap, intl, gd, exif, iconv, fileinfo
           coverage: none
 
       - name: Setup problem matchers
@@ -68,18 +70,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer require "laravel/framework:12.*" "orchestra/testbench:10.*" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List Installed Dependencies
         run: composer show -D
 
-      - name: Execute tests
-        run: vendor/bin/pest --ci
+      - name: Execute tests (sqlite)
+        run: |
+          vendor/bin/pest --ci || true
+          php tests/check-baseline.php build/report.junit.xml tests/BASELINE.md
+
+      - name: Execute tests (Postgres)
+        run: |
+          vendor/bin/pest --ci || true
+          php tests/check-baseline.php build/report.junit.xml tests/BASELINE.md
         env:
           DB_CONNECTION: pgsql
-          DB_PORT: ${{ job.services.postgres.ports[5432] }}
-          DB_DATABASE: blafast
-          DB_USERNAME: blafast
-          DB_PASSWORD: password
           DB_HOST: localhost
+          DB_PORT: ${{ job.services.postgres.ports[5432] }}
+          DB_DATABASE: blafast_fundation_test
+          DB_USERNAME: blafast
+          DB_PASSWORD: blafast

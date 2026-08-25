@@ -196,14 +196,18 @@ class DeferredApiRequest extends Model
     /**
      * Mark request as failed.
      */
-    public function markAsFailed(string $errorCode, string $errorMessage): void
+    public function markAsFailed(string $errorCode, string $errorMessage, ?int $statusCode = null, mixed $result = null): void
     {
-        $this->update([
+        // Task 15: the real downstream status/body are recorded so a polling
+        // client can tell WHAT failed, not just that something did.
+        $this->update(array_filter([
             'status' => DeferredRequestStatus::Failed,
             'completed_at' => now(),
             'error_code' => $errorCode,
             'error_message' => $errorMessage,
-        ]);
+            'result_status_code' => $statusCode,
+            'result' => $result,
+        ], fn ($value) => $value !== null));
     }
 
     /**

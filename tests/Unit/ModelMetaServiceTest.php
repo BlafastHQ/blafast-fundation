@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Blafast\Foundation\Dto\ModelMeta;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\ExecPermissionChecker;
+use Blafast\Foundation\Services\MetadataCacheService;
 use Blafast\Foundation\Services\ModelMetaService;
 use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +17,13 @@ beforeEach(function () {
     $this->permissionChecker = Mockery::mock(ExecPermissionChecker::class);
     $this->permissionChecker->shouldReceive('getExecutableMethodsForModel')->andReturn([]);
 
-    $this->service = new ModelMetaService($this->context, $this->permissionChecker);
+    // Task 11: compile() routes through the single guarded MetadataCacheService
+    // layer now; a pass-through mock keeps these unit tests cache-free.
+    $this->metaCache = Mockery::mock(MetadataCacheService::class);
+    $this->metaCache->shouldReceive('remember')->andReturnUsing(fn ($key, $tags, $cb) => $cb());
+    $this->metaCache->shouldReceive('invalidateModel');
+
+    $this->service = new ModelMetaService($this->context, $this->permissionChecker, $this->metaCache);
 });
 
 afterEach(function () {
@@ -68,30 +75,25 @@ test('compile includes pagination configuration', function () {
 });
 
 test('compile caches metadata', function () {
-    Cache::shouldReceive('tags')
-        ->once()
-        ->with(Mockery::type('array'))
-        ->andReturnSelf();
+    // Task 11 (C3): compile() delegates to the single guarded cache layer.
+    $calls = 0;
+    $metaCache = Mockery::mock(MetadataCacheService::class);
+    $metaCache->shouldReceive('remember')->andReturnUsing(function ($key, $tags, $cb) use (&$calls) {
+        $calls++;
 
-    Cache::shouldReceive('remember')
-        ->once()
-        ->andReturn(new ModelMeta(
-            model: 'Organization',
-            label: 'organizations',
-            slug: 'organization',
-        ));
+        return $cb();
+    });
 
-    $this->service->compile(Organization::class);
+    $service = new ModelMetaService($this->context, $this->permissionChecker, $metaCache);
+    $service->compile(Organization::class);
+
+    expect($calls)->toBe(1);
 });
 
 test('invalidate clears cache for model', function () {
-    Cache::shouldReceive('tags')
+    $this->metaCache->shouldReceive('invalidateByTags')
         ->once()
-        ->with(Mockery::type('array'))
-        ->andReturnSelf();
-
-    Cache::shouldReceive('flush')
-        ->once();
+        ->with(Mockery::on(fn ($tags) => in_array('organization', $tags, true)));
 
     $this->service->invalidate(Organization::class);
 });
@@ -103,22 +105,12 @@ test('compile uses organization context in cache key', function () {
     $permissionChecker = Mockery::mock(ExecPermissionChecker::class);
     $permissionChecker->shouldReceive('getExecutableMethodsForModel')->andReturn([]);
 
-    $service = new ModelMetaService($contextWithOrg, $permissionChecker);
-
-    Cache::shouldReceive('tags')
-        ->once()
-        ->with(Mockery::on(function ($tags) {
-            return in_array('org-123', $tags);
-        }))
-        ->andReturnSelf();
-
-    Cache::shouldReceive('remember')
+    $metaCache = Mockery::mock(MetadataCacheService::class);
+    $metaCache->shouldReceive('remember')
         ->once()
         ->with(
-            Mockery::on(function ($key) {
-                return str_contains($key, '123');
-            }),
-            Mockery::any(),
+            Mockery::on(fn ($key) => str_contains($key, '123')),
+            Mockery::on(fn ($tags) => in_array('org-123', $tags, true)),
             Mockery::any()
         )
         ->andReturn(new ModelMeta(
@@ -126,6 +118,8 @@ test('compile uses organization context in cache key', function () {
             label: 'organizations',
             slug: 'organization',
         ));
+
+    $service = new ModelMetaService($contextWithOrg, $permissionChecker, $metaCache);
 
     $service->compile(Organization::class);
 });

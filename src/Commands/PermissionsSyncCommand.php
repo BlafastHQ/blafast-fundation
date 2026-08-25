@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Commands;
 
+use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Services\BlaFastPermissionRegistrar;
 use Blafast\Foundation\Services\ModuleRegistry;
 use Illuminate\Console\Command;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -44,7 +44,7 @@ class PermissionsSyncCommand extends Command
         PermissionRegistrar $registrar,
         BlaFastPermissionRegistrar $blaFastRegistrar
     ): int {
-        if (! class_exists(Permission::class)) {
+        if (! class_exists((string) config('permission.models.permission'))) {
             $this->error('Spatie Permission package is not installed.');
 
             return self::FAILURE;
@@ -114,14 +114,22 @@ class PermissionsSyncCommand extends Command
         $created = 0;
         $existing = 0;
 
+        // The CONFIGURED model (uuid keys — the base spatie model would insert a
+        // NULL id and a nonexistent `description` column: Postgres-fatal, H8).
+        /** @var class-string<Permission> $permissionClass */
+        $permissionClass = config('permission.models.permission');
+
         foreach ($permissions as $permission) {
-            $permissionModel = Permission::firstOrCreate(
-                ['name' => $permission['name']],
-                [
-                    'guard_name' => $permission['guard_name'] ?? 'web',
-                    'description' => $permission['description'] ?? null,
-                ]
-            );
+            // Match on the FULL identity — name + guard + team. Module permissions
+            // are global (team NULL); the guard defaults to `api`, the only guard
+            // the package runtime checks (`web` rows could never satisfy can()).
+            // The team column is contractually `organization_id` (applied and
+            // boot-asserted by the provider since task 6).
+            $permissionModel = $permissionClass::firstOrCreate([
+                'name' => $permission['name'],
+                'guard_name' => $permission['guard_name'] ?? 'api',
+                'organization_id' => null,
+            ]);
 
             if ($permissionModel->wasRecentlyCreated) {
                 $created++;

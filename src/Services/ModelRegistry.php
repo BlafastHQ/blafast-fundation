@@ -38,7 +38,6 @@ class ModelRegistry
         }
 
         /** @var class-string<HasApiStructure> $modelClass */
-        /** @phpstan-ignore staticMethod.notFound */
         $slug = $modelClass::getApiSlug();
         $this->models[$slug] = $modelClass;
     }

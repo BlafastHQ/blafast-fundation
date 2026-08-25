@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Services;
 
 use Blafast\Foundation\Dto\ApiMethod;
-use Blafast\Foundation\Jobs\ExecuteModelMethod;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 
 /**
  * Service for executing model methods via API.
@@ -18,7 +18,14 @@ use Illuminate\Database\Eloquent\Model;
 class MethodExecutionService
 {
     /**
-     * Execute a model method.
+     * Execute a model method synchronously.
+     *
+     * Task 27 (M7): the queued branch is gone — `->queued()` methods are
+     * routed through the deferred-request infrastructure by the controller
+     * (202 + poll link), and a deferred REPLAY lands here to run for real.
+     * The old branch returned ['queued' => true] which the controller wrapped
+     * in a method-result envelope with a fabricated `executed_at = now()`,
+     * HTTP 200, no job id and no retrievable result.
      */
     public function execute(
         Model $model,
@@ -26,12 +33,6 @@ class MethodExecutionService
         array $parameters,
         ?Authenticatable $user
     ): mixed {
-        // Handle queued execution
-        if ($method->queued) {
-            return $this->queueExecution($model, $method, $parameters, $user);
-        }
-
-        // Execute synchronously
         $result = $this->executeMethod($model, $method, $parameters);
 
         // Log the execution
@@ -54,38 +55,21 @@ class MethodExecutionService
             );
         }
 
-        // Call the method with parameters
-        return $model->{$methodName}(...array_values($parameters));
-    }
+        // Task 26 (H17): bind by NAME, not declaration order. The old
+        // positional splat silently misbound arguments whenever the declared
+        // parameter order drifted from the PHP signature, and forced
+        // null-materialised optionals over PHP defaults. Unknown keys are
+        // dropped rather than becoming an UnknownNamedParameterError.
+        $signature = new \ReflectionMethod($model, $methodName);
+        $arguments = [];
 
-    /**
-     * Queue method execution for background processing.
-     *
-     * @return array<string, mixed>
-     */
-    protected function queueExecution(
-        Model $model,
-        ApiMethod $method,
-        array $parameters,
-        ?Authenticatable $user
-    ): array {
-        // Dispatch job
-        $job = new ExecuteModelMethod(
-            get_class($model),
-            // @phpstan-ignore property.notFound
-            $model->id,
-            $method->slug,
-            $parameters,
-            // @phpstan-ignore property.notFound
-            $user?->id
-        );
+        foreach ($signature->getParameters() as $parameter) {
+            if (array_key_exists($parameter->getName(), $parameters)) {
+                $arguments[$parameter->getName()] = $parameters[$parameter->getName()];
+            }
+        }
 
-        dispatch($job);
-
-        return [
-            'queued' => true,
-            'message' => 'Method execution has been queued.',
-        ];
+        return $model->{$methodName}(...$arguments);
     }
 
     /**
@@ -126,6 +110,13 @@ class MethodExecutionService
             // Redact sensitive parameters
             if ($param && $this->isSensitive($param->name, $param->type)) {
                 $sanitized[$key] = '[REDACTED]';
+            } elseif ($value instanceof UploadedFile) {
+                // Task 26: `file` parameters are not JSON-encodable — logging
+                // the raw object made the activity write throw AFTER the
+                // method had already executed (a 500 on a successful call).
+                $sanitized[$key] = sprintf('[file: %s, %d bytes]', $value->getClientOriginalName(), $value->getSize());
+            } elseif (is_object($value) && ! $value instanceof \JsonSerializable) {
+                $sanitized[$key] = '[object: '.get_debug_type($value).']';
             } else {
                 $sanitized[$key] = $value;
             }

@@ -6,7 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class User extends Model
 {
+    /**
+     * Required: the blafast-fundation permission runtime lives on the `api` guard.
+     * Without this, spatie's guard detection resolves the session guard on
+     * sanctum-authenticated requests and every permission check fails.
+     */
+    protected $guard_name = 'api';
+
+    /**
+     * Required: route notifications through the package's organization-scoped
+     * model — Laravel offers no config to swap its base DatabaseNotification,
+     * and without this override notifications are NOT tenant-isolated.
+     */
+    public function notifications(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\Blafast\Foundation\Models\DatabaseNotification::class, 'notifiable')->latest();
+    }
+
     public string $id;
+
     public string $name;
+
     public string $email;
 }

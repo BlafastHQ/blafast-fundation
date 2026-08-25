@@ -67,6 +67,22 @@ trait BelongsToOrganization
     }
 
     /**
+     * Restore a queued-job-serialized model without the organization scope
+     * (task 12): SerializesModels re-queries by primary key BEFORE any job
+     * middleware restores the org context, and the scope now fails closed — an
+     * unrestorable model would kill every queued job carrying one. Restoration
+     * by unique key is safe; the job middleware then enforces the context.
+     *
+     * @param  array<int, mixed>|int|string  $ids
+     * @return Builder<static>
+     */
+    public function newQueryForRestoration($ids)
+    {
+        /** @var Builder<static> */
+        return parent::newQueryForRestoration($ids)->withoutGlobalScope(OrganizationScope::class);
+    }
+
+    /**
      * Query the model for a specific organization.
      * This bypasses the context and allows querying a specific organization's data.
      *
@@ -78,14 +94,10 @@ trait BelongsToOrganization
             ->where('organization_id', $organizationId);
     }
 
-    /**
-     * Scope a query to only include models for a specific organization.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeForOrganization(Builder $query, string $organizationId): Builder
-    {
-        return $query->where($this->getTable().'.organization_id', $organizationId);
-    }
+    // The named scope scopeForOrganization() is deliberately GONE (task 20/M6):
+    // it shadowed the static above with divergent semantics — resolved through
+    // the query builder it did NOT strip the global scope, so cross-tenant calls
+    // yielded `organization_id = <context> AND organization_id = <requested>`
+    // and silently returned nothing. One variant, one semantic; the fluent call
+    // style now fails loudly (BadMethodCallException) instead of lying.
 }

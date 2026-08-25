@@ -30,14 +30,17 @@ class QueryBuilderService
      */
     public function buildQuery(string $modelClass, Request $request): Builder
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
 
+        // spatie/query-builder v7 signatures are variadics (AllowedFilter|string
+        // ...$filters) — passing the plain arrays threw a TypeError on every
+        // dynamic list request (C5). Spread them.
         $query = QueryBuilder::for($modelClass, $request)
-            ->allowedFilters($this->buildFilters($modelClass, $structure))
-            ->allowedSorts($this->buildSorts($structure))
-            /** @phpstan-ignore staticMethod.notFound */
-            ->allowedIncludes($modelClass::getApiIncludes());
+            ->allowedFilters(...$this->buildFilters($modelClass, $structure))
+            ->allowedSorts(...$this->buildSorts($structure))
+
+            ->allowedIncludes(...$modelClass::getApiIncludes());
 
         // Apply search if present
         $search = $request->input('search');
@@ -47,6 +50,22 @@ class QueryBuilderService
         }
 
         return $query->getEloquentBuilder();
+    }
+
+    /**
+     * Build a query for a single-resource lookup with spatie-validated includes
+     * (task 14/H13): show() used a raw array_intersect that silently ignored
+     * unknown includes while index 400'd on them — one validation path now.
+     *
+     * @param  class-string<HasApiStructure&Model>  $modelClass
+     * @return Builder<Model>
+     */
+    public function buildShowQuery(string $modelClass, Request $request): Builder
+    {
+        /** @var Builder<Model> */
+        return QueryBuilder::for($modelClass, $request)
+            ->allowedIncludes(...$modelClass::getApiIncludes())
+            ->getEloquentBuilder();
     }
 
     /**
@@ -65,6 +84,7 @@ class QueryBuilderService
     protected function buildFilters(string $modelClass, array $structure): array
     {
         $filters = [];
+        $addedNames = [];
 
         foreach ($structure['fields'] as $field) {
             if (! ($field['filterable'] ?? false)) {
@@ -74,18 +94,27 @@ class QueryBuilderService
             $filter = $this->createFilterForField($field);
             if ($filter !== null) {
                 $filters[] = $filter;
+                $addedNames[] = str_starts_with($field['type'] ?? 'string', 'relation')
+                    ? ($field['relation_name'] ?? '').'.'.($field['relation_field'] ?? 'id')
+                    : $field['name'];
             }
         }
 
-        // Add custom filters if defined in the structure
+        // Add custom filters if defined in the structure. Names already registered
+        // from field metadata are SKIPPED (H12): the old unconditional exact()
+        // append stacked a second predicate on the same name, so a partial filter
+        // like `name` also required equality and matched nothing.
         foreach ($structure['filters'] ?? [] as $filterDef) {
-            if (is_string($filterDef)) {
-                // Simple string filter - use exact match
-                $filters[] = AllowedFilter::exact($filterDef);
-            } elseif (is_array($filterDef) && isset($filterDef['name'])) {
-                // Custom filter definition
-                $filters[] = $this->createCustomFilter($filterDef);
+            $name = is_string($filterDef) ? $filterDef : ($filterDef['name'] ?? null);
+
+            if ($name === null || in_array($name, $addedNames, true)) {
+                continue;
             }
+
+            $filters[] = is_string($filterDef)
+                ? AllowedFilter::exact($filterDef)
+                : $this->createCustomFilter($filterDef);
+            $addedNames[] = $name;
         }
 
         return $filters;
@@ -176,16 +205,24 @@ class QueryBuilderService
         $sorts = [];
         $addedSortNames = [];
 
-        // Add sorts from fields marked as sortable
-        foreach ($structure['fields'] as $field) {
-            if ($field['sortable'] ?? false) {
-                $sorts[] = AllowedSort::field($field['name']);
-                $addedSortNames[] = $field['name'];
+        // An explicitly declared sort list (`->sortable('name', …)`) is the
+        // AUTHORITATIVE allow-list: the per-field `sortable` flags default to true
+        // in the builder, so unioning them in silently made every string field
+        // sortable (`?sort=vat_number` was accepted against the declared design).
+        // Models that declare no list keep the field-flag behaviour.
+        $explicitSorts = $structure['sorts'] ?? [];
+
+        if ($explicitSorts === []) {
+            foreach ($structure['fields'] as $field) {
+                if ($field['sortable'] ?? false) {
+                    $sorts[] = AllowedSort::field($field['name']);
+                    $addedSortNames[] = $field['name'];
+                }
             }
         }
 
         // Add custom sorts if defined
-        foreach ($structure['sorts'] ?? [] as $sort) {
+        foreach ($explicitSorts as $sort) {
             $sortName = is_string($sort) ? ltrim($sort, '-') : ($sort['name'] ?? '');
 
             // Skip if already added from fields

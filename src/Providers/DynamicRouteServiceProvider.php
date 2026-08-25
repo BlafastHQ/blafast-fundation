@@ -34,16 +34,22 @@ class DynamicRouteServiceProvider extends ServiceProvider
             /** @var class-string<HasApiStructure> $modelClass */
             $registry->register($modelClass);
 
-            /** @phpstan-ignore staticMethod.notFound */
             $slug = $modelClass::getApiSlug();
             $controller = $options['controller'] ?? DynamicResourceController::class;
-            $middleware = $options['middleware'] ?? [];
 
-            // Register meta endpoint first (outside prefix for clean URL)
-            /** @phpstan-ignore method.notFound */
-            $this->get('meta/{slug}', [$controller, 'meta'])
-                ->where('slug', $slug)
-                ->name("{$slug}.meta");
+            // Secure by default (H1): the trio every built-in route in
+            // routes/api.php attaches. Caller middleware APPENDS — it cannot strip
+            // the defaults. Deliberately no `org.required`: that would deny the
+            // superadmin global-context browsing the package supports.
+            $middleware = array_values(array_unique(array_merge(
+                ['auth:sanctum', 'throttle:api', 'org.resolve'],
+                $options['middleware'] ?? [],
+            )));
+
+            // The macro's own meta/{slug} route is gone (L4): it was permanently
+            // shadowed by the global authorized meta route under api/v1, had drifted
+            // from the live implementation, and performed NO authorization — so it
+            // silently became the served endpoint under any other prefix.
 
             // Register resource routes using array-based group syntax
             // Note: Meta endpoint is handled globally by ModelMetaController

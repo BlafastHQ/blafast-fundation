@@ -22,11 +22,11 @@ class PermissionSeeder extends Seeder
         // Foundation module permissions
         $permissions = [
             // Organization management
-            'view_organizations',
-            'create_organizations',
-            'update_organizations',
-            'delete_organizations',
-            'list_organizations',
+            'view_organization',
+            'create_organization',
+            'update_organization',
+            'delete_organization',
+            'list_organization',
 
             // User management
             'view_users',
@@ -103,8 +103,8 @@ class PermissionSeeder extends Seeder
 
         if ($admin) {
             $admin->givePermissionTo([
-                'view_organizations',
-                'update_organizations',
+                'view_organization',
+                'update_organization',
                 'view_users',
                 'create_users',
                 'update_users',

@@ -3,11 +3,8 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist
@@ -97,7 +94,10 @@ test('login requires email', function () {
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['email']);
+        ->assertStatus(422)
+        // JSON:API error objects (tasks 14/22), not Laravel's errors bag.
+        ->assertJsonPath('errors.0.code', 'VALIDATION_ERROR')
+        ->assertJsonPath('errors.0.source.pointer', '/data/attributes/email');
 });
 
 test('login requires password', function () {
@@ -107,7 +107,10 @@ test('login requires password', function () {
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['password']);
+        ->assertStatus(422)
+        // JSON:API error objects (tasks 14/22), not Laravel's errors bag.
+        ->assertJsonPath('errors.0.code', 'VALIDATION_ERROR')
+        ->assertJsonPath('errors.0.source.pointer', '/data/attributes/password');
 });
 
 test('login requires device name', function () {
@@ -117,7 +120,10 @@ test('login requires device name', function () {
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['device_name']);
+        ->assertStatus(422)
+        // JSON:API error objects (tasks 14/22), not Laravel's errors bag.
+        ->assertJsonPath('errors.0.code', 'VALIDATION_ERROR')
+        ->assertJsonPath('errors.0.source.pointer', '/data/attributes/device_name');
 });
 
 test('authenticated user can logout', function () {
@@ -307,5 +313,8 @@ test('create token requires name', function () {
     ]);
 
     $response->assertStatus(422)
-        ->assertJsonValidationErrors(['name']);
+        ->assertStatus(422)
+        // JSON:API error objects (tasks 14/22), not Laravel's errors bag.
+        ->assertJsonPath('errors.0.code', 'VALIDATION_ERROR')
+        ->assertJsonPath('errors.0.source.pointer', '/data/attributes/name');
 });

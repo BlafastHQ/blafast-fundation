@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Tests\Fixtures;
 
+use Blafast\Foundation\Models\DatabaseNotification;
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\OrganizationContext;
 use Illuminate\Auth\Authenticatable;
@@ -13,7 +14,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -25,6 +28,27 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     use HasFactory;
     use HasRoles;
     use HasUuids;
+    use Notifiable;
+
+    /**
+     * The package's whole permission runtime lives on the `api` guard. Without an
+     * explicit guard, spatie falls back to config-order guard detection, and a
+     * sanctum-authenticated request resolves `web` — every can()/hasPermissionTo()
+     * then throws PermissionDoesNotExist for api-guard permissions (task 5).
+     * Hosts must declare the same — see stubs/User.stub / docs/HOST-REQUIREMENTS.md.
+     */
+    protected $guard_name = 'api';
+
+    /**
+     * Route notifications through the package's org-scoped model (task 18):
+     * Laravel's Notifiable resolves its own base DatabaseNotification and offers
+     * no config to swap it — without this override the org scope, the
+     * organization_id autofill and the column itself are dead code.
+     */
+    public function notifications(): MorphMany
+    {
+        return $this->morphMany(DatabaseNotification::class, 'notifiable')->latest();
+    }
 
     protected $fillable = [
         'id',

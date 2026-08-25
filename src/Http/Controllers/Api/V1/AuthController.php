@@ -38,8 +38,17 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Create token with all abilities
-        $token = $user->createToken($request->device_name, ['*']);
+        // Create token with all abilities. Task 23 (M18): the configured
+        // expiration is honoured — the key existed but was read by nothing, so
+        // operators setting it still issued never-expiring wildcard tokens
+        // (bounded only by the host's sanctum.expiration, commonly null).
+        $expirationMinutes = config('blafast-fundation.auth.token.expiration');
+
+        $token = $user->createToken(
+            $request->device_name,
+            ['*'],
+            is_numeric($expirationMinutes) ? now()->addMinutes((int) $expirationMinutes) : null
+        );
 
         $resource = new TokenResource($token->accessToken);
         $resource->plainTextToken = $token->plainTextToken;
@@ -115,11 +124,15 @@ class AuthController extends Controller
     {
         $abilities = $request->input('abilities', ['*']);
 
+        $configuredExpiration = config('blafast-fundation.auth.token.expiration');
+
         /** @phpstan-ignore-next-line */
         $token = $request->user()->createToken(
             $request->name,
             $abilities,
-            $request->expires_at ? now()->parse($request->expires_at) : null
+            $request->expires_at
+                ? now()->parse($request->expires_at)
+                : (is_numeric($configuredExpiration) ? now()->addMinutes((int) $configuredExpiration) : null)
         );
 
         $resource = new TokenResource($token->accessToken);
@@ -135,8 +148,14 @@ class AuthController extends Controller
      */
     public function revokeToken(Request $request, string $tokenId): JsonResponse
     {
-        /** @phpstan-ignore-next-line */
-        $token = $request->user()->tokens()->where('id', $tokenId)->first();
+        // personal_access_tokens.id is a bigint: a non-numeric id must 404, not reach
+        // the database (Postgres rejects the comparison with SQLSTATE 22P02 -> 500).
+        $token = null;
+
+        if (ctype_digit($tokenId)) {
+            /** @phpstan-ignore-next-line */
+            $token = $request->user()->tokens()->where('id', $tokenId)->first();
+        }
 
         if (! $token) {
             return response()->json([

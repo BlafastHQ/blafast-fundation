@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Ensure the service provider is booted
@@ -26,11 +26,21 @@ beforeEach(function () {
             Route::dynamicResource(Organization::class);
         });
 
-    // Authenticate as a user
-    actingAsUser();
-
-    // Bypass all authorization for testing
-    Gate::before(fn () => true);
+    // Authenticate as a user holding the REAL canonical permissions (task 7):
+    // the old `Gate::before(fn () => true)` crutch hid that granted permissions
+    // never authorized these endpoints.
+    $user = User::factory()->create();
+    foreach (['list_organization', 'view_organization'] as $name) {
+        Permission::findOrCreate($name, 'api');
+    }
+    $user->givePermissionTo(['list_organization', 'view_organization']);
+    // Task 12: the macro now attaches auth+throttle+org.resolve by default; a
+    // superadmin without the org header gets GLOBAL context, where these global
+    // grants stay visible.
+    Role::findOrCreate('Superadmin', 'api');
+    $user->assignRole('Superadmin');
+    $user->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($user, 'sanctum');
 });
 
 test('show endpoint returns single entity with full details', function () {
@@ -75,15 +85,13 @@ test('show endpoint supports includes parameter for relationships', function () 
     expect($response->json('data.id'))->toBe($org->id);
 });
 
-test('show endpoint ignores invalid includes parameter', function () {
+test('show endpoint rejects invalid includes parameter', function () {
     $org = Organization::factory()->create();
 
-    // Request with invalid include
-    $response = $this->getJson("/api/v1/organization/{$org->id}?include=nonexistent,invalid");
-
-    // Should still return successfully, just ignoring invalid includes
-    $response->assertStatus(200);
-    expect($response->json('data.id'))->toBe($org->id);
+    // Task 14 (H13): show validates includes through the same spatie path as
+    // index — an unknown include is a 400, no longer silently ignored.
+    $this->getJson("/api/v1/organization/{$org->id}?include=nonexistent,invalid")
+        ->assertStatus(400);
 });
 
 test('show endpoint allows multiple valid includes', function () {
@@ -97,11 +105,13 @@ test('show endpoint allows multiple valid includes', function () {
 test('show endpoint validates includes against allowed list', function () {
     $org = Organization::factory()->create();
 
-    // Request with mix of valid and invalid includes
-    $response = $this->getJson("/api/v1/organization/{$org->id}?include=users,invalid_relation");
+    // Task 14 (H13): a mix containing an invalid include fails validation —
+    // identical to the index behaviour.
+    $this->getJson("/api/v1/organization/{$org->id}?include=users,invalid_relation")
+        ->assertStatus(400);
 
-    // Should succeed and only load valid includes (invalid ones are ignored)
-    $response->assertStatus(200);
+    $this->getJson("/api/v1/organization/{$org->id}?include=users")
+        ->assertStatus(200);
 });
 
 test('show endpoint works without includes parameter', function () {
@@ -169,6 +179,7 @@ test('show endpoint handles whitespace in includes', function () {
     $include = urlencode(' users , ');
     $response = $this->getJson("/api/v1/organization/{$org->id}?include={$include}");
 
-    // Should still work despite whitespace (handled by query builder)
-    $response->assertStatus(200);
+    // Task 14: spatie's validation does NOT trim — ' users ' is an unknown
+    // include and fails with 400, identically on index and show.
+    $response->assertStatus(400);
 });

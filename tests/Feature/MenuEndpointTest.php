@@ -2,19 +2,58 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\MenuRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
-uses(RefreshDatabase::class);
-
+/**
+ * The user-menu endpoint sits behind auth:sanctum + org.resolve, and menu
+ * permission filtering runs on the `api` guard under the request's
+ * organization team context — the original tests predated all of that (no
+ * org header → 400 MISSING_ORGANIZATION; `web`-guard permissions →
+ * PermissionDoesNotExist for guard `api`).
+ */
 beforeEach(function () {
-    // Setup permissions
     app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+    $this->org = Organization::factory()->create();
 });
+
+/**
+ * An org-member user, plus the header set every menu request needs.
+ */
+function menuUser(): User
+{
+    $user = User::factory()->create();
+    test()->org->addUser($user, 'User');
+
+    return $user;
+}
+
+function menuHeaders(): array
+{
+    return ['X-Organization-Id' => test()->org->id];
+}
+
+/**
+ * Grant org-scoped (team) permissions the way the request will check them.
+ */
+function grantInOrg(User $user, array|string $permissions): void
+{
+    $registrar = app(PermissionRegistrar::class);
+    $registrar->setPermissionsTeamId(test()->org->id);
+
+    foreach ((array) $permissions as $permission) {
+        Permission::findOrCreate($permission, 'api');
+    }
+    $user->givePermissionTo($permissions);
+
+    $registrar->setPermissionsTeamId(null);
+    $user->unsetRelation('roles')->unsetRelation('permissions');
+}
 
 test('user-menu endpoint requires authentication', function () {
     $response = $this->getJson('/api/v1/user-menu');
@@ -30,9 +69,9 @@ test('user-menu endpoint returns empty menu for unauthenticated user', function 
 });
 
 test('user-menu endpoint returns JSON:API formatted response', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -42,7 +81,7 @@ test('user-menu endpoint returns JSON:API formatted response', function () {
 });
 
 test('user-menu returns items without permission requirement', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -52,7 +91,7 @@ test('user-menu returns items without permission requirement', function () {
         'icon' => 'icon-dashboard',
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -62,14 +101,10 @@ test('user-menu returns items without permission requirement', function () {
 });
 
 test('user-menu filters items based on permissions', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    // Create permissions
-    Permission::create(['name' => 'view_admin', 'guard_name' => 'web']);
-    Permission::create(['name' => 'view_secret', 'guard_name' => 'web']);
-
-    // Give user only view_admin permission
-    $user->givePermissionTo('view_admin');
+    Permission::findOrCreate('view_secret', 'api');
+    grantInOrg($user, 'view_admin');
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -86,7 +121,7 @@ test('user-menu filters items based on permissions', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -94,14 +129,10 @@ test('user-menu filters items based on permissions', function () {
 });
 
 test('user-menu filters children based on permissions', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    Permission::create(['name' => 'view_billing', 'guard_name' => 'web']);
-    Permission::create(['name' => 'view_invoices', 'guard_name' => 'web']);
-    Permission::create(['name' => 'view_payments', 'guard_name' => 'web']);
-
-    // Give user billing and invoices but not payments
-    $user->givePermissionTo(['view_billing', 'view_invoices']);
+    Permission::findOrCreate('view_payments', 'api');
+    grantInOrg($user, ['view_billing', 'view_invoices']);
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -115,7 +146,7 @@ test('user-menu filters children based on permissions', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -126,12 +157,10 @@ test('user-menu filters children based on permissions', function () {
 });
 
 test('user-menu excludes parent without accessible children or route', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    Permission::create(['name' => 'view_admin', 'guard_name' => 'web']);
-    Permission::create(['name' => 'view_secret_section', 'guard_name' => 'web']);
-
-    $user->givePermissionTo('view_admin');
+    Permission::findOrCreate('view_secret_section', 'api');
+    grantInOrg($user, 'view_admin');
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -144,19 +173,17 @@ test('user-menu excludes parent without accessible children or route', function 
         ],
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(0, 'data');
 });
 
 test('user-menu includes parent with route even without accessible children', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    Permission::create(['name' => 'view_settings', 'guard_name' => 'web']);
-    Permission::create(['name' => 'view_advanced', 'guard_name' => 'web']);
-
-    $user->givePermissionTo('view_settings');
+    Permission::findOrCreate('view_advanced', 'api');
+    grantInOrg($user, 'view_settings');
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -169,7 +196,7 @@ test('user-menu includes parent with route even without accessible children', fu
         ],
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -178,13 +205,9 @@ test('user-menu includes parent with route even without accessible children', fu
 });
 
 test('user-menu respects hierarchical permission structure', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    Permission::create(['name' => 'view_billing', 'guard_name' => 'web']);
-    Permission::create(['name' => 'view_invoices', 'guard_name' => 'web']);
-    Permission::create(['name' => 'create_invoice', 'guard_name' => 'web']);
-
-    $user->givePermissionTo(['view_billing', 'view_invoices', 'create_invoice']);
+    grantInOrg($user, ['view_billing', 'view_invoices', 'create_invoice']);
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -205,7 +228,7 @@ test('user-menu respects hierarchical permission structure', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')
@@ -220,7 +243,7 @@ test('user-menu respects hierarchical permission structure', function () {
 });
 
 test('user-menu handles deeply nested structures', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
@@ -239,7 +262,7 @@ test('user-menu handles deeply nested structures', function () {
         ],
     ]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data');
@@ -249,33 +272,34 @@ test('user-menu handles deeply nested structures', function () {
 });
 
 test('user-menu caches response', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
     $registry->add(['label' => 'dashboard', 'route' => 'dashboard']);
 
     // First request
-    $response1 = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response1 = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
+    $response1->assertStatus(200);
 
     // Add new item to registry
     $registry->add(['label' => 'new-item', 'route' => 'new']);
 
     // Second request should be cached and not include new item
-    $response2 = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response2 = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     expect($response1->json('data'))->toEqual($response2->json('data'));
 });
 
 test('user-menu response includes order field', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
     $registry->add(['label' => 'first', 'route' => 'first', 'order' => 100]);
     $registry->add(['label' => 'second', 'route' => 'second', 'order' => 200]);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.attributes.order', 100)
@@ -283,58 +307,61 @@ test('user-menu response includes order field', function () {
 });
 
 test('user-menu response includes icon field', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
     $registry->add(['label' => 'settings', 'route' => 'settings', 'icon' => 'icon-settings']);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.attributes.icon', 'icon-settings');
 });
 
 test('user-menu uses tag as id when available', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
     $registry->add(['label' => 'billing', 'route' => 'billing', 'tag' => 'main.billing']);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.id', 'main.billing');
 });
 
 test('user-menu uses slug as id when tag not available', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
     $registry->add(['label' => 'User Settings', 'route' => 'settings']);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonPath('data.0.id', 'user-settings');
 });
 
 test('user-menu works with role-based permissions', function () {
-    $user = User::factory()->create();
+    $user = menuUser();
 
-    $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'web']);
-    Permission::create(['name' => 'access_admin_panel', 'guard_name' => 'web']);
+    $registrar = app(PermissionRegistrar::class);
+    $registrar->setPermissionsTeamId($this->org->id);
+    $adminRole = Role::create(['name' => 'admin', 'guard_name' => 'api', 'organization_id' => $this->org->id]);
+    Permission::findOrCreate('access_admin_panel', 'api');
     $adminRole->givePermissionTo('access_admin_panel');
-
     $user->assignRole($adminRole);
+    $registrar->setPermissionsTeamId(null);
+    $user->unsetRelation('roles')->unsetRelation('permissions');
 
     $registry = app(MenuRegistry::class);
     $registry->clear();
     $registry->add(['label' => 'admin', 'route' => 'admin', 'permission' => 'access_admin_panel']);
 
-    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu');
+    $response = $this->actingAs($user, 'sanctum')->getJson('/api/v1/user-menu', menuHeaders());
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data')

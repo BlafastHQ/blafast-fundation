@@ -29,7 +29,12 @@ class ModuleManifest
      */
     public function __construct(string $basePath)
     {
-        $this->manifestPath = $basePath.'/bootstrap/cache/blafast-modules.php';
+        // Task 23: the config key existed but pointed at storage/ while this
+        // hardcoded bootstrap/cache — operators tuning it changed nothing.
+        $this->manifestPath = config(
+            'blafast-fundation.modules.manifest_cache',
+            $basePath.'/bootstrap/cache/blafast-modules.php'
+        );
     }
 
     /**

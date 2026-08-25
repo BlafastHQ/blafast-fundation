@@ -8,7 +8,6 @@ use Blafast\Foundation\Models\Organization;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
@@ -16,9 +15,12 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-uses(RefreshDatabase::class);
-
 beforeEach(function () {
+    // These closure test routes are NOT package controllers — this file asserts
+    // the RENDERING shapes, so it opts into the whole-app mode explicitly
+    // (task 22 scopes the default to package routes only; see JsonApiScopingTest).
+    config()->set('blafast-fundation.api_errors.scope', 'all');
+
     // Create test routes that throw various exceptions
     Route::get('/api/test/validation', function () {
         throw ValidationException::withMessages([

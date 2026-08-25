@@ -24,7 +24,7 @@ class CleanupActivityLogCommand extends Command
      * @var string
      */
     protected $signature = 'blafast:activity:cleanup
-        {--days=365 : Delete records older than this many days}';
+        {--days= : Delete records older than this many days (default: activity_log.retention_days)}';
 
     /**
      * The console command description.
@@ -38,7 +38,9 @@ class CleanupActivityLogCommand extends Command
      */
     public function handle(): int
     {
-        $days = (int) $this->option('days');
+        // Task 23: activity_log.retention_days is the default now — it said 90
+        // while the command hardcoded 365 and the scheduler passed no override.
+        $days = (int) ($this->option('days') ?? config('blafast-fundation.activity_log.retention_days', 365));
 
         if ($days < 1) {
             $this->error('Days must be a positive number.');

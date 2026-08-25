@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
-use App\Models\User;
 use Blafast\Foundation\Api\ApiStructureBuilder;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Database\Factories\OrganizationFactory;
@@ -38,7 +37,7 @@ use Illuminate\Support\Str;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read Address|null $primaryAddress
- * @property-read Collection<int, User> $users
+ * @property-read Collection<int, Model> $users
  * @property-read Collection<int, Address> $addresses
  *
  * @method static \Blafast\Foundation\Database\Factories\OrganizationFactory factory($count = null, $state = [])
@@ -130,7 +129,7 @@ class Organization extends Model implements HasApiStructure
      */
     public function users(): BelongsToMany
     {
-        $userModel = config('auth.providers.users.model', User::class);
+        $userModel = config('auth.providers.users.model');
 
         return $this->belongsToMany($userModel)
             ->using(OrganizationUser::class)
@@ -208,6 +207,22 @@ class Organization extends Model implements HasApiStructure
      */
     public function addUser(object $user, string $role, array $metadata = []): void
     {
+        // Reactivation-aware (task 20/H24): removeUser() is a SOFT leave, and the
+        // pivot is unique(user_id, organization_id) — a raw attach() threw a 500
+        // on re-inviting a former member, with no reactivation path anywhere.
+        // The existing row is restored to a clean state, preserving the history.
+        if ($this->users()->where('user_id', $user->id)->exists()) {
+            $this->users()->updateExistingPivot($user->id, [
+                'role' => $role,
+                'is_active' => true,
+                'joined_at' => now(),
+                'left_at' => null,
+                'metadata' => $metadata,
+            ]);
+
+            return;
+        }
+
         $this->users()->attach($user->id, [
             'role' => $role,
             'is_active' => true,
@@ -236,7 +251,13 @@ class Organization extends Model implements HasApiStructure
      */
     public function hasUser(object $user): bool
     {
-        return $this->users()->where('user_id', $user->id)->exists();
+        // ACTIVE memberships only (task 20/H24): the unfiltered check let
+        // ex-members through OrganizationContext::set()/with() — the programmatic
+        // path was weaker than the HTTP middleware's.
+        return $this->users()
+            ->where('user_id', $user->id)
+            ->wherePivot('is_active', true)
+            ->exists();
     }
 
     /**
@@ -266,7 +287,10 @@ class Organization extends Model implements HasApiStructure
             ->string('peppol_id', 'organizations.fields.peppol_id')
             ->datetime('created_at', 'organizations.fields.created_at', sortable: true)
             ->datetime('updated_at', 'organizations.fields.updated_at', sortable: true)
-            ->relation('primaryAddress', 'full_address', 'organizations.fields.primary_address')
+            // Task 14 (H15): the relation FILTER targets a real column — the old
+            // `full_address` is a computed accessor, and the registered
+            // primaryAddress.full_address filter produced invalid SQL.
+            ->relation('primaryAddress', 'city', 'organizations.fields.primary_address')
             ->sortable('name', 'slug', 'created_at', 'updated_at')
             ->filterable('name', 'slug', 'is_active')
             ->searchable('name', 'slug', 'vat_number')

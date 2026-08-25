@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Events\MetadataCacheInvalidated;
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\MetadataCacheService;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Enable caching for tests
@@ -80,7 +77,7 @@ test('cache is invalidated when role is attached to user', function () {
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $role = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+    $role = Role::create(['name' => 'admin', 'guard_name' => 'api']);
 
     // Warm the cache
     $service = app(MetadataCacheService::class);
@@ -98,7 +95,7 @@ test('cache is invalidated when role is detached from user', function () {
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $role = Role::create(['name' => 'admin', 'guard_name' => 'web']);
+    $role = Role::create(['name' => 'admin', 'guard_name' => 'api']);
     $user->assignRole($role);
 
     // Warm the cache
@@ -117,7 +114,7 @@ test('cache is invalidated when permission is assigned directly to user', functi
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'web']);
+    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'api']);
 
     // Warm the cache
     $service = app(MetadataCacheService::class);
@@ -135,7 +132,7 @@ test('cache is invalidated when permission is revoked from user', function () {
     Event::fake([MetadataCacheInvalidated::class]);
 
     $user = User::factory()->create();
-    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'web']);
+    $permission = Permission::create(['name' => 'view organizations', 'guard_name' => 'api']);
     $user->givePermissionTo($permission);
 
     // Warm the cache
@@ -151,6 +148,15 @@ test('cache is invalidated when permission is revoked from user', function () {
 });
 
 test('metadata endpoint uses cached response', function () {
+    // Task 13: /meta requires auth + viewAny now (superadmin => global context).
+    $metaUser = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $metaUser->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $metaUser->assignRole('Superadmin');
+    $metaUser->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($metaUser, 'sanctum');
+
     // First request should cache the response
     $response1 = $this->getJson('/api/v1/meta/organization');
     $response1->assertStatus(200);
@@ -164,6 +170,15 @@ test('metadata endpoint uses cached response', function () {
 });
 
 test('metadata endpoint cache is invalidated on model update', function () {
+    // Task 13: /meta requires auth + viewAny now (superadmin => global context).
+    $metaUser = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $metaUser->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $metaUser->assignRole('Superadmin');
+    $metaUser->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($metaUser, 'sanctum');
+
     // First request to populate cache
     $response1 = $this->getJson('/api/v1/meta/organization');
     $response1->assertStatus(200);
@@ -264,6 +279,15 @@ test('cache invalidation respects cache disabled configuration', function () {
 });
 
 test('multiple concurrent requests use cached data', function () {
+    // Task 13: /meta requires auth + viewAny now (superadmin => global context).
+    $metaUser = User::factory()->create();
+    Permission::findOrCreate('list_organization', 'api');
+    $metaUser->givePermissionTo('list_organization');
+    Role::findOrCreate('Superadmin', 'api');
+    $metaUser->assignRole('Superadmin');
+    $metaUser->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($metaUser, 'sanctum');
+
     // First request populates cache
     $response1 = $this->getJson('/api/v1/meta/organization');
     $response1->assertStatus(200);

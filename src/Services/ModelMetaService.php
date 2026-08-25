@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Services;
 
+use Blafast\Foundation\Api\ApiMethodNormalizer;
 use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Dto\ModelMeta;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -22,6 +23,7 @@ class ModelMetaService
     public function __construct(
         private OrganizationContext $context,
         private ExecPermissionChecker $permissionChecker,
+        private MetadataCacheService $cache,
     ) {}
 
     /**
@@ -31,12 +33,15 @@ class ModelMetaService
      */
     public function compile(string $modelClass, ?Authenticatable $user = null): ModelMeta
     {
-        $cacheKey = $this->getCacheKey($modelClass, $user);
-
-        return Cache::tags($this->getCacheTags($modelClass))
-            ->remember($cacheKey, 600, function () use ($modelClass, $user) {
-                return $this->buildMeta($modelClass, $user);
-            });
+        // Single guarded cache layer (C3): this used to call Cache::tags()
+        // directly — a BadMethodCallException (HTTP 500) on file/database/dynamodb
+        // stores, bypassing MetadataCacheService's careful supportsTags() guard
+        // from inside its own callback.
+        return $this->cache->remember(
+            $this->getCacheKey($modelClass, $user),
+            $this->getCacheTags($modelClass),
+            fn () => $this->buildMeta($modelClass, $user),
+        );
     }
 
     /**
@@ -46,7 +51,7 @@ class ModelMetaService
      */
     private function buildMeta(string $modelClass, ?Authenticatable $user): ModelMeta
     {
-        /** @phpstan-ignore staticMethod.notFound */
+
         $structure = $modelClass::getApiStructure();
         $slug = $structure['slug'];
 
@@ -87,6 +92,9 @@ class ModelMetaService
             mediaCollections: $mediaCollections,
             search: $search,
             pagination: $pagination,
+            // M14: the resource used to read search['allowed_includes'], a key that
+            // never existed — /meta always advertised zero includes.
+            allowedIncludes: $structure['allowed_includes'] ?? [],
         );
     }
 
@@ -139,7 +147,7 @@ class ModelMetaService
         // For now, return all fields
         // Permission-based filtering can be added later when we have field-level permissions
         return array_map(function ($field) {
-            return [
+            $mapped = [
                 'name' => $field['name'],
                 'label' => $field['label'],
                 'type' => $field['type'],
@@ -149,6 +157,16 @@ class ModelMetaService
                 'required' => $field['required'] ?? false,
                 'readonly' => $field['readonly'] ?? false,
             ];
+
+            // Task 14 (H15): keep the relation metadata — the resource needs it to
+            // advertise the REGISTERED filter name ({relation}.{field}).
+            foreach (['relation_name', 'relation_field'] as $key) {
+                if (isset($field[$key])) {
+                    $mapped[$key] = $field[$key];
+                }
+            }
+
+            return $mapped;
         }, $fields);
     }
 
@@ -160,15 +178,17 @@ class ModelMetaService
      */
     private function buildMethods(string $modelClass, ?Authenticatable $user): array
     {
-        /** @phpstan-ignore staticMethod.notFound */
-        $apiMethods = $modelClass::apiMethods();
-        /** @phpstan-ignore staticMethod.notFound */
+        // Task 27 (M15): slug-keyed via the one normalizer — array position
+        // in the model's declaration is meaningless.
+        $apiMethods = ApiMethodNormalizer::for($modelClass);
         $slug = $modelClass::getApiSlug();
         $methods = [];
 
         foreach ($apiMethods as $methodSlug => $config) {
             // Check if user can execute this method
-            if ($user && ! $this->canExecuteMethod($user, $slug, $methodSlug)) {
+            // No user means NO methods — the old `$user &&` short-circuit inverted
+            // the filter and served guests the full catalogue (H11).
+            if ($user === null || ! $this->canExecuteMethod($user, $slug, $methodSlug)) {
                 continue;
             }
 
@@ -223,7 +243,6 @@ class ModelMetaService
      */
     private function getCacheKey(string $modelClass, ?Authenticatable $user): string
     {
-        /** @phpstan-ignore staticMethod.notFound */
         $slug = $modelClass::getApiSlug();
 
         $parts = [
@@ -244,7 +263,6 @@ class ModelMetaService
      */
     private function getCacheTags(string $modelClass): array
     {
-        /** @phpstan-ignore staticMethod.notFound */
         $slug = $modelClass::getApiSlug();
 
         $tags = [
@@ -268,6 +286,9 @@ class ModelMetaService
      */
     public function invalidate(string $modelClass): void
     {
-        Cache::tags($this->getCacheTags($modelClass))->flush();
+        // Guarded path (C3): Cache::tags() throws on non-tagging stores; the
+        // outer service flushes tags where supported and bumps version counters
+        // elsewhere (M1).
+        $this->cache->invalidateByTags($this->getCacheTags($modelClass));
     }
 }

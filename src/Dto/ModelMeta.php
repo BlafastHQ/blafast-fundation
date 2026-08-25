@@ -30,5 +30,7 @@ readonly class ModelMeta
         public array $mediaCollections = [],
         public ?array $search = null,
         public ?array $pagination = null,
+        /** @var array<int, string> */
+        public array $allowedIncludes = [],
     ) {}
 }

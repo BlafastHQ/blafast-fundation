@@ -1,48 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
-			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 5
-			path: config/auth.php
-
-		-
-			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
-			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 18
-			path: config/blafast-fundation.php
-
-		-
-			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
-			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 2
-			path: config/activitylog.php
-
-		-
-			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
-			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 7
-			path: config/media-library.php
-
-		-
-			message: '#^Class Spatie\\MediaLibrary\\Conversions\\DefaultConversionFileNamer not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/media-library.php
-
-		-
-			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
-			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 13
-			path: config/queue.php
-
-		-
-			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
-			identifier: larastan.noEnvCallsOutsideOfConfig
-			count: 3
-			path: config/sanctum.php
-
-		-
 			message: '#^Call to an undefined method Faker\\Generator\:\:secondaryAddress\(\)\.$#'
 			identifier: method.notFound
 			count: 3
@@ -83,6 +41,42 @@ parameters:
 			identifier: method.childReturnType
 			count: 1
 			path: database/factories/OrganizationFactory.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$last_used_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Access to an undefined property Blafast\\Foundation\\Http\\Resources\\TokenResource\:\:\$tokenable_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: src/Http/Resources/TokenResource.php
+
+		-
+			message: '#^Method Blafast\\Foundation\\Models\\Activity\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\Activity\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\Activity\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Activity.php
 
 		-
 			message: '#^Method Blafast\\Foundation\\Models\\Address\:\:addressable\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, Blafast\\Foundation\\Models\\Address\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(Blafast\\Foundation\\Models\\Address\)\>\.$#'
@@ -139,6 +133,12 @@ parameters:
 			path: src/Models/Organization.php
 
 		-
+			message: '#^Parameter \#1 \$attributes of method Illuminate\\Database\\Eloquent\\Relations\\HasOneOrMany\<Blafast\\Foundation\\Models\\Address,Illuminate\\Database\\Eloquent\\Model,Illuminate\\Database\\Eloquent\\Collection\<int, Blafast\\Foundation\\Models\\Address\>\>\:\:create\(\) expects array\<model property of Blafast\\Foundation\\Models\\Address, mixed\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Models/Organization.php
+
+		-
 			message: '#^The @use tag of class Blafast\\Foundation\\Models\\Organization describes Illuminate\\Database\\Eloquent\\Factories\\HasFactory but the class uses Blafast\\Foundation\\Traits\\Addressable\.$#'
 			identifier: generics.wrongParent
 			count: 1
@@ -151,22 +151,22 @@ parameters:
 			path: src/Models/OrganizationUser.php
 
 		-
-			message: '#^Method Blafast\\Foundation\\Models\\OrganizationUser\:\:user\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, Blafast\\Foundation\\Models\\OrganizationUser\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(Blafast\\Foundation\\Models\\OrganizationUser\)\>\.$#'
-			identifier: return.type
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:where\(\) expects array\<int\|model property of Illuminate\\Database\\Eloquent\\Model, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of Illuminate\\Database\\Eloquent\\Model, non\-falsy\-string given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Models/OrganizationUser.php
+			path: src/Scopes/OrganizationScope.php
 
 		-
-			message: '#^Method Blafast\\Foundation\\Models\\Activity\:\:organization\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, Blafast\\Foundation\\Models\\Activity\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<Blafast\\Foundation\\Models\\Organization, \$this\(Blafast\\Foundation\\Models\\Activity\)\>\.$#'
+			message: '#^Method Blafast\\Foundation\\Services\\QueryBuilderService\:\:buildQuery\(\) should return Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\> but returns Illuminate\\Database\\Eloquent\\Builder\<Blafast\\Foundation\\Contracts\\HasApiStructure&Illuminate\\Database\\Eloquent\\Model\>\.$#'
 			identifier: return.type
 			count: 1
-			path: src/Models/Activity.php
+			path: src/Services/QueryBuilderService.php
 
 		-
-			message: '#^Trait Blafast\\Foundation\\Traits\\BelongsToOrganization is used zero times and is not analysed\.$#'
+			message: '#^Trait Blafast\\Foundation\\Traits\\ExposesApiMethods is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1
-			path: src/Traits/BelongsToOrganization.php
+			path: src/Traits/ExposesApiMethods.php
 
 		-
 			message: '#^Trait Blafast\\Foundation\\Traits\\HasMediaCollections is used zero times and is not analysed\.$#'
@@ -179,15 +179,3 @@ parameters:
 			identifier: trait.unused
 			count: 1
 			path: src/Traits/LogsOrganizationActivity.php
-
-		-
-			message: '#^Property Blafast\\Foundation\\Api\\ApiMethodBuilder\:\:\$slug is never read, only written\.$#'
-			identifier: property.onlyWritten
-			count: 1
-			path: src/Api/ApiMethodBuilder.php
-
-		-
-			message: '#^Trait Blafast\\Foundation\\Traits\\ExposesApiMethods is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Traits/ExposesApiMethods.php

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Blafast\Foundation\Services;
 
 use Blafast\Foundation\Models\Organization;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * OrganizationContext Service
@@ -46,6 +48,11 @@ class OrganizationContext
         $this->user = $user;
         $this->isGlobalContext = false;
 
+        // C1: spatie permission runs in teams mode — every hasRole()/can() filters by
+        // the registrar's team id. It MUST follow the org context, or all org-scoped
+        // grants resolve against team NULL (global) and deny every member.
+        $this->syncPermissionsTeamId($organization->id, $user);
+
         Log::debug('Organization context set', [
             'organization_id' => $organization->id,
             'organization_slug' => $organization->slug,
@@ -57,15 +64,63 @@ class OrganizationContext
      * Set global context mode (superadmin bypass).
      * This removes the organization filter from all queries.
      */
-    public function setGlobalContext(object $superadmin): void
+    public function setGlobalContext(?object $superadmin = null): void
     {
         $this->organization = null;
         $this->user = $superadmin;
         $this->isGlobalContext = true;
 
+        // Global context is team NULL — correct because only global (NULL-team)
+        // roles like Superadmin should apply here.
+        $this->syncPermissionsTeamId(null, $superadmin);
+
         Log::warning('Global organization context enabled', [
-            'user_id' => $superadmin->id,
+            'user_id' => $superadmin->id ?? 'system',
         ]);
+    }
+
+    /**
+     * Set the organization context for a QUEUED JOB (task 17): jobs have no
+     * authenticated user, so `user()` is deliberately null here — the one state
+     * where hasContext() true + a null user is by design. Replaces the old
+     * reflection write into the private property, and keeps the spatie team id
+     * in sync (task 5).
+     */
+    public function setForJob(Organization $organization): void
+    {
+        $this->organization = $organization;
+        $this->user = null;
+        $this->isGlobalContext = false;
+
+        $this->syncPermissionsTeamId($organization->id);
+
+        Log::debug('Organization context set for job', [
+            'organization_id' => $organization->id,
+        ]);
+    }
+
+    /**
+     * Run a callback in USER-LESS global context (task 12): the escape hatch for
+     * seeders, scheduled commands and migrations now that OrganizationScope fails
+     * closed — with no context at all, scoped queries return zero rows.
+     * The previous context is restored afterwards.
+     */
+    public function runAsSystem(callable $callback): mixed
+    {
+        $previousOrg = $this->organization;
+        $previousUser = $this->user;
+        $previousGlobal = $this->isGlobalContext;
+
+        try {
+            $this->setGlobalContext();
+
+            return $callback();
+        } finally {
+            $this->organization = $previousOrg;
+            $this->user = $previousUser;
+            $this->isGlobalContext = $previousGlobal;
+            $this->syncPermissionsTeamId($previousGlobal ? null : $previousOrg?->id, $previousUser);
+        }
     }
 
     /**
@@ -73,9 +128,13 @@ class OrganizationContext
      */
     public function clear(): void
     {
+        $previousUser = $this->user;
+
         $this->organization = null;
         $this->user = null;
         $this->isGlobalContext = false;
+
+        $this->syncPermissionsTeamId(null, $previousUser);
 
         Log::debug('Organization context cleared');
     }
@@ -199,6 +258,7 @@ class OrganizationContext
             $this->organization = $previousOrg;
             $this->user = $previousUser;
             $this->isGlobalContext = $previousGlobal;
+            $this->syncPermissionsTeamId($previousGlobal ? null : $previousOrg?->id, $previousUser);
         }
     }
 
@@ -220,6 +280,22 @@ class OrganizationContext
             $this->organization = $previousOrg;
             $this->user = $previousUser;
             $this->isGlobalContext = $previousGlobal;
+            $this->syncPermissionsTeamId($previousGlobal ? null : $previousOrg?->id, $previousUser);
+        }
+    }
+
+    /**
+     * Keep spatie permission's team id in lockstep with the organization context
+     * (C1). Also drops the memoized roles/permissions relations on the affected
+     * user: spatie caches them per model instance, so a collection loaded under
+     * another team would otherwise keep answering hasRole()/can() stale.
+     */
+    private function syncPermissionsTeamId(?string $organizationId, ?object $user = null): void
+    {
+        app(PermissionRegistrar::class)->setPermissionsTeamId($organizationId);
+
+        if ($user instanceof Model) {
+            $user->unsetRelation('roles')->unsetRelation('permissions');
         }
     }
 }

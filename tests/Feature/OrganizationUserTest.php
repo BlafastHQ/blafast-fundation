@@ -6,10 +6,7 @@ use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\OrganizationUser;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist
@@ -135,14 +132,19 @@ test('can set nested metadata value', function () {
     expect($pivot->getMetadata('preferences.notifications.email'))->toBe(true);
 });
 
-test('unique constraint prevents duplicate memberships', function () {
+test('re-adding a member updates the membership instead of duplicating (task 20)', function () {
     $organization = Organization::factory()->create();
     $user = createTestUser();
 
     $organization->addUser($user, 'member');
 
-    expect(fn () => $organization->addUser($user, 'admin'))
-        ->toThrow(QueryException::class);
+    // The old contract threw a QueryException here (the H24 bug); addUser() is
+    // reactivation/update-aware now and the unique pivot stays a single row.
+    $organization->addUser($user, 'admin');
+
+    $pivot = $organization->users()->first()->pivot;
+    expect($organization->users()->count())->toBe(1)
+        ->and($pivot->role)->toBe('admin');
 });
 
 test('joined at is set automatically', function () {

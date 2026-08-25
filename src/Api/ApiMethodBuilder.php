@@ -153,6 +153,10 @@ class ApiMethodBuilder
     public function build(): array
     {
         return [
+            // Task 27 (M15): the slug travels WITH the definition, so the
+            // documented plain-list pattern works — consumers normalize via
+            // ApiMethodNormalizer instead of trusting the array key.
+            'slug' => $this->slug,
             'method' => $this->method,
             'http_method' => $this->httpMethod,
             'description' => $this->description,

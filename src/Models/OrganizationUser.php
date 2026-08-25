@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
@@ -26,7 +26,7 @@ use Illuminate\Support\Carbon;
  * @property array|null $metadata
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property-read User $user
+ * @property-read Model $user
  * @property-read Organization $organization
  *
  * @method static Builder|OrganizationUser active()
@@ -65,11 +65,12 @@ class OrganizationUser extends Pivot
     /**
      * Get the user that owns this membership.
      *
-     * @return BelongsTo<User, OrganizationUser>
+     * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // Task 21 (M19): the configured user model, not a hard App import.
+        return $this->belongsTo(config('auth.providers.users.model'));
     }
 
     /**

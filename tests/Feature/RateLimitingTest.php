@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
-uses(RefreshDatabase::class);
-
 beforeEach(function () {
+    // Route prefix rl-check: the TestCase registers a catch-all
+    // api/v1/test/{any} (auth + org.resolve + deferred) that SHADOWS any
+    // api/v1/test/* route registered here — package routes match first.
     // Create test route for rate limiting
-    Route::get('/api/v1/test/rate-limited', function () {
+    Route::get('/api/v1/rl-check/rate-limited', function () {
         return response()->json(['message' => 'Success']);
     })->middleware(['throttle:api']);
 
-    Route::post('/api/v1/test/auth-limited', function () {
+    Route::post('/api/v1/rl-check/auth-limited', function () {
         return response()->json(['message' => 'Success']);
     })->middleware(['throttle:auth']);
 });
@@ -29,7 +29,7 @@ afterEach(function () {
 
 test('auth rate limiter allows requests under limit', function () {
     for ($i = 0; $i < 5; $i++) {
-        $response = $this->postJson('/api/v1/test/auth-limited');
+        $response = $this->postJson('/api/v1/rl-check/auth-limited');
         $response->assertStatus(200);
     }
 });
@@ -39,11 +39,11 @@ test('auth rate limiter blocks requests over limit', function () {
 
     // Make requests up to the limit
     for ($i = 0; $i < $maxAttempts; $i++) {
-        $this->postJson('/api/v1/test/auth-limited');
+        $this->postJson('/api/v1/rl-check/auth-limited');
     }
 
     // Next request should be rate limited
-    $response = $this->postJson('/api/v1/test/auth-limited');
+    $response = $this->postJson('/api/v1/rl-check/auth-limited');
 
     $response->assertStatus(429)
         ->assertJson([
@@ -60,11 +60,11 @@ test('auth rate limiter returns retry-after header', function () {
 
     // Make requests up to the limit
     for ($i = 0; $i < $maxAttempts; $i++) {
-        $this->postJson('/api/v1/test/auth-limited');
+        $this->postJson('/api/v1/rl-check/auth-limited');
     }
 
     // Next request should be rate limited
-    $response = $this->postJson('/api/v1/test/auth-limited');
+    $response = $this->postJson('/api/v1/rl-check/auth-limited');
 
     expect($response->headers->has('Retry-After'))->toBeTrue();
 })->skip('Takes too long to run 60 requests');
@@ -74,7 +74,7 @@ test('api rate limiter allows requests under limit', function () {
 
     for ($i = 0; $i < 10; $i++) {
         $response = $this->actingAs($user, 'sanctum')
-            ->getJson('/api/v1/test/rate-limited');
+            ->getJson('/api/v1/rl-check/rate-limited');
         $response->assertStatus(200);
     }
 });
@@ -86,20 +86,20 @@ test('api rate limiter is per-user when authenticated', function () {
     // Make requests as user1
     for ($i = 0; $i < 5; $i++) {
         $response = $this->actingAs($user1, 'sanctum')
-            ->getJson('/api/v1/test/rate-limited');
+            ->getJson('/api/v1/rl-check/rate-limited');
         $response->assertStatus(200);
     }
 
     // User2 should have their own limit
     $response = $this->actingAs($user2, 'sanctum')
-        ->getJson('/api/v1/test/rate-limited');
+        ->getJson('/api/v1/rl-check/rate-limited');
     $response->assertStatus(200);
 });
 
 test('api rate limiter is per-ip when not authenticated', function () {
     // Make requests without authentication
     for ($i = 0; $i < 5; $i++) {
-        $response = $this->getJson('/api/v1/test/rate-limited');
+        $response = $this->getJson('/api/v1/rl-check/rate-limited');
         $response->assertStatus(200);
     }
 });
@@ -118,7 +118,7 @@ test('superadmin is exempt from rate limiting', function () {
     // Make many requests (more than normal limit would allow)
     for ($i = 0; $i < 10; $i++) {
         $response = $this->actingAs($superadmin, 'sanctum')
-            ->getJson('/api/v1/test/rate-limited');
+            ->getJson('/api/v1/rl-check/rate-limited');
         $response->assertStatus(200);
     }
 
@@ -127,17 +127,21 @@ test('superadmin is exempt from rate limiting', function () {
 });
 
 test('rate limit exceeded returns JSON:API error format', function () {
+    // The JSON:API renderer is scoped to PACKAGE routes by default (task 22);
+    // this test registers its own route, so widen the scope to cover it.
+    config()->set('blafast-fundation.api_errors.scope', 'all');
+
     // Create a route that we'll hit repeatedly to trigger rate limit
-    Route::get('/api/v1/test/strict-limit', function () {
+    Route::get('/api/v1/rl-check/strict-limit', function () {
         return response()->json(['message' => 'Success']);
     })->middleware('throttle:1,1'); // Very strict limit: 1 request per minute
 
     // First request should succeed
-    $response1 = $this->getJson('/api/v1/test/strict-limit');
+    $response1 = $this->getJson('/api/v1/rl-check/strict-limit');
     $response1->assertStatus(200);
 
     // Second request should be rate limited
-    $response2 = $this->getJson('/api/v1/test/strict-limit');
+    $response2 = $this->getJson('/api/v1/rl-check/strict-limit');
 
     $response2->assertStatus(429)
         ->assertJsonStructure([
@@ -168,14 +172,14 @@ test('rate limiting respects configuration values', function () {
 });
 
 test('deferred rate limiter is configured', function () {
-    Route::get('/api/v1/test/deferred-limited', function () {
+    Route::get('/api/v1/rl-check/deferred-limited', function () {
         return response()->json(['message' => 'Success']);
     })->middleware(['throttle:deferred']);
 
     $user = User::factory()->create();
 
     $response = $this->actingAs($user, 'sanctum')
-        ->getJson('/api/v1/test/deferred-limited');
+        ->getJson('/api/v1/rl-check/deferred-limited');
 
     $response->assertStatus(200);
 });
@@ -184,7 +188,7 @@ test('rate limit headers are added to responses', function () {
     $user = User::factory()->create();
 
     $response = $this->actingAs($user, 'sanctum')
-        ->getJson('/api/v1/test/rate-limited');
+        ->getJson('/api/v1/rl-check/rate-limited');
 
     // Laravel automatically adds these headers
     expect($response->headers->has('X-RateLimit-Limit')

@@ -3,6 +3,13 @@ includes:
 
 parameters:
     level: 5
+    ignoreErrors:
+        # config/ here IS this package's config directory — larastan's env-outside-
+        # of-config rule only recognizes the host app's config path, so every
+        # env() default in these files is a false positive.
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config/*
     paths:
         - src
         - config

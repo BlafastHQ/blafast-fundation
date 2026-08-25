@@ -6,9 +6,6 @@ use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Services\OrganizationContext;
 use Blafast\Foundation\Tests\Fixtures\TenantModel;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create class alias for User model if it doesn't exist
@@ -53,7 +50,7 @@ test('scope filters queries by organization when context is set', function () {
         ->and($results->first()->id)->toBe($record1->id);
 });
 
-test('scope does not filter when no context is set', function () {
+test('withoutOrganizationScope returns all records when no context is set', function () {
     $org1 = Organization::factory()->create();
     $org2 = Organization::factory()->create();
 

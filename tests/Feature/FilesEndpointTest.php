@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\ProductModel;
+use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Register ProductModel in morph map for polymorphic relationships
@@ -45,11 +46,20 @@ beforeEach(function () {
             Route::dynamicResource(ProductModel::class);
         });
 
-    // Authenticate as a user
-    actingAsUser();
-
-    // Mock authorization to allow access
-    Gate::before(fn () => true);
+    // Authenticate as a user holding the REAL canonical permissions (task 7):
+    // view_/update_product flow through the generic HasApiStructure gate hook.
+    $user = User::factory()->create();
+    foreach (['view_product', 'update_product', 'list_product'] as $name) {
+        Permission::findOrCreate($name, 'api');
+    }
+    $user->givePermissionTo(['view_product', 'update_product', 'list_product']);
+    // Task 12: the macro now attaches auth+throttle+org.resolve by default; a
+    // superadmin without the org header gets GLOBAL context, where these global
+    // grants stay visible.
+    Role::findOrCreate('Superadmin', 'api');
+    $user->assignRole('Superadmin');
+    $user->unsetRelation('roles')->unsetRelation('permissions');
+    test()->actingAs($user, 'sanctum');
 
     // Setup storage disks for testing
     Storage::fake('public');
@@ -221,14 +231,19 @@ test('file endpoint includes conversion URLs if available', function () {
 test('files endpoint requires view permission', function () {
     $product = ProductModel::factory()->create();
 
-    // Override gate to deny access
-    Gate::before(fn () => null);
-    Gate::define('view', fn () => false);
+    // A user WITHOUT the view_product grant is denied by the real gate hook.
+    // Task 12: the stranger must reach AUTHORIZATION (403), so they get a valid
+    // org context first — otherwise org.resolve 400s before the gate runs.
+    $strangerOrg = Organization::factory()->create();
+    $stranger = User::factory()->create();
+    $strangerOrg->addUser($stranger, 'User');
+    $this->actingAs($stranger, 'sanctum')
+        ->withHeader('X-Organization-Id', $strangerOrg->id);
 
     $response = $this->getJson("/api/v1/product/{$product->id}/files/images");
 
     $response->assertStatus(403);
-})->skip('Gate::before from beforeEach cannot be overridden - requires separate authorization test setup');
+});
 
 test('file endpoint requires view permission', function () {
     $product = ProductModel::factory()->create();
@@ -236,14 +251,18 @@ test('file endpoint requires view permission', function () {
     $media = $product->addMedia(UploadedFile::fake()->image('product.jpg'))
         ->toMediaCollection('images');
 
-    // Override gate to deny access
-    Gate::before(fn () => null);
-    Gate::define('view', fn () => false);
+    // Task 12: the stranger must reach AUTHORIZATION (403), so they get a valid
+    // org context first — otherwise org.resolve 400s before the gate runs.
+    $strangerOrg = Organization::factory()->create();
+    $stranger = User::factory()->create();
+    $strangerOrg->addUser($stranger, 'User');
+    $this->actingAs($stranger, 'sanctum')
+        ->withHeader('X-Organization-Id', $strangerOrg->id);
 
     $response = $this->getJson("/api/v1/product/{$product->id}/files/images/{$media->uuid}");
 
     $response->assertStatus(403);
-})->skip('Gate::before from beforeEach cannot be overridden - requires separate authorization test setup');
+});
 
 test('files endpoint handles multiple collections separately', function () {
     $product = ProductModel::factory()->create();

@@ -2,174 +2,116 @@
 
 declare(strict_types=1);
 
-// Configuration for Blafast Foundation Module
+// Every key in this file is CONSUMED by the package (task 23 removed ~50 dead
+// keys — see CHANGELOG). If you add a key, wire it to a consumer in the same
+// commit; the config-hygiene test sweep fails on unread keys.
 return [
 
     /*
     |--------------------------------------------------------------------------
-    | API Configuration
+    | Migrations
     |--------------------------------------------------------------------------
     |
-    | Configure API behavior including versioning, pagination, and error handling.
+    | When true (default), the package's migrations run automatically with
+    | `php artisan migrate`. Set to false when you publish the migrations to
+    | fork them (`php artisan vendor:publish --tag=blafast-fundation-migrations`)
+    | — leaving auto-run enabled after publishing registers every migration
+    | twice and `migrate` fails on "already exists".
     |
     */
-    'api' => [
-        // API version prefix (e.g., /api/v1/...)
-        'version' => env('BLAFAST_API_VERSION', 'v1'),
 
-        // Default pagination settings
+    'run_migrations' => env('FOUNDATION_RUN_MIGRATIONS', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | JSON:API error rendering scope
+    |--------------------------------------------------------------------------
+    |
+    | 'package' (default): the JSON:API error renderer applies only to requests
+    | routed to this package's controllers (or asking for
+    | application/vnd.api+json) — your app's own JSON error contract is left
+    | untouched. 'all': render EVERY api/JSON error in the JSON:API shape (the
+    | pre-1.0 behaviour; opt-in).
+    |
+    */
+
+    'api_errors' => [
+        'scope' => env('FOUNDATION_JSON_API_ERRORS', 'package'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | API pagination & rate limiting
+    |--------------------------------------------------------------------------
+    */
+
+    'api' => [
         'pagination' => [
-            'default_per_page' => 25,
-            'max_per_page' => 100,
-            // Use cursor pagination by default
-            'type' => 'cursor',
-            // Query parameter names
+            // Cursor pagination parameter names: page[{size_name}], page[{cursor_name}]
+            'default_per_page' => env('BLAFAST_API_DEFAULT_PER_PAGE', 25),
+            'max_per_page' => env('BLAFAST_API_MAX_PER_PAGE', 100),
             'cursor_name' => 'cursor',
             'size_name' => 'per_page',
         ],
 
-        // Rate limiting configuration
         'rate_limiting' => [
-            // Authentication routes (login, register, password reset)
-            'auth' => [
-                'max_attempts' => 60,
-                'decay_minutes' => 1,
-            ],
-            // Data API routes
-            'api' => [
-                'max_attempts' => 300,
-                'decay_minutes' => 1,
-            ],
-            // Exempt superadmins from rate limiting
-            'exempt_superadmins' => true,
-        ],
-
-        // Error handling
-        'errors' => [
-            // Return JSON:API error objects
-            'format' => 'jsonapi',
+            // Requests per minute (the limiters are fixed per-minute windows).
+            'auth' => ['max_attempts' => env('BLAFAST_RATE_LIMIT_AUTH', 60)],
+            'api' => ['max_attempts' => env('BLAFAST_RATE_LIMIT_API', 300)],
+            'exempt_superadmins' => env('BLAFAST_RATE_LIMIT_EXEMPT_SUPERADMINS', true),
         ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Authentication Configuration
+    | Authentication tokens
     |--------------------------------------------------------------------------
     |
-    | Configuration for Laravel Sanctum authentication.
+    | Token lifetime in MINUTES for tokens issued by the package's auth
+    | endpoints (login + token create without an explicit expires_at). Null
+    | defers entirely to the host's sanctum.expiration.
     |
     */
+
     'auth' => [
-        // Sanctum guard name
-        'guard' => 'api',
-
-        // Token settings
         'token' => [
-            // Token expiration in minutes (null = never expires)
-            'expiration' => env('BLAFAST_TOKEN_EXPIRATION', null),
-            // Token name for SPA authentication
-            'name' => 'api-token',
+            'expiration' => env('BLAFAST_TOKEN_EXPIRATION'),
         ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Organization Configuration
+    | Organization context resolution
     |--------------------------------------------------------------------------
-    |
-    | Multi-tenancy settings for organization-based data isolation.
-    |
     */
+
     'organization' => [
-        // Organization context header name
-        'header_name' => 'X-Organization-Id',
-
-        // Fallback to session for SPA convenience
-        'session_fallback' => true,
-
-        // Session key for storing last used organization
-        'session_key' => 'blafast.organization_id',
-
-        // Require organization context for all users except superadmins
-        'require_context' => true,
+        'header_name' => env('BLAFAST_ORG_HEADER', 'X-Organization-Id'),
+        'session_fallback' => env('BLAFAST_ORG_SESSION_FALLBACK', true),
+        'session_key' => 'organization_id',
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Roles and Permissions
+    | Metadata / menu / settings caching
     |--------------------------------------------------------------------------
-    |
-    | Configuration for spatie/laravel-permission package.
-    |
     */
-    'permissions' => [
-        // Enable teams mode for organization-scoped permissions
-        'teams' => true,
 
-        // Team foreign key
-        'team_foreign_key' => 'organization_id',
-
-        // Global roles (not scoped to organizations)
-        'global_roles' => [
-            'Superadmin',
-        ],
-
-        // Organization-level default roles
-        'organization_roles' => [
-            'Admin',
-            'User',
-            'Viewer',
-            'Consumer',
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Settings for caching metadata, menus, and settings.
-    |
-    */
     'cache' => [
-        // Enable caching
         'enabled' => env('BLAFAST_CACHE_ENABLED', true),
-
-        // Default TTL for metadata responses (in seconds)
-        'metadata_ttl' => env('BLAFAST_CACHE_METADATA_TTL', 600), // 10 minutes
-
-        // Menu cache TTL (in seconds)
-        'menu_ttl' => env('BLAFAST_CACHE_MENU_TTL', 600), // 10 minutes
-
-        // Settings cache TTL (in seconds)
-        'settings_ttl' => env('BLAFAST_CACHE_SETTINGS_TTL', 600), // 10 minutes
-
-        // Cache driver (null = use default)
-        'driver' => env('BLAFAST_CACHE_DRIVER', null),
-
-        // Cache key prefix
-        'prefix' => 'blafast',
-
-        // Enable cache tagging (requires Redis or Memcached)
-        'tagging' => env('BLAFAST_CACHE_TAGGING', false),
-
-        // Enable cache monitoring (fires events on cache misses)
+        'metadata_ttl' => env('BLAFAST_CACHE_METADATA_TTL', 600),
+        'menu_ttl' => env('BLAFAST_CACHE_MENU_TTL', 600),
+        'settings_ttl' => env('BLAFAST_CACHE_SETTINGS_TTL', 600),
         'monitoring_enabled' => env('BLAFAST_CACHE_MONITORING', false),
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Queue Configuration
+    | Queues
     |--------------------------------------------------------------------------
-    |
-    | Job queue settings for background processing.
-    |
     */
-    'queue' => [
-        // Default queue connection
-        'connection' => env('BLAFAST_QUEUE_CONNECTION', 'database'),
 
-        // Queue names for different job types
+    'queue' => [
         'names' => [
             'default' => 'default',
             'notifications' => 'notifications',
@@ -180,215 +122,82 @@ return [
             'deferred_low' => 'deferred-low',
         ],
 
-        // Failed job configuration
         'failed' => [
             'notify_superadmins' => env('BLAFAST_QUEUE_NOTIFY_SUPERADMINS', true),
-            'notify_after_attempts' => 3,
-        ],
-
-        // Timeout configuration for different queue types (in seconds)
-        'timeouts' => [
-            'default' => 60,
-            'notifications' => 60,
-            'media' => 300,
-            'exports' => 600,
-            'deferred' => 300,
-            'deferred_high' => 300,
-            'deferred_low' => 300,
         ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Activity Log Configuration
+    | Activity log
     |--------------------------------------------------------------------------
-    |
-    | Settings for spatie/laravel-activitylog package.
-    |
     */
+
     'activity_log' => [
-        // Enable activity logging
-        'enabled' => env('BLAFAST_ACTIVITY_LOG_ENABLED', true),
-
-        // Log retention in days (0 = keep forever)
-        'retention_days' => 90,
-
-        // Automatically log model events
-        'log_events' => [
-            'created',
-            'updated',
-            'deleted',
-        ],
-
-        // Include organization_id in activity log
-        'include_organization' => true,
+        // Default retention for blafast:activity:cleanup (overridable via --days).
+        'retention_days' => env('BLAFAST_ACTIVITY_RETENTION_DAYS', 365),
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Dynamic Discovery Configuration
+    | Media
     |--------------------------------------------------------------------------
-    |
-    | Settings for automatic API structure discovery.
-    |
     */
-    'discovery' => [
-        // Enable automatic model discovery
-        'enabled' => true,
 
-        // Default search strategy
-        'search_strategy' => 'like', // Options: 'like', 'full_text', 'none'
-
-        // Cache discovery results
-        'cache_enabled' => true,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Menu Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Dynamic menu system settings.
-    |
-    */
-    'menu' => [
-        // Enable menu caching
-        'cache_enabled' => true,
-
-        // Default menu order for items
-        'default_order' => 100,
-
-        // Cache TTL in seconds
-        'cache_ttl' => 600,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Media Library Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Settings for spatie/laravel-medialibrary package.
-    |
-    */
     'media' => [
-        // Default disk for media storage
-        'disk' => env('BLAFAST_MEDIA_DISK', 'public'),
+        // Default upload disk (task 24): private by default — the provider ships
+        // a `blafast-private` local disk (visibility private, temporary URLs).
+        // Collections opt into a public disk explicitly via ->useDisk().
+        'disk' => env('BLAFAST_MEDIA_DISK', 'blafast-private'),
 
-        // Default max file size in KB
-        'max_file_size' => 10240, // 10MB
+        // Maximum upload size in bytes.
+        'max_file_size' => env('BLAFAST_MEDIA_MAX_FILE_SIZE', 10 * 1024 * 1024),
 
-        // Enable responsive images
-        'responsive_images' => true,
+        // Wired by task 25 (queued conversions).
+        'queue_conversions' => env('BLAFAST_MEDIA_QUEUE_CONVERSIONS', true),
 
-        // Queue media conversions
-        'queue_conversions' => true,
-
-        // Image conversion presets
         'conversions' => [
-            'thumb' => [
-                'width' => 150,
-                'height' => 150,
-                'quality' => 80,
-                'format' => 'webp',
-            ],
-            'preview' => [
-                'width' => 800,
-                'height' => 600,
-                'quality' => 85,
-                'format' => 'webp',
-            ],
-            'large' => [
-                'width' => 1920,
-                'height' => 1080,
-                'quality' => 90,
-                'format' => 'webp',
-            ],
+            'thumb' => ['width' => 150, 'height' => 150, 'quality' => 80, 'format' => 'webp'],
+            'preview' => ['width' => 500, 'height' => 500, 'quality' => 85, 'format' => 'webp'],
+            'large' => ['width' => 1200, 'height' => 1200, 'quality' => 90, 'format' => 'webp'],
         ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Deferred API Requests Configuration
+    | Deferred API requests
     |--------------------------------------------------------------------------
-    |
-    | Settings for asynchronous API request processing.
-    |
     */
+
     'deferred' => [
-        // Enable deferred request system
         'enabled' => env('BLAFAST_DEFERRED_ENABLED', true),
 
-        // Default timeout for deferred jobs (in seconds)
-        'timeout' => 300, // 5 minutes
+        // Job timeout in seconds.
+        'timeout' => env('BLAFAST_DEFERRED_TIMEOUT', 300),
 
-        // Default result TTL (in seconds)
-        'result_ttl' => 3600, // 1 hour
+        // Default result TTL in seconds (a DeferredEndpointConfig row overrides).
+        'result_ttl' => env('BLAFAST_DEFERRED_RESULT_TTL', 3600),
 
-        // Default priority
+        // Default priority when the endpoint config declares none.
         'priority' => 'default',
 
-        // Cleanup configuration
         'cleanup' => [
             'enabled' => true,
-            'older_than_days' => 7,
+            'older_than_days' => env('BLAFAST_DEFERRED_CLEANUP_DAYS', 7),
         ],
 
-        // Request header name for opt-in deferred execution
+        // Request header name for opt-in deferred execution.
         'header_name' => 'X-Blafast-Defer',
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Module Discovery Configuration
+    | Modules
     |--------------------------------------------------------------------------
-    |
-    | Settings for loading and discovering Laravel modules.
-    |
     */
+
     'modules' => [
-        // Enable module auto-discovery
-        'auto_discover' => true,
-
-        // Cache module manifest
-        'cache_enabled' => true,
-
-        // Module manifest cache file
-        'manifest_cache' => storage_path('framework/cache/blafast-modules.php'),
+        // Manifest cache file for discovered modules.
+        'manifest_cache' => env('BLAFAST_MODULES_MANIFEST', base_path('bootstrap/cache/blafast-modules.php')),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Localization Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Locale and currency settings.
-    |
-    */
-    'localization' => [
-        // Default locale
-        'default_locale' => env('BLAFAST_DEFAULT_LOCALE', 'en'),
-
-        // Default currency
-        'default_currency' => env('BLAFAST_DEFAULT_CURRENCY', 'USD'),
-
-        // Available locales
-        'available_locales' => ['en', 'fr', 'de', 'es'],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | PEPPOL Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Electronic invoicing settings for PEPPOL network.
-    |
-    */
-    'peppol' => [
-        // Enable PEPPOL integration
-        'enabled' => env('BLAFAST_PEPPOL_ENABLED', false),
-
-        // PEPPOL endpoint configuration
-        'endpoint' => env('BLAFAST_PEPPOL_ENDPOINT', null),
-    ],
-
 ];

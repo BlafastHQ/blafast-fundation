@@ -47,6 +47,23 @@ enum ApiMethodParameterType: string
     }
 
     /**
+     * Cast a validated value to the PHP type the method signature expects.
+     *
+     * Task 26 (H17): validation alone leaves GET values as strings ('5' passes
+     * the integer rule), which then TypeError into strictly-typed signatures.
+     * Types without a scalar PHP counterpart pass through unchanged.
+     */
+    public function cast(mixed $value): mixed
+    {
+        return match ($this) {
+            self::INTEGER => (int) $value,
+            self::FLOAT => (float) $value,
+            self::BOOLEAN => (bool) filter_var($value, FILTER_VALIDATE_BOOL),
+            default => $value,
+        };
+    }
+
+    /**
      * Parse type string with modifiers (e.g., "array:email", "enum:a4,letter").
      *
      * @return array{type: self, modifier: string|null}

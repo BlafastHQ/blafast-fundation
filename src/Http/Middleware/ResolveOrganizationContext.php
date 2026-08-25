@@ -85,8 +85,8 @@ class ResolveOrganizationContext
             return false;
         }
 
-        // Check if X-Organization-Id header is NOT provided
-        return ! $request->hasHeader('X-Organization-Id');
+        // Check if the organization header is NOT provided
+        return ! $request->hasHeader(self::headerName());
     }
 
     /**
@@ -94,15 +94,25 @@ class ResolveOrganizationContext
      */
     private function resolveOrganizationId(Request $request): ?string
     {
-        // First, try to get from X-Organization-Id header
-        $organizationId = $request->header('X-Organization-Id');
+        // First, try the organization header (name configurable — task 23 wired
+        // the previously dead organization.* keys).
+        $organizationId = $request->header(self::headerName());
 
         if ($organizationId) {
             return $organizationId;
         }
 
-        // Fallback to session for SPA convenience
-        return $request->session()->get('organization_id');
+        // Fallback to session for SPA convenience (config-toggleable). Guarded
+        // (H3): stateless token routes have no StartSession, and an unguarded
+        // $request->session() throws — turning the designed 400
+        // MISSING_ORGANIZATION into a 500.
+        if (! config('blafast-fundation.organization.session_fallback', true)) {
+            return null;
+        }
+
+        return $request->hasSession()
+            ? $request->session()->get(self::sessionKey())
+            : null;
     }
 
     /**
@@ -117,8 +127,14 @@ class ResolveOrganizationContext
             return null;
         }
 
-        // Validate user belongs to organization
-        if (! $organization->hasUser($user)) {
+        // ANY membership row (active or not) — hasUser() is active-only since
+        // task 20, but this middleware distinguishes 403 ORGANIZATION_ACCESS_DENIED
+        // (no membership at all) from 403 MEMBERSHIP_INACTIVE (checked next).
+        $isMember = $organization->users()
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if (! $isMember) {
             return null;
         }
 
@@ -153,9 +169,25 @@ class ResolveOrganizationContext
      */
     private function storeInSession(Request $request, string $organizationId): void
     {
-        if ($request->hasSession()) {
-            $request->session()->put('organization_id', $organizationId);
+        if ($request->hasSession() && config('blafast-fundation.organization.session_fallback', true)) {
+            $request->session()->put(self::sessionKey(), $organizationId);
         }
+    }
+
+    /**
+     * The configured organization header name (task 23).
+     */
+    public static function headerName(): string
+    {
+        return (string) config('blafast-fundation.organization.header_name', 'X-Organization-Id');
+    }
+
+    /**
+     * The configured session key for the SPA fallback (task 23).
+     */
+    public static function sessionKey(): string
+    {
+        return (string) config('blafast-fundation.organization.session_key', 'organization_id');
     }
 
     /**

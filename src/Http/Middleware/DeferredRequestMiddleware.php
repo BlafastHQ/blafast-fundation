@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Http\Middleware;
 
-use Blafast\Foundation\Enums\DeferredRequestStatus;
-use Blafast\Foundation\Jobs\ProcessDeferredApiRequest;
-use Blafast\Foundation\Models\DeferredApiRequest;
 use Blafast\Foundation\Models\DeferredEndpointConfig;
+use Blafast\Foundation\Services\DeferredRequestService;
 use Blafast\Foundation\Services\OrganizationContext;
 use Closure;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +23,8 @@ class DeferredRequestMiddleware
      * Create a new middleware instance.
      */
     public function __construct(
-        private OrganizationContext $orgContext
+        private OrganizationContext $orgContext,
+        private DeferredRequestService $deferredService,
     ) {}
 
     /**
@@ -33,13 +32,26 @@ class DeferredRequestMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip if already a deferred execution (prevent infinite loop)
-        if ($request->header('X-Deferred-Execution') === 'true') {
+        // Kill switch (task 16: the config key existed but nothing read it).
+        if (! config('blafast-fundation.deferred.enabled', true)) {
+            return $next($request);
+        }
+
+        // Loop guard on the SERVER-SIDE attribute bag (M8): the old client-supplied
+        // X-Deferred-Execution header let any caller run force_deferred endpoints
+        // synchronously, defeating load-shedding. Attributes are unforgeable.
+        if ($request->attributes->get('blafast.deferred_execution') === true) {
             return $next($request);
         }
 
         // Skip if no authenticated user
         if (! $request->user()) {
+            return $next($request);
+        }
+
+        // M11: in global (superadmin) context there is no organization_id and the
+        // column is NOT NULL — deliberately degrade to synchronous execution.
+        if (! $this->orgContext->hasContext()) {
             return $next($request);
         }
 
@@ -53,6 +65,20 @@ class DeferredRequestMiddleware
         // Check if request should be deferred
         if (! $this->shouldDefer($request, $config)) {
             return $next($request);
+        }
+
+        // M10: multipart uploads cannot be deferred — the encrypted:json cast
+        // serializes UploadedFile objects to {} and the temp files are gone before
+        // the job runs. Reject clearly instead of silently losing the upload.
+        if ($request->allFiles() !== []) {
+            return response()->json([
+                'errors' => [[
+                    'status' => '422',
+                    'code' => 'DEFERRED_FILES_UNSUPPORTED',
+                    'title' => 'Cannot Defer File Uploads',
+                    'detail' => 'Requests carrying file uploads cannot be deferred. Retry without the defer header.',
+                ]],
+            ], 422);
         }
 
         // Create and dispatch deferred request
@@ -117,61 +143,21 @@ class DeferredRequestMiddleware
             return true;
         }
 
-        // Otherwise, check for explicit defer header
-        return $request->header('X-Blafast-Defer') === 'true';
+        // Otherwise, check for the explicit defer header (name configurable —
+        // task 16 wires the previously dead deferred.header_name key).
+        $headerName = (string) config('blafast-fundation.deferred.header_name', 'X-Blafast-Defer');
+
+        return $request->header($headerName) === 'true';
     }
 
     /**
-     * Create deferred request and return 202 response.
+     * Create deferred request and return 202 response (task 27: extracted to
+     * DeferredRequestService, shared with queued RPC methods).
      */
     protected function createDeferredRequest(Request $request, DeferredEndpointConfig $config): JsonResponse
     {
-        $deferred = DeferredApiRequest::create([
-            'organization_id' => $this->orgContext->id(),
-            'user_id' => $request->user()->id,
-            'http_method' => $request->method(),
-            'endpoint' => $request->path(),
-            'payload' => $request->isMethod('GET') ? null : $request->all(),
-            'query_params' => $request->query(),
-            'headers' => $this->filterHeaders($request->headers->all()),
-            'status' => DeferredRequestStatus::Pending,
-            'priority' => $config->priority ?? 'default',
-            'max_attempts' => 3,
-            'expires_at' => now()->addSeconds($config->result_ttl ?? 3600),
-        ]);
-
-        // Dispatch background job
-        ProcessDeferredApiRequest::dispatch($deferred);
-
-        return response()->json([
-            'data' => [
-                'type' => 'deferred-request',
-                'id' => $deferred->id,
-                'attributes' => [
-                    'status' => $deferred->status->value,
-                    'endpoint' => $deferred->endpoint,
-                    'http_method' => $deferred->http_method,
-                    'created_at' => $deferred->created_at->toIso8601String(),
-                    'expires_at' => $deferred->expires_at->toIso8601String(),
-                ],
-                'links' => [
-                    'self' => route('api.v1.deferred.show', ['id' => $deferred->id]),
-                    'poll' => route('api.v1.deferred.show', ['id' => $deferred->id]),
-                ],
-            ],
-        ], 202);
-    }
-
-    /**
-     * Filter headers to only include safe ones.
-     */
-    protected function filterHeaders(array $headers): array
-    {
-        $allowed = ['accept', 'content-type', 'x-organization-id', 'accept-language'];
-
-        return array_intersect_key(
-            $headers,
-            array_flip(array_map('strtolower', $allowed))
+        return $this->deferredService->respond(
+            $this->deferredService->defer($request, $config)
         );
     }
 }

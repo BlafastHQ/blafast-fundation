@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Permission\Models\Role as SpatieRole;
 
+/**
+ * @property string|null $organization_id
+ */
 class Role extends SpatieRole
 {
     use HasFactory;
@@ -59,8 +62,6 @@ class Role extends SpatieRole
     /**
      * The organization ID associated with this role.
      */
-    public ?string $organization_id = null;
-
     /**
      * Get the organization that owns the role.
      *
