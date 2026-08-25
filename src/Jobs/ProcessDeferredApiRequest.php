@@ -45,7 +45,7 @@ class ProcessDeferredApiRequest extends BlaFastJob
 
         // Override tries and timeout from request config
         $this->tries = $deferredRequest->max_attempts;
-        $this->timeout = 300; // 5 minutes default
+        $this->timeout = (int) config('blafast-fundation.deferred.timeout', 300);
         $this->onQueue($this->resolveQueue());
     }
 

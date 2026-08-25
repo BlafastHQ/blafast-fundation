@@ -165,9 +165,9 @@ class DeferredRequestMiddleware
             'query_params' => $request->query(),
             'headers' => $this->filterHeaders($request->headers->all()),
             'status' => DeferredRequestStatus::Pending,
-            'priority' => $config->priority ?? 'default',
+            'priority' => $config->priority ?? config('blafast-fundation.deferred.priority', 'default'),
             'max_attempts' => 3,
-            'expires_at' => now()->addSeconds($config->result_ttl ?? 3600),
+            'expires_at' => now()->addSeconds($config->result_ttl ?? (int) config('blafast-fundation.deferred.result_ttl', 3600)),
         ]);
 
         // Dispatch background job

@@ -34,6 +34,26 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Changed (Task 23)
+- **Config cleanup:** ~50 dead `blafast-fundation.*` keys are removed
+  (`api.version`, `api.pagination.type`, `api.rate_limiting.*.decay_minutes`,
+  `api.errors.format`, `auth.guard`, `auth.token.name`,
+  `organization.require_context`, `permissions.*`,
+  `cache.driver/prefix/tagging`, `queue.connection`, `queue.timeouts.*`,
+  `queue.failed.notify_after_attempts`,
+  `activity_log.enabled/log_events/include_organization`, `discovery.*`,
+  `menu.*`, `media.responsive_images`, `modules.auto_discover/cache_enabled`,
+  `localization.*`, `peppol.*`). Newly honoured knobs:
+  `auth.token.expiration` (login/token-create lifetime, minutes),
+  `organization.header_name/session_fallback/session_key`,
+  `activity_log.retention_days` (cleanup default),
+  `modules.manifest_cache` (now defaulting to the real
+  `bootstrap/cache/blafast-modules.php`), `cache.settings_ttl`,
+  `deferred.timeout/result_ttl/priority`. A test sweep now fails on any
+  shipped-but-unread key.
+- `Role::$organization_id` no longer shadows the Eloquent attribute —
+  `isGlobal()`/`isSuperadmin()` were true for ANY role named "Superadmin".
+
 ### Fixed (Task 15)
 - **The deferred (202/poll) subsystem actually works now.** Deferred requests
   execute in process as the original user with the organization context restored

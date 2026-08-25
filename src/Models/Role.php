@@ -59,8 +59,6 @@ class Role extends SpatieRole
     /**
      * The organization ID associated with this role.
      */
-    public ?string $organization_id = null;
-
     /**
      * Get the organization that owns the role.
      *

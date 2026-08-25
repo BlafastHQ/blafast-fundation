@@ -24,7 +24,7 @@ class SettingsService
 
     private const ORG_CACHE_PREFIX = 'settings:organization-';
 
-    private const CACHE_TTL = 600; // 10 minutes
+    private const CACHE_TTL = 600; // fallback; see ttl()
 
     /**
      * Create a new settings service instance.
@@ -163,7 +163,7 @@ class SettingsService
     {
         return Cache::remember(
             self::SYSTEM_CACHE_KEY,
-            self::CACHE_TTL,
+            $this->ttl(),
             function () {
                 return SystemSetting::all()
                     ->mapWithKeys(fn ($s) => [$s->key => $s->getTypedValue()])
@@ -187,13 +187,21 @@ class SettingsService
 
         return Cache::remember(
             self::ORG_CACHE_PREFIX.$orgId,
-            self::CACHE_TTL,
+            $this->ttl(),
             function () {
                 $org = $this->context->organization();
 
                 return $org && $org->settings ? (array) $org->settings : [];
             }
         );
+    }
+
+    /**
+     * Cache TTL — cache.settings_ttl is a real knob now (task 23).
+     */
+    private function ttl(): int
+    {
+        return (int) config('blafast-fundation.cache.settings_ttl', self::CACHE_TTL);
     }
 
     /**
@@ -223,7 +231,7 @@ class SettingsService
     {
         return Cache::remember(
             self::SYSTEM_PUBLIC_CACHE_KEY,
-            self::CACHE_TTL,
+            $this->ttl(),
             function () {
                 return SystemSetting::query()->public()
                     ->get()
