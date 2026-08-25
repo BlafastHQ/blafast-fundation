@@ -13,7 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jobs', function (Blueprint $table) {
+        // These three are Laravel's own queue tables, shipped with the exact
+        // framework schema — most hosts already have them (the Laravel 12 skeleton
+        // creates jobs/job_batches/failed_jobs itself), so each is guarded: an
+        // existing table is identical and safely skipped (H22).
+        Schema::hasTable('jobs') || Schema::create('jobs', function (Blueprint $table) {
             $table->id();
             $table->string('queue')->index();
             $table->longText('payload');
@@ -23,7 +27,7 @@ return new class extends Migration
             $table->unsignedInteger('created_at');
         });
 
-        Schema::create('job_batches', function (Blueprint $table) {
+        Schema::hasTable('job_batches') || Schema::create('job_batches', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('name');
             $table->integer('total_jobs');
@@ -36,7 +40,7 @@ return new class extends Migration
             $table->integer('finished_at')->nullable();
         });
 
-        Schema::create('failed_jobs', function (Blueprint $table) {
+        Schema::hasTable('failed_jobs') || Schema::create('failed_jobs', function (Blueprint $table) {
             $table->uuid('uuid')->primary();
             $table->text('connection');
             $table->text('queue');

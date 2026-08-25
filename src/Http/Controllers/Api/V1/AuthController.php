@@ -135,8 +135,14 @@ class AuthController extends Controller
      */
     public function revokeToken(Request $request, string $tokenId): JsonResponse
     {
-        /** @phpstan-ignore-next-line */
-        $token = $request->user()->tokens()->where('id', $tokenId)->first();
+        // personal_access_tokens.id is a bigint: a non-numeric id must 404, not reach
+        // the database (Postgres rejects the comparison with SQLSTATE 22P02 -> 500).
+        $token = null;
+
+        if (ctype_digit($tokenId)) {
+            /** @phpstan-ignore-next-line */
+            $token = $request->user()->tokens()->where('id', $tokenId)->first();
+        }
 
         if (! $token) {
             return response()->json([

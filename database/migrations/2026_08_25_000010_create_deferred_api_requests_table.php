@@ -19,13 +19,16 @@ return new class extends Migration
             $table->uuid('user_id');
             $table->string('http_method', 10);
             $table->string('endpoint');
-            $table->json('payload')->nullable();
+            // payload/headers/result carry the `encrypted:json` casts — the encrypted
+            // value is an opaque base64 string that Postgres's json type rejects
+            // (SQLSTATE 22P02), so these three are text, not json (C7).
+            $table->text('payload')->nullable();
             $table->json('query_params')->nullable();
-            $table->json('headers');
+            $table->text('headers');
             $table->string('status')->default('pending');
             $table->integer('progress')->nullable();
             $table->string('progress_message')->nullable();
-            $table->json('result')->nullable();
+            $table->text('result')->nullable();
             $table->integer('result_status_code')->nullable();
             $table->string('error_code')->nullable();
             $table->text('error_message')->nullable();

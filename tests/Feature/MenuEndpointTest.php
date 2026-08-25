@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Services\MenuRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {

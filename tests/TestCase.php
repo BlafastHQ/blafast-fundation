@@ -104,9 +104,10 @@ class TestCase extends Orchestra
      * it switches to an immediate MigrateProcessor->up() with a tearDown ->rollback()
      * that drops the tables mid-suite.
      *
-     * RefreshDatabase's `migrate:fresh` then runs everything in filename order:
-     * Sanctum's vendor table (2019_…, exactly as a host gets it) → the test users /
-     * addressable tables (2026_01_04_…, FK targets of organization_user and
+     * RefreshDatabase's `migrate:fresh` then runs everything in filename order: the
+     * test support tables (2026_01_04_…: personal_access_tokens with uuid morphs —
+     * Sanctum's vendor migration ships bigint morphs that cannot hold uuid user ids
+     * on Postgres — then users/addressable, FK targets of organization_user and
      * deferred_api_requests) → the package migrations (2026_08_25_…, FK-ordered).
      *
      * The vendor spatie permission migrations are deliberately absent: the package
@@ -115,9 +116,7 @@ class TestCase extends Orchestra
      */
     protected function defineDatabaseMigrations(): void
     {
-        $migrator = $this->app['migrator'];
-        $migrator->path(__DIR__.'/database/migrations');
-        $migrator->path(__DIR__.'/../vendor/laravel/sanctum/database/migrations');
+        $this->app['migrator']->path(__DIR__.'/database/migrations');
     }
 
     protected function defineRoutes($router): void

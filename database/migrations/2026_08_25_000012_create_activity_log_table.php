@@ -10,7 +10,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::connection(config('activitylog.database_connection'))->create(config('activitylog.table_name'), function (Blueprint $table) {
+        $schema = Schema::connection(config('activitylog.database_connection'));
+        $tableName = config('activitylog.table_name');
+
+        // A pre-existing vendor spatie-activitylog table (bigint id + morphs, no
+        // organization_id) is incompatible with this schema (uuid id + uuid morphs) —
+        // skipping it silently would break every activity query at runtime (H22).
+        if ($schema->hasTable($tableName)) {
+            if (! $schema->hasColumn($tableName, 'organization_id')) {
+                throw new RuntimeException(
+                    "Table [{$tableName}] exists without the [organization_id] column — this is the vendor "
+                    .'spatie-activitylog schema, incompatible with blafast-fundation (uuid keys, '
+                    .'organization scope). Migrate or drop it first — see docs/HOST-REQUIREMENTS.md.'
+                );
+            }
+
+            return; // package-shaped table already present
+        }
+
+        $schema->create($tableName, function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('log_name')->nullable();
             $table->text('description');

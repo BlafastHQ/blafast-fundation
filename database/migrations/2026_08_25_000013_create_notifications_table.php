@@ -13,6 +13,22 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Laravel's stock notifications table shares the uuid id but uses bigint
+        // morphs and has no organization_id — incompatible with the package's uuid
+        // notifiables. Never skip it silently (H22).
+        if (Schema::hasTable('notifications')) {
+            if (! Schema::hasColumn('notifications', 'organization_id')) {
+                throw new RuntimeException(
+                    'Table [notifications] exists without the [organization_id] column — an existing '
+                    .'notifications table (e.g. Laravel\'s stock one with bigint morphs) is incompatible '
+                    .'with blafast-fundation (uuid notifiable morphs, organization scope). Migrate or '
+                    .'drop it first — see docs/HOST-REQUIREMENTS.md.'
+                );
+            }
+
+            return; // package-shaped table already present
+        }
+
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('type');

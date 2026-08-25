@@ -94,14 +94,6 @@ class BlafastServiceProvider extends PackageServiceProvider
                 SchedulerHealthCheckCommand::class,
             ]);
 
-        // Auto-run the package migrations on `php artisan migrate` (default). Hosts
-        // that publish the migrations to fork them must disable this via
-        // FOUNDATION_RUN_MIGRATIONS=false (or run_migrations in the published
-        // config), otherwise each migration is registered twice. Read with an env
-        // fallback because the package config is not merged yet at register time.
-        if (config('blafast-fundation.run_migrations', env('FOUNDATION_RUN_MIGRATIONS', true))) {
-            $package->runsMigrations();
-        }
     }
 
     /**
@@ -114,6 +106,14 @@ class BlafastServiceProvider extends PackageServiceProvider
             __DIR__.'/../config/blafast-fundation.php',
             'blafast-fundation'
         );
+
+        // Auto-run the package migrations on `php artisan migrate` (default). Hosts
+        // that publish the migrations to fork them must disable this via
+        // FOUNDATION_RUN_MIGRATIONS=false / run_migrations in the published config,
+        // otherwise each migration registers twice. Decided HERE — after the config
+        // merge above — so `config()` is authoritative and no env() call is needed;
+        // bootPackageMigrations() only reads the flag at boot time, after this runs.
+        $this->package->runsMigrations((bool) config('blafast-fundation.run_migrations', true));
 
         // Register OrganizationContext as a scoped singleton (per-request)
         $this->app->scoped(OrganizationContext::class, function () {
