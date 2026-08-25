@@ -181,7 +181,8 @@ test('complex module interaction scenario', function () {
     $admin = $registry->getByTag('admin');
 
     expect($admin->children)->toHaveCount(4)
-        ->and($admin->children[0]->label)->toBe('admin.dashboard')
+        // 'admin.dashboard' is the child's TAG; its label is 'dashboard'.
+        ->and($admin->children[0]->label)->toBe('dashboard')
         ->and($admin->children[1]->label)->toBe('users')
         ->and($admin->children[2]->label)->toBe('roles')
         ->and($admin->children[3]->label)->toBe('settings');

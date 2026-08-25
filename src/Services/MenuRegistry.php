@@ -94,6 +94,12 @@ class MenuRegistry
      */
     public function getByTag(string $tag): ?MenuItem
     {
+        // Same lazy sort as all(): a tagged item's merged children must come
+        // back order-sorted, not in module-registration order.
+        if (! $this->sorted) {
+            $this->sort();
+        }
+
         return $this->taggedItems[$tag] ?? null;
     }
 

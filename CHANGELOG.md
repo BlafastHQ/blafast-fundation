@@ -4,6 +4,18 @@ All notable changes to `blafast-fundation` will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed (post-task suite-green pass)
+- The test suite is fully green on both drivers with an **empty** failing-test
+  baseline (`tests/BASELINE.md`): stale tests modernized (JSON:API validation
+  error shape; org-context + `api`-guard setup for the user-menu suite; test
+  routes moved off a shadowed `api/v1/test/*` prefix; JSON:API 429 shape asserted
+  under `api_errors.scope=all`), `MenuRegistry::getByTag()` now returns
+  order-sorted children like `all()`, Country/Currency factories generate unique
+  synthetic ISO codes (the only order-flaky failures), and
+  `orchestra/testbench` requires `^10.6` — older testbench-core is incompatible
+  with current laravel/framework `HandleExceptions::flushState` on the
+  prefer-lowest CI leg.
+
 ### Fixed (Tasks 26-27, RPC)
 - **The documented plain-list `apiMethods()` pattern works** (Task 27): the builder
   emits the slug and one normalizer keys every consumer by `slug ?? key` — before,
