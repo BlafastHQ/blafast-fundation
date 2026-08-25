@@ -80,6 +80,13 @@ code must opt out explicitly — `Model::withoutOrganizationScope()`,
 and migrations. Audit any host command/job/Filament resource that queries a
 scoped model outside a request: it now reads nothing instead of everything.
 
+## Dependency slimming (Task 25)
+
+`spatie/laravel-tags` and `laravel-json-api/laravel` are no longer installed by
+this package, and `knuckleswtf/scribe` is dev-only. A host that used any of them
+transitively must `composer require` it directly. Media conversions are queued
+by default; set `BLAFAST_MEDIA_QUEUE_CONVERSIONS=false` to generate them inline.
+
 ## Upload safety defaults (Task 24)
 
 Uploads through the package's file endpoints enforce a MIME allow-list: a media

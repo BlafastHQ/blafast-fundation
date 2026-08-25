@@ -11,7 +11,6 @@ use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\SanctumServiceProvider;
-use LaravelJsonApi\Laravel\ServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
@@ -45,7 +44,6 @@ class TestCase extends Orchestra
             // configs (task 6/H21) these providers must merge their own.
             MediaLibraryServiceProvider::class,
             ActivitylogServiceProvider::class,
-            ServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }

@@ -7,7 +7,6 @@ namespace Blafast\Foundation\Tests\Feature;
 use Blafast\Foundation\BlafastServiceProvider;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\SanctumServiceProvider;
-use LaravelJsonApi\Laravel\ServiceProvider as JsonApiServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Activitylog\ActivitylogServiceProvider;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
@@ -48,7 +47,6 @@ class PackageMigrationsDisabledTest extends Orchestra
             PermissionServiceProvider::class,
             MediaLibraryServiceProvider::class,
             ActivitylogServiceProvider::class,
-            JsonApiServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }

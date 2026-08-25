@@ -13,8 +13,6 @@ use Blafast\Foundation\Http\Controllers\Api\V1\NotificationController;
 use Blafast\Foundation\Http\Controllers\Api\V1\ScheduleController;
 use Blafast\Foundation\Http\Controllers\Api\V1\SettingsController;
 use Illuminate\Support\Facades\Route;
-use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
-use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 /*
 |--------------------------------------------------------------------------
@@ -126,17 +124,6 @@ Route::prefix('api/v1')->name('api.v1.')->group(function () {
         ->middleware(['auth:sanctum', 'throttle:api', 'org.resolve'])
         ->whereUuid('uuid')
         ->name('model.method');
-
-    // JSON:API resource routes - with API rate limiting
-    JsonApiRoute::server('v1')
-        ->prefix('api/v1')
-        ->middleware('auth:sanctum')
-        ->middleware('throttle:api')
-        ->middleware('org.resolve')
-        ->resources(function (ResourceRegistrar $server) {
-            // JSON:API resources will be registered here
-            // Example: $server->resource('organizations', OrganizationController::class);
-        });
 });
 
 /*

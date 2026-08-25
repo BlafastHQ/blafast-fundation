@@ -10,7 +10,6 @@ use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Tests\Fixtures\User;
 use Laravel\Sanctum\SanctumServiceProvider;
-use LaravelJsonApi\Laravel\ServiceProvider as JsonApiServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RuntimeException;
 use Spatie\Activitylog\ActivitylogServiceProvider;
@@ -36,7 +35,6 @@ class HostConfigTest extends Orchestra
             PermissionServiceProvider::class,
             MediaLibraryServiceProvider::class,
             ActivitylogServiceProvider::class,
-            JsonApiServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }

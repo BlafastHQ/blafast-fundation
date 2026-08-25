@@ -4,6 +4,28 @@ All notable changes to `blafast-fundation` will be documented in this file.
 
 ## [Unreleased]
 
+### Removed (Task 25)
+- **Production dependencies dropped:** `spatie/laravel-tags` (never used) and
+  `laravel-json-api/laravel` (zero schemas registered — the JSON:API responses and
+  error rendering are hand-rolled and use none of it) are gone from `require`;
+  `knuckleswtf/scribe` moved to `require-dev`. Hosts relying on any of these being
+  transitively installed must require them directly.
+- Dead code deleted: the `AddRateLimitHeaders` middleware (read request attributes
+  nothing sets; alias applied to no route), the unreferenced `PasswordResetNotification`
+  / `WelcomeNotification` and their blade views (no such flow exists), the empty
+  JSON:API `Server` class + `config/jsonapi.php`, the zero-resource `JsonApiRoute`
+  block, and the empty published views directory.
+
+### Fixed (Task 25)
+- Media conversions honour `blafast-fundation.media.queue_conversions` instead of an
+  unconditional `nonQueued()` that generated every conversion inline in the upload
+  request.
+- `HasMediaCollections::registerMediaConversions()` types spatie's `Media` (what the
+  `HasMedia` interface declares) — the old package-model narrowing was a fatal
+  signature incompatibility for every adopting model.
+- README rewritten to describe the real package (install, host contract, usage,
+  supported versions) instead of the unmodified skeleton.
+
 ### Changed
 - **Breaking (Task 24):** file uploads are safe by default. Collections that declare no
   `accepted_mimes` now enforce a default MIME allow-list (raster images, PDF, plain

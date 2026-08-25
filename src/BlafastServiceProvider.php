@@ -21,7 +21,6 @@ use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
 use Blafast\Foundation\Foundation\ModuleManifest;
-use Blafast\Foundation\Http\Middleware\AddRateLimitHeaders;
 use Blafast\Foundation\Http\Middleware\DeferredRequestMiddleware;
 use Blafast\Foundation\Http\Middleware\EnsureOrganizationContext;
 use Blafast\Foundation\Http\Middleware\ResolveOrganizationContext;
@@ -88,8 +87,7 @@ class BlafastServiceProvider extends PackageServiceProvider
             // host (spatie silently ran with teams=false: a cross-tenant leak).
             // Required framework settings are now applied imperatively in
             // applyRequiredFrameworkConfig() and verified by a boot-time check.
-            ->hasConfigFile(['blafast-fundation', 'jsonapi'])
-            ->hasViews()
+            ->hasConfigFile('blafast-fundation')
             ->hasRoute('api')
             // Real timestamped migrations, FK-ordered by filename. discoversMigrations()
             // registers every file in database/migrations with the Migrator AND exposes
@@ -338,7 +336,6 @@ class BlafastServiceProvider extends PackageServiceProvider
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('org.resolve', ResolveOrganizationContext::class);
         $router->aliasMiddleware('org.required', EnsureOrganizationContext::class);
-        $router->aliasMiddleware('rate-limit-headers', AddRateLimitHeaders::class);
         $router->aliasMiddleware('deferred', DeferredRequestMiddleware::class);
 
         // Register response macros

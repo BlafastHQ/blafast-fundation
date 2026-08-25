@@ -9,13 +9,13 @@
 - **Tests: Pest 4** on orchestra/testbench — `composer test` runs on **sqlite `:memory:` by default** (fast, no services). Real-Postgres lane (workspace docker stack, port 55433): `DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=55433 DB_DATABASE=blafast_fundation_test DB_USERNAME=blafast DB_PASSWORD=blafast composer test` — create the database once with `docker compose exec postgres psql -U blafast -c 'CREATE DATABASE blafast_fundation_test'` from the workspace root. The suite's schema comes from the package's own timestamped migrations (registered by the provider, run by `migrate:fresh`) plus the test users/addressable tables and Sanctum's vendor migration — the package's own permission migration runs, not the vendor spatie ones.
 - `composer analyse` — PHPStan/larastan (baseline in `phpstan-baseline.neon`). `composer format` — Pint.
 - CI: GitHub Actions — run-tests matrix (PHP 8.3/8.4 × Laravel 11/12 × prefer-lowest/prefer-stable, ubuntu + windows), phpstan, auto Pint fix, dependabot auto-merge.
-- `BlafastServiceProvider` (spatie package-tools) publishes/overrides host configs `blafast-fundation`, `permission`, `auth`, `sanctum`, `jsonapi`, `media-library`, `activitylog`, `queue`, ships **real timestamped migrations** (auto-run on `php artisan migrate`; publish tag `blafast-fundation-migrations` for forking, paired with `FOUNDATION_RUN_MIGRATIONS=false`), and registers all commands/middleware/policies/macros below.
+- `BlafastServiceProvider` (spatie package-tools) publishes the single `blafast-fundation` config (required framework/vendor settings are applied imperatively at register+boot and asserted via `assertHostConfiguration()`), ships **real timestamped migrations** (auto-run on `php artisan migrate`; publish tag `blafast-fundation-migrations` for forking, paired with `FOUNDATION_RUN_MIGRATIONS=false`), and registers all commands/middleware/policies/macros below.
 
 ## Multi-tenancy (organizations)
 
 - `Organization` (UUID, unique auto-suffixed `slug`, `settings`/`contact_details` JSON, `peppol_id`) ⟷ users via `organization_user` pivot (`role`, `is_active`, `joined_at`/`left_at`, `metadata`; soft leave = `removeUser()`).
 - Context per request: middleware **`org.resolve`** reads `X-Organization-Id` header (session fallback), validates membership (400 `MISSING_ORGANIZATION` / 403 `ORGANIZATION_ACCESS_DENIED` / 403 `MEMBERSHIP_INACTIVE`); a superadmin without the header gets **global (unscoped) context**. **`org.required`** rejects both missing *and* global context.
-- Models opt in with `use BelongsToOrganization`: adds `OrganizationScope` (filters by current org; **no filter at all** in global context *or* when no context exists — CLI/unauthenticated see everything) and auto-fills `organization_id` on create. Migrations use the Blueprint macros `$table->organizationId()` (FK) / `organizationIdIndex()` (no FK).
+- Models opt in with `use BelongsToOrganization`: adds `OrganizationScope` (filters by current org; **fail-closed** — with *no* context at all the scope matches nothing; a superadmin's *global* context sees everything) and auto-fills `organization_id` on create. CLI/system code uses `organization_context()->runAsSystem(...)` or `Model::withoutOrganizationScope()` explicitly. Migrations use the Blueprint macros `$table->organizationId()` (FK) / `organizationIdIndex()` (no FK).
 - Queued jobs must extend **`BlaFastJob`**: it captures the current org id and restores it in the worker via the `RestoreOrganizationContext` job middleware; failures notify Superadmins.
 - Helpers: `organization()`, `organization_id()`, `organization_slug()`, `organization_context()`, `has_organization_context()`, `is_global_organization_context()`, `blafast_setting($key, $default)`, `blafast_setting_with_source($key, $default)`.
 
@@ -75,18 +75,17 @@ spatie/laravel-permission in **teams mode** with `team_foreign_key = organizatio
 
 ## Host app requirements
 
-`App\Models\User` must use `HasUuids`, Sanctum `HasApiTokens`, spatie `HasRoles`, define `organizations(): BelongsToMany` (through the `organization_user` pivot) and **`isSuperadmin(): bool`** (probed via `method_exists`). A morph map is enforced (`organization`, `user`). Built-in endpoints (all under `/api/v1`): `auth/*` (login/logout/me/tokens), `meta/{slug}`, `user-menu`, `activities`, `notifications`, `settings/*`, `scheduler/status`, `deferred/*`, file upload/delete, method call. Rate limiters: `auth` 60/min per IP, `api` 300/min per user (Superadmins exempt).
+`App\Models\User` must use `HasUuids`, Sanctum `HasApiTokens`, spatie `HasRoles`, define `organizations(): BelongsToMany` (through the `organization_user` pivot) and **`isSuperadmin(): bool`** (probed via `method_exists`). A non-enforcing morph map registers the `organization` and `user` aliases (`user` resolves from `auth.providers.users.model`); host models without aliases keep working. Built-in endpoints (all under `/api/v1`): `auth/*` (login/logout/me/tokens), `meta/{slug}`, `user-menu`, `activities`, `notifications`, `settings/*`, `scheduler/status`, `deferred/*`, file upload/delete, method call. Rate limiters: `auth` 60/min per IP, `api` 300/min per user (Superadmins exempt).
 
 ## Scheduled tasks & commands
 
 Scheduler (via `ScheduleServiceProvider`): heartbeat file every minute (checked by `blafast:scheduler:health` and `GET /api/v1/scheduler/status`), `blafast:activity:cleanup` 02:00, `blafast:deferred:cleanup` 03:00, `cache:prune-stale-tags` 04:00, `blafast:cache:metadata warm` 05:00, `blafast:modules:discover` weekly. Other commands: `blafast:info`, `blafast:queue:status`, `blafast:queue:retry`.
 
-## Gotchas (verified 2026-08)
+## Gotchas (verified 2026-08, post fix/optimize pass)
 
-- `BlaFastPermissionRegistrar` derives slugs with `Str::snake()` but runtime checks use the kebab-case `getApiSlug()` — identical for one-word models, **divergent for multi-word models** (`sales_order` created vs `sales-order` checked). Prefer one-word model names or fix before relying on exec permissions.
-- `HasApiMethods` / the RPC path has **no fixtures and no test coverage** yet; `Organization` is the only production model wired into the dynamic API.
+- Permission slugs are canonical **kebab-case** everywhere (`getApiSlug()`); rows created under the old `Str::snake()` derivation can be renamed with `php artisan blafast:permissions:migrate-slugs`.
 - Field-level permission filtering in `/meta/{slug}` is not implemented (all fields returned); method filtering only applies to authenticated users.
-- Several config keys are currently dead: `organization.header_name`/`session_key` (middleware hardcodes `X-Organization-Id` / `organization_id`), `discovery.enabled`, `modules.manifest_cache` (real cache path is `bootstrap/cache/blafast-modules.php`).
-- `ExecuteModelMethod` and `ScheduleServiceProvider` import `App\Models\User` directly — an app-level coupling inside the package.
-- `OrganizationPathGenerator` (per-org media paths) exists but is commented out in `config/media-library.php`.
-- With **no** org context (unauthenticated routes, CLI, tinker), `OrganizationScope` applies no filter — don't assume tenant isolation outside `org.resolve`d requests.
+- `OrganizationPathGenerator` (per-org media paths) ships but is not wired anywhere — opt in by setting `media-library.path_generator` in the host.
+- With **no** org context (CLI, tinker, jobs outside `BlaFastJob`), `OrganizationScope` is **fail-closed**: tenant queries match nothing until you enter a context (`organization_context()->set/…->runAsSystem()`) or bypass explicitly (`withoutOrganizationScope()`).
+- The RPC / method-execution path has only smoke-level test coverage; parameter validation/casting and the queued-execution contract are the last audit items being hardened.
+- A bare `vendor/bin/testbench` CLI run writes a default `.env` into `vendor/orchestra/testbench-core/laravel/` that poisons the whole suite (`CACHE_STORE=database`) — delete it if the suite suddenly fails en masse.

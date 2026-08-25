@@ -8,7 +8,6 @@ use Blafast\Foundation\BlafastServiceProvider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\SanctumServiceProvider;
-use LaravelJsonApi\Laravel\ServiceProvider as JsonApiServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RuntimeException;
 use Spatie\Activitylog\ActivitylogServiceProvider;
@@ -34,7 +33,6 @@ class VendorTableCollisionTest extends Orchestra
             PermissionServiceProvider::class,
             MediaLibraryServiceProvider::class,
             ActivitylogServiceProvider::class,
-            JsonApiServiceProvider::class,
             BlafastServiceProvider::class,
         ];
     }

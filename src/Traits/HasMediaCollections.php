@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Blafast\Foundation\Traits;
 
-use Blafast\Foundation\Models\Media;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Trait for models that support media collections.
@@ -75,6 +75,10 @@ trait HasMediaCollections
 
     /**
      * Register media conversions based on apiStructure().
+     *
+     * Task 25: the parameter types spatie's Media (what the HasMedia interface
+     * declares) — the old narrowing to the package Media model was a fatal
+     * signature incompatibility for every adopting model.
      */
     public function registerMediaConversions(?Media $media = null): void
     {
@@ -132,8 +136,17 @@ trait HasMediaCollections
             $mediaConversion->withResponsiveImages();
         }
 
-        // Queue conversions by default
-        $mediaConversion->nonQueued();
+        // Task 25 (L2): honour the configured queue behaviour. The old code
+        // called nonQueued() unconditionally — under a "Queue conversions by
+        // default" comment — overriding both media-library's
+        // queue_conversions_by_default and this package's own knob, so every
+        // conversion (responsive variants included) generated inline in the
+        // upload request.
+        if (config('blafast-fundation.media.queue_conversions', true)) {
+            $mediaConversion->queued();
+        } else {
+            $mediaConversion->nonQueued();
+        }
     }
 
     /**
