@@ -22,6 +22,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | JSON:API error rendering scope
+    |--------------------------------------------------------------------------
+    |
+    | 'package' (default): the JSON:API error renderer applies only to requests
+    | routed to this package's controllers (or asking for
+    | application/vnd.api+json) — your app's own JSON error contract is left
+    | untouched. 'all': render EVERY api/JSON error in the JSON:API shape (the
+    | pre-1.0 behaviour; opt-in).
+    |
+    */
+
+    'api_errors' => [
+        'scope' => env('FOUNDATION_JSON_API_ERRORS', 'package'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | API Configuration
     |--------------------------------------------------------------------------
     |

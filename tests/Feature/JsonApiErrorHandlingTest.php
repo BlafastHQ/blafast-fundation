@@ -16,6 +16,11 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {
+    // These closure test routes are NOT package controllers — this file asserts
+    // the RENDERING shapes, so it opts into the whole-app mode explicitly
+    // (task 22 scopes the default to package routes only; see JsonApiScopingTest).
+    config()->set('blafast-fundation.api_errors.scope', 'all');
+
     // Create test routes that throw various exceptions
     Route::get('/api/test/validation', function () {
         throw ValidationException::withMessages([

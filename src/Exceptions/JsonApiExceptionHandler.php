@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -48,7 +49,37 @@ class JsonApiExceptionHandler
     }
 
     /**
-     * Determine if the request expects a JSON:API response.
+     * Should this handler render for the request at all (task 22/M5)?
+     *
+     * Default mode `package`: only requests routed to THIS package's controllers
+     * (or explicitly asking for application/vnd.api+json) — merely installing
+     * the package must not rewrite a host's established JSON error contract.
+     * Mode `all` restores the old whole-app takeover as an explicit opt-in.
+     */
+    public function shouldHandle(Request $request): bool
+    {
+        if (config('blafast-fundation.api_errors.scope', 'package') === 'all') {
+            return $this->wantsJsonApi($request);
+        }
+
+        if ($request->header('Accept') === 'application/vnd.api+json') {
+            return true;
+        }
+
+        $route = $request->route();
+
+        if ($route === null) {
+            return false;
+        }
+
+        $uses = $route->getAction('uses');
+        $controller = $route->getAction('controller') ?? (is_string($uses) ? $uses : '');
+
+        return is_string($controller) && str_contains($controller, 'Blafast\\Foundation\\');
+    }
+
+    /**
+     * Determine if the request expects a JSON:API response (opt-in `all` mode).
      */
     private function wantsJsonApi(Request $request): bool
     {
@@ -228,7 +259,11 @@ class JsonApiExceptionHandler
                 'exception' => get_class($e),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => collect($e->getTrace())->take(5)->toArray(),
+                // Bounded (task 22): frames without their `args` — raw traces can
+                // carry credentials and payloads even in debug environments.
+                'trace' => collect($e->getTrace())->take(5)
+                    ->map(fn (array $frame) => Arr::only($frame, ['file', 'line', 'function', 'class']))
+                    ->all(),
             ];
         }
 

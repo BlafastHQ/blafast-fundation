@@ -440,6 +440,13 @@ class BlafastServiceProvider extends PackageServiceProvider
             $jsonApiHandler = $this->app->make(JsonApiExceptionHandler::class);
 
             $handler->renderable(function (\Throwable $e, Request $request) use ($jsonApiHandler) {
+                // Task 22 (M5): only the package's own routes by default — a
+                // renderable short-circuits Laravel's rendering, so an unscoped
+                // one silently rewrote EVERY JSON error in the host app.
+                if (! $jsonApiHandler->shouldHandle($request)) {
+                    return null;
+                }
+
                 return $jsonApiHandler->render($request, $e);
             });
 

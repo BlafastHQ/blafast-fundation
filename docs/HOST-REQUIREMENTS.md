@@ -80,6 +80,14 @@ code must opt out explicitly — `Model::withoutOrganizationScope()`,
 and migrations. Audit any host command/job/Filament resource that queries a
 scoped model outside a request: it now reads nothing instead of everything.
 
+## JSON:API error rendering scope (Task 22)
+
+By default the package's JSON:API error renderer applies **only to its own
+routes** (and to requests sending `Accept: application/vnd.api+json`) — your
+app's established JSON error contract is untouched. Set
+`blafast-fundation.api_errors.scope = 'all'` (env `FOUNDATION_JSON_API_ERRORS`)
+to render every api/JSON error in the JSON:API shape instead.
+
 ## Organization-scoped notifications (Task 18)
 
 `App\Models\User` must override `notifications()` to route through the
