@@ -46,7 +46,7 @@ beforeEach(function () {
 test('list endpoint returns paginated results', function () {
     Organization::factory()->count(5)->create();
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization');
 
     $response->assertStatus(200)
@@ -78,7 +78,7 @@ test('list endpoint supports partial filtering on string fields', function () {
     Organization::factory()->create(['name' => 'Test Company']);
     Organization::factory()->create(['name' => 'Another Corp']);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[name]=Acme');
 
     $response->assertStatus(200)
@@ -90,13 +90,13 @@ test('list endpoint supports exact filtering on boolean fields', function () {
     Organization::factory()->count(3)->create(['is_active' => true]);
     Organization::factory()->count(2)->create(['is_active' => false]);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[is_active]=true');
 
     $response->assertStatus(200)
         ->assertJsonCount(3, 'data');
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[is_active]=false');
 
     $response->assertStatus(200)
@@ -107,7 +107,7 @@ test('list endpoint supports exact filtering on UUID fields', function () {
     $org1 = Organization::factory()->create(['name' => 'Org 1']);
     Organization::factory()->create(['name' => 'Org 2']);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson("/api/v1/organization?filter[id]={$org1->id}");
 
     $response->assertStatus(200)
@@ -120,7 +120,7 @@ test('list endpoint supports sorting ascending', function () {
     Organization::factory()->create(['name' => 'Alpha Inc']);
     Organization::factory()->create(['name' => 'Beta LLC']);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?sort=name');
 
     $response->assertStatus(200)
@@ -134,7 +134,7 @@ test('list endpoint supports sorting descending', function () {
     Organization::factory()->create(['name' => 'Alpha Inc']);
     Organization::factory()->create(['name' => 'Beta LLC']);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?sort=-name');
 
     $response->assertStatus(200)
@@ -149,21 +149,21 @@ test('list endpoint supports ILIKE search across multiple fields', function () {
     Organization::factory()->create(['name' => 'Another Corp', 'vat_number' => 'BE0123456789']);
 
     // Search by name
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?search=Acme');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data');
 
     // Search by slug
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?search=test-company');
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data');
 
     // Search by VAT number
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?search=BE0123');
 
     $response->assertStatus(200)
@@ -175,7 +175,7 @@ test('list endpoint combines filters and sorting', function () {
     Organization::factory()->create(['name' => 'Active Alpha', 'is_active' => true]);
     Organization::factory()->create(['name' => 'Inactive Beta', 'is_active' => false]);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[is_active]=true&sort=name');
 
     $response->assertStatus(200)
@@ -189,7 +189,7 @@ test('list endpoint combines search with filters', function () {
     Organization::factory()->create(['name' => 'Acme Inactive Corp', 'is_active' => false]);
     Organization::factory()->create(['name' => 'Test Active Corp', 'is_active' => true]);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?search=Acme&filter[is_active]=true');
 
     $response->assertStatus(200)
@@ -200,7 +200,7 @@ test('list endpoint combines search with filters', function () {
 test('list endpoint respects pagination per_page parameter', function () {
     Organization::factory()->count(50)->create();
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?page[per_page]=10');
 
     $response->assertStatus(200)
@@ -212,7 +212,7 @@ test('list endpoint rejects non-allowed filters', function () {
     Organization::factory()->count(3)->create();
 
     // 'contact_details' is not in the allowed filters
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[contact_details]=test');
 
     // Spatie Query Builder throws an InvalidFilterQuery exception
@@ -224,7 +224,7 @@ test('list endpoint rejects non-allowed sorts', function () {
     Organization::factory()->count(3)->create();
 
     // 'vat_number' is not in the allowed sorts
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?sort=vat_number');
 
     // Spatie Query Builder throws an InvalidSortQuery exception
@@ -234,7 +234,7 @@ test('list endpoint rejects non-allowed sorts', function () {
 test('list endpoint returns empty array when no results match filters', function () {
     Organization::factory()->count(5)->create(['is_active' => true]);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[is_active]=false');
 
     $response->assertStatus(200)
@@ -242,12 +242,16 @@ test('list endpoint returns empty array when no results match filters', function
 });
 
 test('list endpoint requires authorization', function () {
-    // Create a user without permissions
+    // Create a user without permissions — but WITH a valid org context (task 12:
+    // org.resolve runs before the gate; without a context this would be a 400).
     $unauthorizedUser = User::factory()->create();
+    $org = Organization::factory()->create();
+    $org->addUser($unauthorizedUser, 'User');
 
-    Organization::factory()->count(3)->create();
+    Organization::factory()->count(2)->create();
 
-    $response = actingAs($unauthorizedUser)
+    $response = actingAs($unauthorizedUser, 'sanctum')
+        ->withHeader('X-Organization-Id', $org->id)
         ->getJson('/api/v1/organization');
 
     $response->assertStatus(403)
@@ -262,21 +266,21 @@ test('list endpoint supports date range filtering', function () {
     $newest = Organization::factory()->create(['created_at' => now()]);
 
     // Filter by exact date
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[created_at]='.$recent->created_at->format('Y-m-d'));
 
     $response->assertStatus(200)
         ->assertJsonCount(1, 'data');
 
     // Filter by date range (from)
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[created_at][from]='.now()->subDays(3)->format('Y-m-d'));
 
     $response->assertStatus(200)
         ->assertJsonCount(2, 'data'); // recent and newest
 
     // Filter by date range (to)
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?filter[created_at][to]='.now()->subDays(5)->format('Y-m-d'));
 
     $response->assertStatus(200)
@@ -288,7 +292,7 @@ test('list endpoint cursor pagination works correctly', function () {
     Organization::factory()->count(30)->create();
 
     // Get first page
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization?page[per_page]=10');
 
     $response->assertStatus(200)
@@ -305,7 +309,7 @@ test('list endpoint cursor pagination works correctly', function () {
     expect($cursor)->not->toBeNull();
 
     // Get second page using cursor
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson("/api/v1/organization?page[per_page]=10&page[cursor]={$cursor}");
 
     $response->assertStatus(200)
@@ -319,7 +323,7 @@ test('list endpoint returns correct JSON:API structure', function () {
         'is_active' => true,
     ]);
 
-    $response = actingAs($this->user)
+    $response = actingAs($this->user, 'sanctum')
         ->getJson('/api/v1/organization');
 
     $response->assertStatus(200)

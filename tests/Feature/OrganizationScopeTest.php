@@ -50,7 +50,7 @@ test('scope filters queries by organization when context is set', function () {
         ->and($results->first()->id)->toBe($record1->id);
 });
 
-test('scope does not filter when no context is set', function () {
+test('withoutOrganizationScope returns all records when no context is set', function () {
     $org1 = Organization::factory()->create();
     $org2 = Organization::factory()->create();
 

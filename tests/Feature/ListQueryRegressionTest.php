@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\ProductModel;
@@ -42,6 +43,10 @@ beforeEach(function () {
         Permission::findOrCreate($name, 'api');
     }
     $user->givePermissionTo(['list_product', 'list_organization']);
+    // Task 12: macro routes now carry org.resolve — superadmin ⇒ global context.
+    Role::findOrCreate('Superadmin', 'api');
+    $user->assignRole('Superadmin');
+    $user->unsetRelation('roles')->unsetRelation('permissions');
     test()->actingAs($user, 'sanctum');
 });
 

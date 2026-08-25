@@ -34,6 +34,24 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Changed (Task 12)
+- **Breaking:** `Route::dynamicResource()` routes now default to
+  `auth:sanctum` + `throttle:api` + `org.resolve`; caller middleware APPENDS and
+  cannot strip the defaults (the old default was NO middleware — an index that
+  returned every organization's rows to anyone). Unauthenticated requests are
+  401 now.
+- **Breaking:** `OrganizationScope` (and the activity/notification scopes) FAIL
+  CLOSED: with no organization context — in any runtime — scoped queries return
+  zero rows instead of every tenant's. Escape hatches:
+  `Model::withoutOrganizationScope()`, `OrganizationContext::setGlobalContext()`
+  (user optional now) or the new `OrganizationContext::runAsSystem(callable)`
+  for seeders/commands/migrations. Queued-job model restoration bypasses the
+  scope (restoration by primary key runs before the job middleware restores
+  context). The notification scope keeps `organization_id IS NULL` system rows
+  visible.
+- The macro's unauthorized `meta/{slug}` route is removed — the global,
+  authorized `/api/v1/meta/{slug}` endpoint is the only meta route.
+
 ### Fixed (Task 9)
 - **Behaviour change:** `GET /settings/resolved` now returns only `is_public`
   system settings to non-superadmin users — any authenticated member could read

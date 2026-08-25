@@ -34,26 +34,6 @@ class DynamicResourceController extends Controller
     ) {}
 
     /**
-     * Get metadata about a resource.
-     */
-    public function meta(Request $request, string $slug): JsonResponse
-    {
-        /** @var class-string<HasApiStructure> $modelClass */
-        $modelClass = $this->registry->resolve($slug);
-
-        /** @phpstan-ignore staticMethod.notFound */
-        $structure = $modelClass::getApiStructure();
-
-        return response()->json([
-            'data' => [
-                'type' => 'model-meta',
-                'id' => $slug,
-                'attributes' => $this->buildMetaResponse($slug, $structure),
-            ],
-        ]);
-    }
-
-    /**
      * List all resources with filtering, sorting, and pagination.
      */
     public function index(Request $request): JsonResponse
@@ -260,35 +240,6 @@ class DynamicResourceController extends Controller
         }
 
         return $attributes;
-    }
-
-    /**
-     * Build meta response for a resource.
-     *
-     * @param  array<string, mixed>  $structure
-     * @return array<string, mixed>
-     */
-    protected function buildMetaResponse(string $slug, array $structure): array
-    {
-        $modelClass = $this->registry->get($slug);
-
-        return [
-            'model' => $modelClass ? class_basename($modelClass) : $slug,
-            'label' => $structure['label'],
-            'endpoints' => [
-                'list' => "/api/v1/{$slug}",
-                'view_entity' => "/api/v1/{$slug}/{entity}",
-                'files' => "/api/v1/{$slug}/{entity}/files/{collection}",
-                'view_file' => "/api/v1/{$slug}/{entity}/files/{collection}/{file}",
-                'meta' => "/api/v1/meta/{$slug}",
-            ],
-            'fields' => $structure['fields'],
-            'filters' => $structure['filters'] ?? [],
-            'sorts' => $structure['sorts'] ?? [],
-            'allowed_includes' => $structure['allowed_includes'] ?? [],
-            'search' => $structure['search'] ?? null,
-            'pagination' => $structure['pagination'] ?? null,
-        ];
     }
 
     /**

@@ -66,20 +66,30 @@ it('derives one canonical kebab slug across registrar, checker and meta', functi
 it('lists a registered model with the list grant and 403s without it', function () {
     SalesOrderModel::create(['reference' => 'SO-1']);
 
-    $granted = User::factory()->create();
-    Permission::findOrCreate('list_sales-order-model', 'api');
-    $granted->givePermissionTo('list_sales-order-model');
+    // Task 12: the macro carries org.resolve by default now — the test users are
+    // org members with (and without) an ORG-SCOPED grant, requesting under that org.
+    $org = Organization::factory()->create();
+    $registrar = app(PermissionRegistrar::class);
 
-    // Tightened with task 10 (the C5/H12 filter-pipeline crash is fixed):
-    // the granted user gets a real 200 with rows.
+    $granted = User::factory()->create();
+    $org->addUser($granted, 'User');
+    $registrar->setPermissionsTeamId($org->id);
+    Permission::findOrCreate('list_sales-order-model', 'api');
+    $role = Role::findOrCreate('SOReader', 'api');
+    $role->givePermissionTo('list_sales-order-model');
+    $granted->assignRole($role);
+    $registrar->setPermissionsTeamId(null);
+    $granted->unsetRelation('roles')->unsetRelation('permissions');
+
     $this->actingAs($granted, 'sanctum')
-        ->getJson('/api/v1/sales-order-model')
+        ->getJson('/api/v1/sales-order-model', ['X-Organization-Id' => $org->id])
         ->assertOk()
         ->assertJsonCount(1, 'data');
 
     $stranger = User::factory()->create();
+    $org->addUser($stranger, 'User');
     $this->actingAs($stranger, 'sanctum')
-        ->getJson('/api/v1/sales-order-model')
+        ->getJson('/api/v1/sales-order-model', ['X-Organization-Id' => $org->id])
         ->assertStatus(403);
 });
 

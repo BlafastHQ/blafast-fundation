@@ -36,6 +36,12 @@ class ActivityOrganizationScope implements Scope
         // Filter by organization if context exists
         if ($context->hasContext()) {
             $builder->where('organization_id', $context->id());
+
+            return;
         }
+
+        // FAIL CLOSED (task 12): no context ⇒ zero rows. Cross-org maintenance
+        // (e.g. CleanupActivityLogCommand) uses withoutOrganizationScope().
+        $builder->whereRaw('1 = 0');
     }
 }

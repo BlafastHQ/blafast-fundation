@@ -64,7 +64,7 @@ class OrganizationContext
      * Set global context mode (superadmin bypass).
      * This removes the organization filter from all queries.
      */
-    public function setGlobalContext(object $superadmin): void
+    public function setGlobalContext(?object $superadmin = null): void
     {
         $this->organization = null;
         $this->user = $superadmin;
@@ -75,8 +75,32 @@ class OrganizationContext
         $this->syncPermissionsTeamId(null, $superadmin);
 
         Log::warning('Global organization context enabled', [
-            'user_id' => $superadmin->id,
+            'user_id' => $superadmin->id ?? 'system',
         ]);
+    }
+
+    /**
+     * Run a callback in USER-LESS global context (task 12): the escape hatch for
+     * seeders, scheduled commands and migrations now that OrganizationScope fails
+     * closed — with no context at all, scoped queries return zero rows.
+     * The previous context is restored afterwards.
+     */
+    public function runAsSystem(callable $callback): mixed
+    {
+        $previousOrg = $this->organization;
+        $previousUser = $this->user;
+        $previousGlobal = $this->isGlobalContext;
+
+        try {
+            $this->setGlobalContext();
+
+            return $callback();
+        } finally {
+            $this->organization = $previousOrg;
+            $this->user = $previousUser;
+            $this->isGlobalContext = $previousGlobal;
+            $this->syncPermissionsTeamId($previousGlobal ? null : $previousOrg?->id, $previousUser);
+        }
     }
 
     /**

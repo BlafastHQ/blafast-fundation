@@ -67,6 +67,22 @@ trait BelongsToOrganization
     }
 
     /**
+     * Restore a queued-job-serialized model without the organization scope
+     * (task 12): SerializesModels re-queries by primary key BEFORE any job
+     * middleware restores the org context, and the scope now fails closed — an
+     * unrestorable model would kill every queued job carrying one. Restoration
+     * by unique key is safe; the job middleware then enforces the context.
+     *
+     * @param  array<int, mixed>|int|string  $ids
+     * @return Builder<static>
+     */
+    public function newQueryForRestoration($ids)
+    {
+        /** @var Builder<static> */
+        return parent::newQueryForRestoration($ids)->withoutGlobalScope(OrganizationScope::class);
+    }
+
+    /**
      * Query the model for a specific organization.
      * This bypasses the context and allows querying a specific organization's data.
      *

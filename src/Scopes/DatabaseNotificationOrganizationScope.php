@@ -25,9 +25,26 @@ class DatabaseNotificationOrganizationScope implements Scope
     {
         $context = app(OrganizationContext::class);
 
-        // Only apply scope if we have an organization context
-        if ($context->hasContext()) {
-            $builder->where('organization_id', $context->id());
+        // Global context (superadmin/system): everything.
+        if ($context->isGlobalContext()) {
+            return;
         }
+
+        // Org context: the org's notifications PLUS global/system rows (task 12) —
+        // package notifications delivered by SendQueuedNotifications restore no org
+        // context, so their organization_id is null; a strict equality filter
+        // would hide them forever.
+        if ($context->hasContext()) {
+            $builder->where(function ($query) use ($context) {
+                $query->where('organization_id', $context->id())
+                    ->orWhereNull('organization_id');
+            });
+
+            return;
+        }
+
+        // FAIL CLOSED, keeping the global/system rows visible: with no context at
+        // all, only null-org notifications remain readable.
+        $builder->whereNull('organization_id');
     }
 }

@@ -69,6 +69,17 @@ Host knobs the package deliberately does NOT set any more: queue tuning
 them in your own configs (`SANCTUM_EXPIRATION=525600` was the old shipped
 default).
 
+## Route and scope security defaults (Task 12)
+
+`Route::dynamicResource()` attaches `auth:sanctum` + `throttle:api` +
+`org.resolve` by default; your `middleware` option APPENDS. `OrganizationScope`
+fails closed: no organization context ⇒ zero rows, in every runtime. Cross-org
+code must opt out explicitly — `Model::withoutOrganizationScope()`,
+`OrganizationContext::setGlobalContext()` (user optional), or
+`OrganizationContext::runAsSystem(fn () => …)` in seeders, scheduled commands
+and migrations. Audit any host command/job/Filament resource that queries a
+scoped model outside a request: it now reads nothing instead of everything.
+
 ## The User model's permission guard (Task 5)
 
 `App\Models\User` must declare:

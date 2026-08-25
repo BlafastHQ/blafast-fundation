@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\ProductModel;
@@ -51,6 +53,12 @@ beforeEach(function () {
         Permission::findOrCreate($name, 'api');
     }
     $user->givePermissionTo(['view_product', 'update_product', 'list_product']);
+    // Task 12: the macro now attaches auth+throttle+org.resolve by default; a
+    // superadmin without the org header gets GLOBAL context, where these global
+    // grants stay visible.
+    Role::findOrCreate('Superadmin', 'api');
+    $user->assignRole('Superadmin');
+    $user->unsetRelation('roles')->unsetRelation('permissions');
     test()->actingAs($user, 'sanctum');
 
     // Setup storage disks for testing
@@ -224,8 +232,13 @@ test('files endpoint requires view permission', function () {
     $product = ProductModel::factory()->create();
 
     // A user WITHOUT the view_product grant is denied by the real gate hook.
+    // Task 12: the stranger must reach AUTHORIZATION (403), so they get a valid
+    // org context first — otherwise org.resolve 400s before the gate runs.
+    $strangerOrg = Organization::factory()->create();
     $stranger = User::factory()->create();
-    $this->actingAs($stranger, 'sanctum');
+    $strangerOrg->addUser($stranger, 'User');
+    $this->actingAs($stranger, 'sanctum')
+        ->withHeader('X-Organization-Id', $strangerOrg->id);
 
     $response = $this->getJson("/api/v1/product/{$product->id}/files/images");
 
@@ -238,8 +251,13 @@ test('file endpoint requires view permission', function () {
     $media = $product->addMedia(UploadedFile::fake()->image('product.jpg'))
         ->toMediaCollection('images');
 
+    // Task 12: the stranger must reach AUTHORIZATION (403), so they get a valid
+    // org context first — otherwise org.resolve 400s before the gate runs.
+    $strangerOrg = Organization::factory()->create();
     $stranger = User::factory()->create();
-    $this->actingAs($stranger, 'sanctum');
+    $strangerOrg->addUser($stranger, 'User');
+    $this->actingAs($stranger, 'sanctum')
+        ->withHeader('X-Organization-Id', $strangerOrg->id);
 
     $response = $this->getJson("/api/v1/product/{$product->id}/files/images/{$media->uuid}");
 

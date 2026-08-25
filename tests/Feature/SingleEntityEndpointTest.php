@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
 use Blafast\Foundation\Models\Permission;
+use Blafast\Foundation\Models\Role;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\User;
@@ -33,6 +34,12 @@ beforeEach(function () {
         Permission::findOrCreate($name, 'api');
     }
     $user->givePermissionTo(['list_organization', 'view_organization']);
+    // Task 12: the macro now attaches auth+throttle+org.resolve by default; a
+    // superadmin without the org header gets GLOBAL context, where these global
+    // grants stay visible.
+    Role::findOrCreate('Superadmin', 'api');
+    $user->assignRole('Superadmin');
+    $user->unsetRelation('roles')->unsetRelation('permissions');
     test()->actingAs($user, 'sanctum');
 });
 

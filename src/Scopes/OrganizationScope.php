@@ -26,17 +26,25 @@ class OrganizationScope implements Scope
     {
         $context = app(OrganizationContext::class);
 
-        // If in global context (superadmin mode), don't apply any filter
+        // Global context (superadmin/system mode): no filter.
         if ($context->isGlobalContext()) {
             return;
         }
 
-        // If an organization context is set, filter by organization_id
+        // Organization context: filter by organization_id.
         if ($context->hasContext()) {
             $builder->where(
                 $model->getTable().'.organization_id',
                 $context->id()
             );
+
+            return;
         }
+
+        // FAIL CLOSED (task 12): no context — in ANY runtime — means zero rows,
+        // never a silent full table. Legitimate cross-org paths must opt out via
+        // Model::withoutOrganizationScope() or OrganizationContext::
+        // setGlobalContext()/runAsSystem().
+        $builder->whereRaw('1 = 0');
     }
 }

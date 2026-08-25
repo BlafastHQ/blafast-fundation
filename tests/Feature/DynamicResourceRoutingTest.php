@@ -54,7 +54,7 @@ test('index endpoint lists organizations', function () {
 
     $response = $this->getJson('/api/v1/organization');
 
-    $response->assertStatus(403); // Unauthorized - needs auth
+    $response->assertStatus(401); // Task 12: auth:sanctum is a route default now — guests are 401, not a policy 403
 });
 
 test('show endpoint returns single organization', function () {
@@ -62,7 +62,7 @@ test('show endpoint returns single organization', function () {
 
     $response = $this->getJson("/api/v1/organization/{$org->id}");
 
-    $response->assertStatus(403); // Unauthorized - needs auth
+    $response->assertStatus(401); // Task 12: auth:sanctum is a route default now — guests are 401, not a policy 403
 });
 
 test('meta endpoint includes field definitions', function () {
@@ -131,7 +131,7 @@ test('dynamic resources macro can register multiple models', function () {
     // Verify routes work by accessing the index endpoint
     // Note: Meta endpoint is now global at /api/v1/meta/{slug}
     $response = $this->getJson('/api/v1/test/organization');
-    $response->assertStatus(403); // Unauthorized without auth
+    $response->assertStatus(401); // Task 12: guests are 401 under the secure default
 });
 
 test('unknown model slug returns 404', function () {

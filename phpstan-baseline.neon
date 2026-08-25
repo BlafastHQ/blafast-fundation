@@ -187,18 +187,6 @@ parameters:
 			path: src/Services/QueryBuilderService.php
 
 		-
-			message: '#^Parameter \#1 \.\.\.\$filters of method Spatie\\QueryBuilder\\QueryBuilder\<Blafast\\Foundation\\Contracts\\HasApiStructure&Illuminate\\Database\\Eloquent\\Model\>\:\:allowedFilters\(\) expects Spatie\\QueryBuilder\\AllowedFilter\|string, array\<int, Spatie\\QueryBuilder\\AllowedFilter\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Services/QueryBuilderService.php
-
-		-
-			message: '#^Parameter \#1 \.\.\.\$sorts of method Spatie\\QueryBuilder\\QueryBuilder\<Blafast\\Foundation\\Contracts\\HasApiStructure&Illuminate\\Database\\Eloquent\\Model\>\:\:allowedSorts\(\) expects Spatie\\QueryBuilder\\AllowedSort\|string, array\<int, Spatie\\QueryBuilder\\AllowedSort\|string\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Services/QueryBuilderService.php
-
-		-
 			message: '#^Trait Blafast\\Foundation\\Traits\\ExposesApiMethods is used zero times and is not analysed\.$#'
 			identifier: trait.unused
 			count: 1

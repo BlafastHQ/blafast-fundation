@@ -41,9 +41,13 @@ class DeferredCleanupCommand extends Command
 
         $this->info("Cleaning up deferred requests older than {$days} days...");
 
-        // Find expired requests
-        $query = DeferredApiRequest::where('expires_at', '<', now())
-            ->orWhere('created_at', '<', now()->subDays($days));
+        // Find expired requests — cross-organization maintenance, so the org scope
+        // is explicitly bypassed (it fails closed with no context since task 12).
+        $query = DeferredApiRequest::withoutOrganizationScope()
+            ->where(function ($q) use ($days) {
+                $q->where('expires_at', '<', now())
+                    ->orWhere('created_at', '<', now()->subDays($days));
+            });
 
         $count = $query->count();
 
