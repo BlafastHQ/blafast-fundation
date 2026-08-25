@@ -34,7 +34,6 @@ class DynamicRouteServiceProvider extends ServiceProvider
             /** @var class-string<HasApiStructure> $modelClass */
             $registry->register($modelClass);
 
-            /** @phpstan-ignore staticMethod.notFound */
             $slug = $modelClass::getApiSlug();
             $controller = $options['controller'] ?? DynamicResourceController::class;
             $middleware = $options['middleware'] ?? [];

@@ -11,11 +11,13 @@ use Blafast\Foundation\Commands\DeferredCleanupCommand;
 use Blafast\Foundation\Commands\MetadataCacheCommand;
 use Blafast\Foundation\Commands\ModulesDiscoverCommand;
 use Blafast\Foundation\Commands\ModulesListCommand;
+use Blafast\Foundation\Commands\PermissionsMigrateSlugsCommand;
 use Blafast\Foundation\Commands\PermissionsSyncCommand;
 use Blafast\Foundation\Commands\QueueStatusCommand;
 use Blafast\Foundation\Commands\RetryFailedJobsCommand;
 use Blafast\Foundation\Commands\SchedulerHealthCheckCommand;
 use Blafast\Foundation\Console\ScheduleServiceProvider;
+use Blafast\Foundation\Contracts\HasApiStructure;
 use Blafast\Foundation\Database\Concerns\HasOrganizationColumn;
 use Blafast\Foundation\Events\JobFailed;
 use Blafast\Foundation\Exceptions\JsonApiExceptionHandler;
@@ -100,6 +102,7 @@ class BlafastServiceProvider extends PackageServiceProvider
                 ModulesDiscoverCommand::class,
                 ModulesListCommand::class,
                 PermissionsSyncCommand::class,
+                PermissionsMigrateSlugsCommand::class,
                 DeferredCleanupCommand::class,
                 SchedulerHealthCheckCommand::class,
             ]);
@@ -291,6 +294,42 @@ class BlafastServiceProvider extends PackageServiceProvider
         Gate::policy(Activity::class, ActivityPolicy::class);
         Gate::policy(SystemSetting::class, SystemSettingPolicy::class);
         Gate::policy(DeferredApiRequest::class, DeferredApiRequestPolicy::class);
+
+        // H6: generic authorization for every HasApiStructure model WITHOUT an
+        // explicit policy — before this, Gate found no policy for module models
+        // registered via Route::dynamicResource() and denied permanently,
+        // regardless of grants. Canonical mapping: viewAny → list_{slug},
+        // view/create/update/delete → {ability}_{slug}, slug = getApiSlug().
+        // Superadmins pass, mirroring ExecPermissionChecker. Explicit policies
+        // keep full control (the hook abstains); non-grants fall through to the
+        // default denial rather than hard-false, so later Gate definitions can
+        // still apply.
+        Gate::before(function (object $user, string $ability, array $arguments = []) {
+            $target = $arguments[0] ?? null;
+            $class = is_object($target)
+                ? $target::class
+                : (is_string($target) && class_exists($target) ? $target : null);
+
+            if ($class === null || ! is_subclass_of($class, HasApiStructure::class)) {
+                return null;
+            }
+
+            if (Gate::getPolicyFor($class) !== null) {
+                return null;
+            }
+
+            if (method_exists($user, 'isSuperadmin') && $user->isSuperadmin()) {
+                return true;
+            }
+
+            $map = ['viewAny' => 'list', 'view' => 'view', 'create' => 'create', 'update' => 'update', 'delete' => 'delete'];
+
+            if (isset($map[$ability]) && method_exists($user, 'can') && $user->can($map[$ability].'_'.$class::getApiSlug())) {
+                return true;
+            }
+
+            return null;
+        });
 
         // Register JSON:API exception handler
         $this->registerExceptionHandler();

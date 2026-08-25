@@ -34,4 +34,10 @@ interface HasApiStructure
      * }
      */
     public static function apiStructure(): array;
+
+    /**
+     * The model's canonical API slug — the single source for routes, permission
+     * names, exec checks and metadata (task 7). Provided by ExposesApiStructure.
+     */
+    public static function getApiSlug(): string;
 }

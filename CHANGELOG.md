@@ -34,6 +34,18 @@ All notable changes to `blafast-fundation` will be documented in this file.
 - A stateless request without `X-Organization-Id` gets the designed
   `400 MISSING_ORGANIZATION` instead of a 500 (unguarded session fallback, Task 5).
 
+### Fixed (Task 7)
+- Permission slugs unified on `getApiSlug()` (kebab-case) across the registrar,
+  checker, metadata and routes — `permissions:sync` used `Str::snake()`, so every
+  multi-word model's grants (`exec.sales_order.*`) were checked as
+  `exec.sales-order.*` and never matched. `blafast:permissions:migrate-slugs`
+  renames rows created under the old scheme (also the legacy plural
+  `*_organizations` names, now singular canonical).
+- Granted permissions actually authorize the dynamic endpoints: a generic gate
+  hook maps viewAny/view/create/update/delete to `{action}_{slug}` for
+  registered models without an explicit policy (superadmins pass); before this,
+  module models were denied permanently regardless of grants.
+
 ### Changed (Task 6)
 - **Breaking:** the package no longer ships/publishes `auth.php`,
   `permission.php`, `sanctum.php`, `queue.php`, `media-library.php`,

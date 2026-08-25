@@ -209,9 +209,18 @@ class BlaFastPermissionRegistrar
      */
     protected function getModelSlug(string $modelClass): string
     {
-        $className = class_basename($modelClass);
+        // Canonical slug = the model's own getApiSlug() (kebab-case), the same
+        // source routes, ModelRegistry, ExecPermissionChecker and ModelMetaService
+        // use. The old Str::snake() derivation made permissions:sync grant
+        // `exec.sales_order.*` while the runtime checked `exec.sales-order.*` —
+        // unreachable grants for every multi-word model (H7). Use
+        // `blafast:permissions:migrate-slugs` to rename rows created under the
+        // old scheme.
+        if (method_exists($modelClass, 'getApiSlug')) {
+            return $modelClass::getApiSlug();
+        }
 
-        return Str::snake($className);
+        return Str::kebab(class_basename($modelClass));
     }
 
     /**

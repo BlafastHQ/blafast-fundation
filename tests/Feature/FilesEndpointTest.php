@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
 use Blafast\Foundation\Tests\Fixtures\ProductModel;
+use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
@@ -42,11 +44,14 @@ beforeEach(function () {
             Route::dynamicResource(ProductModel::class);
         });
 
-    // Authenticate as a user
-    actingAsUser();
-
-    // Mock authorization to allow access
-    Gate::before(fn () => true);
+    // Authenticate as a user holding the REAL canonical permissions (task 7):
+    // view_/update_product flow through the generic HasApiStructure gate hook.
+    $user = User::factory()->create();
+    foreach (['view_product', 'update_product', 'list_product'] as $name) {
+        Permission::findOrCreate($name, 'api');
+    }
+    $user->givePermissionTo(['view_product', 'update_product', 'list_product']);
+    test()->actingAs($user, 'sanctum');
 
     // Setup storage disks for testing
     Storage::fake('public');
@@ -218,14 +223,14 @@ test('file endpoint includes conversion URLs if available', function () {
 test('files endpoint requires view permission', function () {
     $product = ProductModel::factory()->create();
 
-    // Override gate to deny access
-    Gate::before(fn () => null);
-    Gate::define('view', fn () => false);
+    // A user WITHOUT the view_product grant is denied by the real gate hook.
+    $stranger = User::factory()->create();
+    $this->actingAs($stranger, 'sanctum');
 
     $response = $this->getJson("/api/v1/product/{$product->id}/files/images");
 
     $response->assertStatus(403);
-})->skip('Gate::before from beforeEach cannot be overridden - requires separate authorization test setup');
+});
 
 test('file endpoint requires view permission', function () {
     $product = ProductModel::factory()->create();
@@ -233,14 +238,13 @@ test('file endpoint requires view permission', function () {
     $media = $product->addMedia(UploadedFile::fake()->image('product.jpg'))
         ->toMediaCollection('images');
 
-    // Override gate to deny access
-    Gate::before(fn () => null);
-    Gate::define('view', fn () => false);
+    $stranger = User::factory()->create();
+    $this->actingAs($stranger, 'sanctum');
 
     $response = $this->getJson("/api/v1/product/{$product->id}/files/images/{$media->uuid}");
 
     $response->assertStatus(403);
-})->skip('Gate::before from beforeEach cannot be overridden - requires separate authorization test setup');
+});
 
 test('files endpoint handles multiple collections separately', function () {
     $product = ProductModel::factory()->create();

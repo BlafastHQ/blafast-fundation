@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Blafast\Foundation\Models\Organization;
+use Blafast\Foundation\Models\Permission;
 use Blafast\Foundation\Providers\DynamicRouteServiceProvider;
 use Blafast\Foundation\Services\ModelRegistry;
+use Blafast\Foundation\Tests\Fixtures\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
@@ -23,11 +25,15 @@ beforeEach(function () {
             Route::dynamicResource(Organization::class);
         });
 
-    // Authenticate as a user
-    actingAsUser();
-
-    // Bypass all authorization for testing
-    Gate::before(fn () => true);
+    // Authenticate as a user holding the REAL canonical permissions (task 7):
+    // the old `Gate::before(fn () => true)` crutch hid that granted permissions
+    // never authorized these endpoints.
+    $user = User::factory()->create();
+    foreach (['list_organization', 'view_organization'] as $name) {
+        Permission::findOrCreate($name, 'api');
+    }
+    $user->givePermissionTo(['list_organization', 'view_organization']);
+    test()->actingAs($user, 'sanctum');
 });
 
 test('show endpoint returns single entity with full details', function () {

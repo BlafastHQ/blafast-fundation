@@ -162,7 +162,6 @@ class ModelMetaService
     {
         /** @phpstan-ignore staticMethod.notFound */
         $apiMethods = $modelClass::apiMethods();
-        /** @phpstan-ignore staticMethod.notFound */
         $slug = $modelClass::getApiSlug();
         $methods = [];
 
@@ -223,7 +222,6 @@ class ModelMetaService
      */
     private function getCacheKey(string $modelClass, ?Authenticatable $user): string
     {
-        /** @phpstan-ignore staticMethod.notFound */
         $slug = $modelClass::getApiSlug();
 
         $parts = [
@@ -244,7 +242,6 @@ class ModelMetaService
      */
     private function getCacheTags(string $modelClass): array
     {
-        /** @phpstan-ignore staticMethod.notFound */
         $slug = $modelClass::getApiSlug();
 
         $tags = [
